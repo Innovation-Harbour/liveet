@@ -1,0 +1,4 @@
+/sql
+/doc
+*.code-workspace
+.git*

@@ -1,0 +1,33 @@
+<?php
+
+namespace LAMATA_EPURSE\Domain;
+
+class Constants
+{
+  const PRODUCTION_HOST = 'apis.touchandpay.me';
+  const DEVELOPMENT_HOST = 'localhost';
+  const DEVELOPMENT_BASE_PATH = "/lamata/RAL-LAMATA-EPURSE-APIs";
+  const PRODUCTION_BASE_PATH = "/lamata/RAL-LAMATA-EPURSE-APIs";
+
+  const USERTYPE_USER = 4;
+  const USERTYPE_ADMIN = 0;
+  const USER_TYPE_ORGANIZATION = 1;
+
+  const TRANSACTION_TYPE_ = 0;
+
+  const TRANSACTION_PENDING = 0;
+  const TRANSACTION_APPROVED = 1;
+  const TRANSACTION_DISAPPROVED = 2;
+
+  const USER_VERIFIED = 1;
+  const EMAIL_VERIFIED = 1;
+
+  const DEFAULT_RESET_PASSWORD = 'LAMATA_EPURSE_12345';
+
+  const PRIVILEDGE_CREATE_ADMIN = 0;
+  const PRIVILEDGE_GET_ANY_ADMIN = 1;
+  const PRIVILEDGE_UPDATE_ANY_ADMIN = 2;
+  const PRIVILEDGE_RESET_PASSWORDS = 3;
+  const PRIVILEDGE_DELETE_ANY_ADMIN = 4;
+  const PRIVILEDGE_LOGOUT_ANY_ADMIN = 5;
+}

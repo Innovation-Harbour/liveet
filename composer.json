@@ -1,0 +1,25 @@
+{
+  "name": "rashtell/lamata_epurse",
+  "type": "project",
+  "description":"APIs for Lamata-Epurse Integration",
+  "require": {
+    "illuminate/database": "^7.1",
+    "slim/slim": "^4.4",
+    "slim/psr7": "^1.0",
+    "firebase/php-jwt": "^5.2",
+    "phpmailer/phpmailer": "^6.1",
+    "psr/log": "^1.1"
+  },
+  "authors": [
+    {
+      "name": "rasheed",
+      "email": "rashtell2@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "LAMATA_EPURSE\\": "src/LAMATA_EPURSE/",
+      "Rashtell\\":"src/Rashtell/"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+on:
+  push:
+    branches:
+      - "main"
+name: Publish LAMATA_EPURSE APIs
+jobs:
+  FTP-Deploy-Action:
+    name: FTP-Deploy-Action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.1.0
+        with:
+          fetch-depth: 2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "7.4"
+          extensions: mbstring, intl
+          ini-values: post_max_size=256M, short_open_tag=On
+          coverage: xdebug
+          tools: composer
+
+      - name: Build Project
+        run: |
+          composer install
+
+      - name: List output files
+        run: ls
+
+      - name: FTP-Deploy-Action
+        uses: SamKirkland/FTP-Deploy-Action@3.1.1
+        with:
+          ftp-server: ftp://touchandpay.me/apis.touchandpay.me/lamata/RAL-LAMATA-EPURSE-APIs
+          ftp-username: rasheed@touchandpay.com
+          ftp-password: ${{ secrets.FTP_PASSWORD }}

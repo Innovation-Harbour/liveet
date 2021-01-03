@@ -32,5 +32,5 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@3.1.1
         with:
           ftp-server: ftp://ftp.touchandpay.me/apis.touchandpay.me/lamata/RAL-LAMATA-EPURSE-APIs
-          ftp-username: rasheed@touchandpay.com
+          ftp-username: rasheed@touchandpay.me
           ftp-password: ${{ secrets.FTP_PASSWORD }}

@@ -50,12 +50,12 @@ class TransactionModel extends BaseModel
         } elseif ($transType == Constants::TRANSACTION_CHECK_OUT) {
             return $this->createCheckOutTransaction($details);
         } else {
-            return ['data' => null, 'error' => 'Invalid transaction type. Transaction type should either be CHECK_IN or CHECK_OUT'];
+            return ['data' => null, 'error' => ["type" => "error", 'Invalid transaction type. Transaction type should either be CHECK_IN or CHECK_OUT']];
         }
 
         $user = OrganizationModel::find($userID);
         if (!$user) {
-            return ["data" => null, "error" => "Invalid transaction"];
+            return ["data" => null, "error" => ["type" => "error", "Invalid transaction"]];
         }
 
         $to = $user->email;
@@ -159,12 +159,12 @@ class TransactionModel extends BaseModel
 
         $exitPoint = $details["exitPoint"];
         if ((!isset($exitPoint) or !$exitPoint)) {
-            return ["data" => null, "error" => ["type" => "error", "message" => "Entry point is required"]];
+            return ["data" => null, "error" => ["type" => "error", "message" => "Exit point is required"]];
         }
 
         $exitTime = $details["exitTime"];
         if ((!isset($exitTime) or !$exitTime)) {
-            return ["data" => null, "error" => ["type" => "error", "message" => "Entry time is required"]];
+            return ["data" => null, "error" => ["type" => "error", "message" => "Exit time is required"]];
         }
 
         $user = OrganizationModel::find($userID);
@@ -231,6 +231,6 @@ class TransactionModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select('id', 'userID', 'transType', 'transID', 'tripID', 'entryPoint', 'entryTime', 'exitPoint', 'exitTime', 'cardType', 'cardSerial', 'busID', 'amount', 'maxFee', 'changeFee', 'dateCreated', 'dateUpdated');
+        return self::select('id', 'transID', 'tripID', 'entryPoint', 'entryTime', 'exitPoint', 'exitTime', 'cardType', 'cardSerial', 'busID', 'amount', 'maxFee', 'changeFee', 'dateCreated', 'dateUpdated');
     }
 }

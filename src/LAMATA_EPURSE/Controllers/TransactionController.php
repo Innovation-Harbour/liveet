@@ -16,7 +16,9 @@ class TransactionController extends BaseController
          * []
          */
         return (new BaseController)->createMany($request, $response, new TransactionModel(), [
-            'entryPoint', "entryTime", 'exitPoint', "exitTime", "cardType", "cardSerial", "busID", "amount"
+            'transType',
+            'transID', 'tripID',
+            "cardType", "cardSerial", "busID", "amount"
         ], [], ["userID" => $id]);
     }
 

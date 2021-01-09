@@ -25,10 +25,12 @@ class WalletModel extends BaseModel
         $userID = $details["userID"];
         $previousBalance = $details["previousBalance"];
         $currentBalance = $details["currentBalance"];
+        $transactionType = $details["transactionType"];
 
         $this->userID = $userID;
         $this->previousBalance = $previousBalance;
         $this->currentBalance = $currentBalance;
+        $this->transactionType = $transactionType;
 
         $this->save();
 
@@ -37,6 +39,6 @@ class WalletModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select('id', 'userID', 'previousBalance', 'currentBalance', 'dateCreated', 'dateUpdated');
+        return self::select('id', 'userID', 'transactionType', 'previousBalance', 'currentBalance', 'dateCreated', 'dateUpdated');
     }
 }

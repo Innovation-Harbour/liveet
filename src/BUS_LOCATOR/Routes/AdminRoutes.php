@@ -2,9 +2,9 @@
 
 use Slim\Routing\RouteCollectorProxy;
 
-use LAMATA_EPURSE\Controllers\AdminController;
-use LAMATA_EPURSE\Middlewares\AuthenticationMiddleware;
-use LAMATA_EPURSE\Models\AdminModel;
+use BUS_LOCATOR\Controllers\AdminController;
+use BUS_LOCATOR\Middlewares\AuthenticationMiddleware;
+use BUS_LOCATOR\Models\AdminModel;
 
 /**
  * Admin priviledged
@@ -16,7 +16,7 @@ isset($group) && $group->group(
         /**
          * Organization Routes
          */
-        require 'src/LAMATA_EPURSE/Routes/OrganizationRoutes.php';
+        require 'src/BUS_LOCATOR/Routes/OrganizationRoutes.php';
 
 
         $adminGroup->post(
@@ -24,10 +24,6 @@ isset($group) && $group->group(
             AdminController::class . ':createAdmin'
         );
 
-        // $adminGroup->post(
-        //     '/login/admin',
-        //     AdminController::class . ':loginAdmin'
-        // );
 
         $adminGroup->get(
             '/get/admin/dashboard',
@@ -83,11 +79,6 @@ isset($group) && $group->group(
             '/delete/admin/{id}',
             AdminController::class . ':deleteAdminById'
         );
-
-        // $adminGroup->post(
-        //     '/logout/admin',
-        //     AdminController::class . ':logoutAdmin'
-        // );
 
         $adminGroup->post(
             '/logout/admin/{id}',

@@ -1,9 +1,9 @@
 <?php
 
-namespace LAMATA_EPURSE\Models;
+namespace BUS_LOCATOR\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
-use LAMATA_EPURSE\Domain\Constants;
+use BUS_LOCATOR\Domain\Constants;
 use Rashtell\Domain\KeyManager;
 
 class AdminModel extends BaseModel
@@ -23,12 +23,12 @@ class AdminModel extends BaseModel
     {
         $adminsCount = self::count();
         $organizationsCount = OrganizationModel::count();
-        $transactionsCount = TransactionModel::count();
+        $locationsCount = LocationModel::count();
 
         $dashboard = [
             "adminsCount" => $adminsCount,
             "organizationsCount" => $organizationsCount,
-            "transactionsCount" => $transactionsCount,
+            "locationsCount" => $locationsCount,
         ];
 
         return ["error" => "", "data" => $dashboard];

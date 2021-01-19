@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `touchandpay_lamata_epurse`
+-- Database: `touchandpay_lamata_bus_locator`
 --
 
 -- --------------------------------------------------------
@@ -86,17 +86,17 @@ CREATE TABLE `organizations` (
 -- Dumping data for table `organizations`
 --
 
-INSERT INTO `organizations` (`id`, `name`, `phone`, `email`, `address`, `userType`, `phoneVerified`, `emailVerified`, `username`, `password`, `publicKey`, `authToken`, `emailVerificationToken`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
-(4, 'EPURSE', '08134738157', 'info@epurse.com', 'Lagos', 1, 0, 0, NULL, NULL, 'jylP5Qedpr81cRJP2xzxUZBjIgStrAfZYEb6lsSB', NULL, NULL, '[]', '1609629663', '1609629663', NULL);
+-- INSERT INTO `organizations` (`id`, `name`, `phone`, `email`, `address`, `userType`, `phoneVerified`, `emailVerified`, `username`, `password`, `publicKey`, `authToken`, `emailVerificationToken`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
+-- (4, 'TAP', '08134738157', 'info@lamata.com', 'Lagos', 1, 0, 0, NULL, NULL, 'jylP5Qedpr81cRJP2xzxUZBjIgStrAfZYEb6lsSB', NULL, NULL, '[]', '1609629663', '1609629663', NULL);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `transactions`
+-- Table structure for table `locations`
 --
 
-DROP TABLE IF EXISTS `transactions`;
-CREATE TABLE `transactions` (
+DROP TABLE IF EXISTS `locations`;
+CREATE TABLE `locations` (
   `id` int(11) NOT NULL,
   `userID` int(11) NOT NULL,
   `entryPoint` varchar(100) DEFAULT NULL,
@@ -173,9 +173,9 @@ ALTER TABLE `organizations`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `transactions`
+-- Indexes for table `locations`
 --
-ALTER TABLE `transactions`
+ALTER TABLE `locations`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -207,9 +207,9 @@ ALTER TABLE `organizations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT for table `transactions`
+-- AUTO_INCREMENT for table `locations`
 --
-ALTER TABLE `transactions`
+ALTER TABLE `locations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --

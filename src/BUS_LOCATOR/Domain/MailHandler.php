@@ -1,13 +1,13 @@
 <?php
 
-namespace LAMATA_EPURSE\Domain;
+namespace BUS_LOCATOR\Domain;
 
 use Rashtell\Domain\Mailer;
 
 class MailHandler
 {
-    public $from = 'info@LAMATA_EPURSE.com';
-    public $fromName = 'LAMATA_EPURSE';
+    public $from = 'info@BUS_LOCATOR.com';
+    public $fromName = 'BUS_LOCATOR';
     private $template = '';
     private  $userType = '';
     private $to = '';
@@ -50,7 +50,7 @@ class MailHandler
                                 <h1>Hello ${mobile_number}</h1>
                                 <div align='center'>
                                     <p>
-                                        Please confirm your LAMATA_EPURSE account by clicking the link below.
+                                        Please confirm your BUS_LOCATOR account by clicking the link below.
                                     </p>
                                     <a href='${link}'>${link}</a>
                                 </div>
@@ -65,7 +65,7 @@ class MailHandler
         $text = "
                     Hello ${mobile_number},
             
-                    Please confirm your LAMATA_EPURSE account by clicking the link below.
+                    Please confirm your BUS_LOCATOR account by clicking the link below.
 
                     ${link}
                 ";
@@ -99,7 +99,7 @@ class MailHandler
         switch ($this->template) {
             case '1':
                 $subject = 'Confirm your account';
-                $link = "localhost/LAMATA_EPURSE/v1/${user}/update/verification/email/" . $this->params["emailVerificationToken"];
+                $link = "localhost/BUS_LOCATOR/v1/${user}/update/verification/email/" . $this->params["emailVerificationToken"];
                 $body = $this->constructBody($link);
                 return ["subject" => $subject, "body" => $body];
 

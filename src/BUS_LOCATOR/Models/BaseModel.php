@@ -1,10 +1,10 @@
 <?php
 
-namespace LAMATA_EPURSE\Models;
+namespace BUS_LOCATOR\Models;
 
 use Rashtell\Domain\KeyManager;
 use Illuminate\Database\Eloquent\Model;
-use LAMATA_EPURSE\Controllers\BaseController;
+use BUS_LOCATOR\Controllers\BaseController;
 
 class BaseModel extends Model
 {
@@ -57,7 +57,7 @@ class BaseModel extends Model
         return static::select();
     }
 
-    public function getAll($page, $limit)
+    public function getAll($page, $limit, $return = null)
     {
         $start = ($page - 1) * $limit;
 
@@ -67,31 +67,31 @@ class BaseModel extends Model
 
         // $allmodels = $this->getStruct()->where('id', '>', '0')->offset($start)->limit($limit)->get();
 
-        $allmodels = $this->getStruct()->where('id', '>', $start)->limit($limit)->get();
+        $allmodels = $return ? $this->select($return)->where('id', '>', $start)->limit($limit)->get() : $this->getStruct()->where('id', '>', $start)->limit($limit)->get();
 
         $total = static::count();
 
         return ['data' => ["all" => $allmodels, "total" => $total], 'error' => ''];
     }
 
-    public function getByDate($from, $to)
+    public function getByDate($from, $to, $return = null)
     {
         if (!$this->isExist(static::select('id')->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to))) {
             return ['data' => null, 'error' => 'No more data'];
         }
 
-        $allmodels = $this->getStruct()->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get();
+        $allmodels = $return ? $this->select($return)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get() : $this->getStruct()->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get();
 
         return ['data' => $allmodels, 'error' => ''];
     }
 
-    public function getByDateWithRelationship($from, $to, $relationships)
+    public function getByDateWithRelationship($from, $to, $relationships, $return = null)
     {
         if (!$this->isExist(static::select('id')->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to))) {
             return ['data' => null, 'error' => 'No more data'];
         }
 
-        $allmodels = $this->getStruct()->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get();
+        $allmodels = $return ? $this->select($return)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get() : $this->getStruct()->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get();
 
         foreach ($allmodels as $models) {
 
@@ -122,35 +122,35 @@ class BaseModel extends Model
         return ['data' => $allmodels, 'error' => ''];
     }
 
-    public function getByDateWithConditions($from, $to, $conditions)
+    public function getByDateWithConditions($from, $to, $conditions, $return = null)
     {
         if (!$this->isExist(static::select('id')->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to))) {
             return ['data' => null, 'error' => 'No more data'];
         }
 
-        $allmodels = $this->getStruct()->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get();
+        $allmodels = $return ? $this->select($return)->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get() : $this->getStruct()->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get();
 
         return ['data' => $allmodels, 'error' => ''];
     }
 
-    public function get($id)
+    public function get($id, $return = null)
     {
-        if (!static::find($id)) {
+        if (!$this::find($id)) {
             return ['data' => null, 'error' => 'Does not exist'];
         }
 
-        $model = $this->getStruct()->where('id', $id)->first();
+        $model = $return ? $this->select($return)->where('id', $id)->first() : $this->getStruct()->where('id', $id)->first();
 
         return ['data' => $model, 'error' => ''];
     }
 
-    public function getWithRelationships($id, $relationships)
+    public function getWithRelationships($id, $relationships, $return = null)
     {
         if (!static::find($id)) {
             return ['data' => null, 'error' => 'Does not exist'];
         }
 
-        $model = $this->getStruct()->where('id', $id)->first();
+        $model = $return ? $this->select($return)->where('id', $id)->first() : $this->getStruct()->where('id', $id)->first();
 
         $this->handleRelationships($relationships, $model);
 
@@ -186,13 +186,13 @@ class BaseModel extends Model
         }
     }
 
-    public function getByColumn($columnName, $columnValue)
+    public function getByColumn($columnName, $columnValue, $return = null)
     {
         if (!$this->getStruct()->where($columnName, $columnValue)->exists()) {
             return ['data' => null, 'error' => 'Does not exist'];
         }
 
-        $model = $this->getStruct()->where($columnName, $columnValue)->get();
+        $model = $return ? $this->select($return)->where($columnName, $columnValue)->get() : $this->getStruct()->where($columnName, $columnValue)->get();
 
         return ['data' => $model, 'error' => ''];
     }
@@ -272,7 +272,7 @@ class BaseModel extends Model
         $model->save();
 
         $model = $this->get($id);
-        $model["data"]["password"] = BaseController::LAMATA_EPURSE_RESET_PASSWORD;
+        $model["data"]["password"] = BaseController::BUS_LOCATOR_RESET_PASSWORD;
 
         return ['data' => $model['data'], 'error' => $model['error']];
     }

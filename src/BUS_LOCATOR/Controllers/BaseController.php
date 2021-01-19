@@ -1,15 +1,15 @@
 <?php
 
-namespace LAMATA_EPURSE\Controllers;
+namespace BUS_LOCATOR\Controllers;
 
-use LAMATA_EPURSE\Domain\MailHandler;
+use BUS_LOCATOR\Domain\MailHandler;
 use Rashtell\Domain\CodeLibrary;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\KeyManager;
 use Rashtell\Domain\MCrypt;
 use Rashtell\Domain\JSON;
-use LAMATA_EPURSE\Models\BaseModel;
+use BUS_LOCATOR\Models\BaseModel;
 use DateTime;
 
 class BaseController
@@ -17,7 +17,7 @@ class BaseController
 
     private const EMAIL_VERIFIED = 1;
     private const USER_VERIFIED = 2;
-    const LAMATA_EPURSE_RESET_PASSWORD = 'LAMATA_EPURSE12345';
+    const BUS_LOCATOR_RESET_PASSWORD = 'BUS_LOCATOR_12345';
 
     protected function getValidJsonOrError($request)
     {
@@ -322,7 +322,7 @@ class BaseController
                 $allInputs[$ovrKey] = $value;
             }
 
-            $modelData = $model->create($allInputs);
+            $modelData = $model->createMany($allInputs);
 
             if ($modelData['error']) {
                 $error = ['errorMessage' => $modelData['error'], 'errorStatus' => 1, 'statusCode' => 406];
@@ -361,7 +361,7 @@ class BaseController
             return $json->withJsonResponse($response, $allInputs['error']);
         }
 
-        if ($allInputs['password'] == self::LAMATA_EPURSE_RESET_PASSWORD) {
+        if ($allInputs['password'] == self::BUS_LOCATOR_RESET_PASSWORD) {
             //TODO Redirect user to change password page
         }
 
@@ -435,7 +435,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getAll(Request $request, ResponseInterface $response, $model): ResponseInterface
+    public function getAll(Request $request, ResponseInterface $response, $model, $return = null): ResponseInterface
     {
         $json = new JSON();
 
@@ -447,7 +447,7 @@ class BaseController
 
         ['limit' => $limit, 'error' => $error] = $this->getPageLimit($request);
 
-        $data = $model->getAll($page, $limit);
+        $data = $model->getAll($page, $limit, $return);
 
         if ($data['error']) {
             $payload = array('errorMessage' => $data['error'], 'errorStatus' => '1', 'statusCode' => 400);
@@ -460,7 +460,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByDate(Request $request, ResponseInterface $response, $model): ResponseInterface
+    public function getByDate(Request $request, ResponseInterface $response, $model, $return = null): ResponseInterface
     {
         $json = new JSON();
 
@@ -470,7 +470,7 @@ class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->getByDate($from, $to);
+        $data = $model->getByDate($from, $to, $return);
 
         if ($data['error']) {
             $payload = array('errorMessage' => $data['error'], 'errorStatus' => '1', 'statusCode' => 400);
@@ -483,7 +483,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByDateWithRelationship(Request $request, ResponseInterface $response, $model, $relationships): ResponseInterface
+    public function getByDateWithRelationship(Request $request, ResponseInterface $response, $model, $relationships, $return = null): ResponseInterface
     {
         $json = new JSON();
 
@@ -493,7 +493,7 @@ class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->getByDateWithRelationship($from, $to, $relationships);
+        $data = $model->getByDateWithRelationship($from, $to, $relationships, $return);
 
         if ($data['error']) {
             $payload = array('errorMessage' => $data['error'], 'errorStatus' => '1', 'statusCode' => 400);
@@ -506,7 +506,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByDateWithConditions(Request $request, ResponseInterface $response, $model, $conditions): ResponseInterface
+    public function getByDateWithConditions(Request $request, ResponseInterface $response, $model, $conditions, $return = null): ResponseInterface
     {
         $json = new JSON();
 
@@ -516,7 +516,7 @@ class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->getByDateWithConditions($from, $to, $conditions);
+        $data = $model->getByDateWithConditions($from, $to, $conditions, $return);
 
         if ($data['error']) {
             $payload = array('errorMessage' => $data['error'], 'errorStatus' => '1', 'statusCode' => 400);
@@ -529,7 +529,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getSelf(Request $request, ResponseInterface $response, $model): ResponseInterface
+    public function getSelf(Request $request, ResponseInterface $response, $model, $return = null): ResponseInterface
     {
         $json = new JSON();
 
@@ -537,10 +537,10 @@ class BaseController
 
         ['id' => $id] = $authDetails;
 
-        $data = $model->get($id);
+        $data = $model->get($id, $return);
 
         if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 200);
+            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
@@ -550,7 +550,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getById(Request $request, ResponseInterface $response, $model): ResponseInterface
+    public function getById(Request $request, ResponseInterface $response, $model, $return = null): ResponseInterface
     {
         $json = new JSON();
 
@@ -560,10 +560,10 @@ class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->get($id);
+        $data = $model->get($id, $return);
 
         if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 200);
+            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
@@ -573,7 +573,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByIdWithRelationships(Request $request, ResponseInterface $response, $model, $relationships): ResponseInterface
+    public function getByIdWithRelationships(Request $request, ResponseInterface $response, $model, $relationships, $return = null): ResponseInterface
     {
         $json = new JSON();
 
@@ -583,10 +583,10 @@ class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->getWithRelationships($id, $relationships);
+        $data = $model->getWithRelationships($id, $relationships, $return);
 
         if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 200);
+            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
@@ -596,7 +596,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByColumn(Request $request, ResponseInterface $response, $model, $columnName): ResponseInterface
+    public function getByColumn(Request $request, ResponseInterface $response, $model, $columnName, $return = null): ResponseInterface
     {
         $json = new JSON();
 
@@ -606,10 +606,10 @@ class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->getByColumn($columnName, $columnValue);
+        $data = $model->getByColumn($columnName, $columnValue, $return);
 
         if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 200);
+            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
@@ -964,7 +964,7 @@ class BaseController
         }
 
         ['id' => $id, 'error' => $error] = $allInputs;
-        $newPassword = self::LAMATA_EPURSE_RESET_PASSWORD;
+        $newPassword = self::BUS_LOCATOR_RESET_PASSWORD;
 
         $kmg = new KeyManager();
         $encryptedPassword = $kmg->getDigest($newPassword);
@@ -979,7 +979,7 @@ class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ['successMessage' => 'Password reset to default: ' . self::LAMATA_EPURSE_RESET_PASSWORD, 'statusCode' => 201, 'data' => $data['data']];
+        $payload = ['successMessage' => 'Password reset to default: ' . self::BUS_LOCATOR_RESET_PASSWORD, 'statusCode' => 201, 'data' => $data['data']];
 
         return $json->withJsonResponse($response,  $payload);
     }

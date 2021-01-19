@@ -1,15 +1,15 @@
 <?php
 
-namespace LAMATA_EPURSE\Middlewares;
+namespace BUS_LOCATOR\Middlewares;
 
-use LAMATA_EPURSE\Controllers\BaseController;
+use BUS_LOCATOR\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Response;
 use Rashtell\Domain\JSON;
-use LAMATA_EPURSE\Models\BaseModel;
+use BUS_LOCATOR\Models\BaseModel;
 use Rashtell\Domain\CodeLibrary;
 
 class AuthenticationMiddleware implements MiddlewareInterface

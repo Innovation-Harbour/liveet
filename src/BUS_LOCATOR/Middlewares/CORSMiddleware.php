@@ -1,6 +1,6 @@
 <?php
 
-namespace LAMATA_EPURSE\Middlewares;
+namespace BUS_LOCATOR\Middlewares;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

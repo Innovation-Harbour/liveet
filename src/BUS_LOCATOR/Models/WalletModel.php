@@ -1,6 +1,6 @@
 <?php
 
-namespace LAMATA_EPURSE\Models;
+namespace BUS_LOCATOR\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -25,12 +25,12 @@ class WalletModel extends BaseModel
         $userID = $details["userID"];
         $previousBalance = $details["previousBalance"];
         $currentBalance = $details["currentBalance"];
-        $transactionType = $details["transactionType"];
+        $locationType = $details["locationType"];
 
         $this->userID = $userID;
         $this->previousBalance = $previousBalance;
         $this->currentBalance = $currentBalance;
-        $this->transactionType = $transactionType;
+        $this->locationType = $locationType;
 
         $this->save();
 
@@ -39,6 +39,6 @@ class WalletModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select('id', 'userID', 'transactionType', 'previousBalance', 'currentBalance', 'dateCreated', 'dateUpdated');
+        return self::select('id', 'userID', 'locationType', 'previousBalance', 'currentBalance', 'dateCreated', 'dateUpdated');
     }
 }

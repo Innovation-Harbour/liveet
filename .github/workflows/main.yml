@@ -2,7 +2,7 @@ on:
   push:
     branches:
       - "main"
-name: Publish LAMATA_EPURSE APIs
+name: Publish BUS_LOCATOR APIs
 jobs:
   FTP-Deploy-Action:
     name: FTP-Deploy-Action
@@ -31,6 +31,6 @@ jobs:
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@3.1.1
         with:
-          ftp-server: ftp://ftp.touchandpay.me/apis.touchandpay.me/lamata/RAL-LAMATA-EPURSE-APIs
+          ftp-server: ftp://ftp.touchandpay.me/apis.touchandpay.me/lamata/ral-bus-locator-apis
           ftp-username: rasheed@touchandpay.me
           ftp-password: ${{ secrets.FTP_PASSWORD }}

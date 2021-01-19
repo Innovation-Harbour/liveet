@@ -6,8 +6,8 @@ $appGroup->group(
     '/v1',
     function (RouteCollectorProxy $group) {
 
-        require "src/LAMATA_EPURSE/Routes/AdminRoutes.php";
+        require "src/BUS_LOCATOR/Routes/AdminRoutes.php";
 
-        require "src/LAMATA_EPURSE/Routes/OrganizationRoutes.php";
+        require "src/BUS_LOCATOR/Routes/OrganizationRoutes.php";
     }
 );

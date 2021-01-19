@@ -3,7 +3,7 @@
 require 'vendor/autoload.php';
 require 'bootstrap.php';
 
-use LAMATA_EPURSE\Domain\Constants;
+use BUS_LOCATOR\Domain\Constants;
 use Rashtell\Domain\JSON;
 use Slim\Factory\AppFactory;
 
@@ -12,9 +12,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Routing\RouteCollectorProxy;
 
 use Slim\Middleware\ContentLengthMiddleware;
-use LAMATA_EPURSE\Middlewares\CORSMiddleware;
-use LAMATA_EPURSE\Middlewares\LogMiddleware;
-use LAMATA_EPURSE\Middlewares\ToJsonMiddleware;
+use BUS_LOCATOR\Middlewares\CORSMiddleware;
+use BUS_LOCATOR\Middlewares\LogMiddleware;
+use BUS_LOCATOR\Middlewares\ToJsonMiddleware;
 use Slim\Exception\HttpNotFoundException;
 
 // error_reporting(0);
@@ -45,7 +45,7 @@ $app->add(new ContentLengthMiddleware());
 $app->group(
     $basePath,
     function (RouteCollectorProxy $appGroup) {
-        require 'src/LAMATA_EPURSE/Routes/index.php';
+        require 'src/BUS_LOCATOR/Routes/index.php';
     }
 );
 

@@ -1,24 +1,17 @@
 <?php
 
-namespace LAMATA_EPURSE\Controllers;
+namespace BUS_LOCATOR\Controllers;
 
-use LAMATA_EPURSE\Domain\Constants;
-use LAMATA_EPURSE\Domain\MailHandler;
+use BUS_LOCATOR\Domain\Constants;
+use BUS_LOCATOR\Domain\MailHandler;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\JSON;
-use LAMATA_EPURSE\Models\AdminModel;
+use BUS_LOCATOR\Models\AdminModel;
+use BUS_LOCATOR\Models\OrganizationModel;
 
 class AdminController extends BaseController
 {
-    private const PRIVILEDGE_CREATE_ADMIN = Constants::PRIVILEDGE_CREATE_ADMIN;
-    private const PRIVILEDGE_GET_ANY_ADMIN = Constants::PRIVILEDGE_GET_ANY_ADMIN;
-    private const PRIVILEDGE_UPDATE_ANY_ADMIN = Constants::PRIVILEDGE_UPDATE_ANY_ADMIN;
-    private const PRIVILEDGE_RESET_PASSWORDS = Constants::PRIVILEDGE_RESET_PASSWORDS;
-    private const PRIVILEDGE_DELETE_ANY_ADMIN = Constants::PRIVILEDGE_DELETE_ANY_ADMIN;
-    private const PRIVILEDGE_LOGOUT_ANY_ADMIN = Constants::PRIVILEDGE_LOGOUT_ANY_ADMIN;
-
-
     //super admin exclusive
     public function createAdmin(Request $request, ResponseInterface $response): ResponseInterface
     {
@@ -28,7 +21,7 @@ class AdminController extends BaseController
 
         $ownerPriviledges = isset($authDetails["priviledges"]) ? json_decode($authDetails["priviledges"]) : [];
 
-        if (!in_array(self::PRIVILEDGE_CREATE_ADMIN, $ownerPriviledges)) {
+        if (!in_array(Constants::PRIVILEDGE_CREATE_ADMIN, $ownerPriviledges)) {
             $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", 'statusCode' => 400];
 
             return $json->withJsonResponse($response, $error);
@@ -56,7 +49,7 @@ class AdminController extends BaseController
 
         $ownerPriviledges = isset($authDetails["priviledges"]) ? json_decode($authDetails["priviledges"]) : [];
 
-        if (!in_array(self::PRIVILEDGE_GET_ANY_ADMIN, $ownerPriviledges)) {
+        if (!in_array(Constants::PRIVILEDGE_GET_ANY_ADMIN, $ownerPriviledges)) {
             $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
 
             return $json->withJsonResponse($response, $error);
@@ -79,7 +72,7 @@ class AdminController extends BaseController
 
         $ownerPriviledges = isset($authDetails["priviledges"]) ? json_decode($authDetails["priviledges"]) : [];
 
-        if (!in_array(self::PRIVILEDGE_GET_ANY_ADMIN, $ownerPriviledges)) {
+        if (!in_array(Constants::PRIVILEDGE_GET_ANY_ADMIN, $ownerPriviledges)) {
             $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
 
             return $json->withJsonResponse($response, $error);
@@ -101,7 +94,7 @@ class AdminController extends BaseController
 
         $ownerPriviledges = isset($authDetails["priviledges"]) ? json_decode($authDetails["priviledges"]) : [];
 
-        if (!in_array(self::PRIVILEDGE_UPDATE_ANY_ADMIN, $ownerPriviledges)) {
+        if (!in_array(Constants::PRIVILEDGE_UPDATE_ANY_ADMIN, $ownerPriviledges)) {
 
             $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
 
@@ -125,7 +118,7 @@ class AdminController extends BaseController
 
         $ownerPriviledges = isset($authDetails["priviledges"]) ? json_decode($authDetails["priviledges"]) : [];
 
-        if (!in_array(self::PRIVILEDGE_RESET_PASSWORDS, $ownerPriviledges)) {
+        if (!in_array(Constants::PRIVILEDGE_RESET_PASSWORDS, $ownerPriviledges)) {
             $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
 
             return $json->withJsonResponse($response, $error);
@@ -153,7 +146,7 @@ class AdminController extends BaseController
 
         $ownerPriviledges = isset($authDetails["priviledges"]) ? json_decode($authDetails["priviledges"]) : [];
 
-        if (!in_array(self::PRIVILEDGE_DELETE_ANY_ADMIN, $ownerPriviledges)) {
+        if (!in_array(Constants::PRIVILEDGE_DELETE_ANY_ADMIN, $ownerPriviledges)) {
             $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
 
             return $json->withJsonResponse($response, $error);
@@ -176,7 +169,7 @@ class AdminController extends BaseController
 
         $ownerPriviledges = isset($authDetails["priviledges"]) ? json_decode($authDetails["priviledges"]) : [];
 
-        if (!in_array(self::PRIVILEDGE_LOGOUT_ANY_ADMIN, $ownerPriviledges)) {
+        if (!in_array(Constants::PRIVILEDGE_LOGOUT_ANY_ADMIN, $ownerPriviledges)) {
             $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
 
             return $json->withJsonResponse($response, $error);

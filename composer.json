@@ -1,7 +1,7 @@
 {
-  "name": "rashtell/lamata_epurse",
+  "name": "rashtell/lamata_bus_locator_apis",
   "type": "project",
-  "description":"APIs for Lamata-Epurse Integration",
+  "description":"APIs for locating lamata buses on the map",
   "require": {
     "illuminate/database": "^7.1",
     "slim/slim": "^4.4",
@@ -18,7 +18,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "LAMATA_EPURSE\\": "src/LAMATA_EPURSE/",
+      "BUS_LOCATOR\\": "src/BUS_LOCATOR/",
       "Rashtell\\":"src/Rashtell/"
     }
   }

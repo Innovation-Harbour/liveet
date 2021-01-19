@@ -1,6 +1,6 @@
 <?php
 
-namespace LAMATA_EPURSE\Middlewares;
+namespace BUS_LOCATOR\Middlewares;
 
 use Rashtell\Domain\JSON;
 use Rashtell\Http\Response;

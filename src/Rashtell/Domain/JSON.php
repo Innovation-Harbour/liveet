@@ -67,10 +67,29 @@ class JSON
 		$data = isset($data) ? $data : null;
 
 		$payload = isset($token) ?
-			array("success" => array("message" => $successMessage, "code" => $statusCode), "content" =>  $data ? array("data" => $data) : null, "token" => $token)
+			array(
+				"success" => array(
+					"message" => $successMessage, "code" => $statusCode
+				),
+				"content" =>  $data ? array("data" => $data) : null,
+				"token" => $token
+			)
 			: ($statusCode < 400 ?
-				array("success" => array("message" => $successMessage, "code" => $statusCode), "content" => $data ? array("data" => $data) : null) :
-				array("error" => array("message" => $errorMessage, "code" => $errorStatus)));
+				array(
+					"success" => array(
+						"message" => $successMessage, "code" => $statusCode
+					), "content" => $data
+						?
+						array(
+							"data" => $data
+						) : null
+				)
+				:
+				array(
+					"error" => array(
+						"message" => $errorMessage, "code" => $errorStatus
+					)
+				));
 
 		return $response->withStatus(200)
 			->withHeader('Content-Type', 'application/json')

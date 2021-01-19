@@ -1,13 +1,14 @@
 <?php
 
-namespace LAMATA_EPURSE\Domain;
+namespace BUS_LOCATOR\Domain;
 
 class Constants
 {
   const PRODUCTION_HOST = 'apis.touchandpay.me';
   const DEVELOPMENT_HOST = 'localhost';
-  const DEVELOPMENT_BASE_PATH = "/lamata/RAL-LAMATA-EPURSE-APIs";
-  const PRODUCTION_BASE_PATH = "/lamata/RAL-LAMATA-EPURSE-APIs";
+  const DEVELOPMENT_BASE_PATH = "/lamata/ral-bus-locator-apis";
+  const PRODUCTION_BASE_PATH = "/lamata/ral-bus-locator-apis
+  ";
 
   const USERTYPE_USER = 4;
   const USERTYPE_ADMIN = 0;
@@ -23,12 +24,12 @@ class Constants
   const TRANSACTION_CHECK_OUT = 'CHECK_OUT';
   const TRANSACTION_CHECK_IN_OUT = 'CHECK_IN_OUT';
 
-  const CARD_TYPE = ['TAP', 'EPURSE'];
+  const CARD_TYPE = ['TAP'];
 
   const USER_VERIFIED = 1;
   const EMAIL_VERIFIED = 1;
 
-  const DEFAULT_RESET_PASSWORD = 'LAMATA_EPURSE_12345';
+  const DEFAULT_RESET_PASSWORD = 'BUS_LOCATOR_12345';
 
   const PRIVILEDGE_CREATE_ADMIN = 0;
   const PRIVILEDGE_GET_ANY_ADMIN = 1;

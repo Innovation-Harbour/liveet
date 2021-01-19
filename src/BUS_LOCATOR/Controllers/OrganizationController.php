@@ -1,11 +1,11 @@
 <?php
 
-namespace LAMATA_EPURSE\Controllers;
+namespace BUS_LOCATOR\Controllers;
 
-use LAMATA_EPURSE\Domain\MailHandler;
+use BUS_LOCATOR\Domain\MailHandler;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use LAMATA_EPURSE\Models\OrganizationModel;
+use BUS_LOCATOR\Models\OrganizationModel;
 use Rashtell\Domain\CodeLibrary;
 use Rashtell\Domain\JSON;
 use Rashtell\Domain\KeyManager;
@@ -31,7 +31,7 @@ class OrganizationController extends BaseController
             return $json->withJsonResponse($response, $allInputs['error']);
         }
 
-        $data = $model->authenticatePublicKey($allInputs);
+        $data = $model->authenticateWithPublicKey($allInputs);
 
         if ($data['error']) {
             $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400, 'data' => null);
@@ -56,6 +56,45 @@ class OrganizationController extends BaseController
         return (new BaseController)->getAll($request, $response, new OrganizationModel());
     }
 
+    public function getOrganizationById(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        return (new BaseController)->getById($request, $response, new OrganizationModel());
+    }
+
+    public function getOrganizationByIdProperty(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        ['property' => $property, 'error' => $error] = $this->getRouteParams($request, ["property"]);
+
+        return (new BaseController)->getById($request, $response, new OrganizationModel(), $return = $property);
+    }
+
+    public function updateOrganizationByIdPublicKey(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $json = new JSON();
+
+        ['id' => $id, 'error' => $error] = $this->getRouteParams($request, ["id"]);
+
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $data = (new OrganizationModel())->generateNewPublicKey(["id" => $id]);
+
+        if ($data['error']) {
+            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
+
+            return $json->withJsonResponse($response, $payload);
+        }
+
+        $payload = array('successMessage' => 'Requst success', 'statusCode' => 200, 'data' => $data['data']);
+
+        return $json->withJsonResponse($response, $payload);
+    }
+
+
+
+    /** */
+
     public function loginOrganization(Request $request, ResponseInterface $response)
     {
 
@@ -79,7 +118,7 @@ class OrganizationController extends BaseController
             return $json->withJsonResponse($response, $allInputs['error']);
         }
 
-        if ($allInputs['password'] == self::LAMATA_EPURSE_RESET_PASSWORD) {
+        if ($allInputs['password'] == self::BUS_LOCATOR_RESET_PASSWORD) {
             //TODO Redirect organization to change password page
         }
 

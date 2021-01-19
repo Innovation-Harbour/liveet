@@ -1,4 +1,2 @@
 
-# LAMATA EPURSE
-
-## lamata epurse integration
+# LAMATA BUS LOCATOR

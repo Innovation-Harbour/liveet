@@ -1,9 +1,9 @@
 <?php
 
-namespace LAMATA_EPURSE\Models;
+namespace BUS_LOCATOR\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
-use LAMATA_EPURSE\Domain\Constants;
+use BUS_LOCATOR\Domain\Constants;
 use Rashtell\Domain\CodeLibrary;
 
 class OrganizationModel extends BaseModel
@@ -18,15 +18,11 @@ class OrganizationModel extends BaseModel
 
     protected $dateFormat = 'U';
 
-    public function transactions()
+    public function locations()
     {
-        return $this->hasMany(TransactionModel::class, "userID");
+        return $this->hasMany(LocationModel::class, "userID");
     }
 
-    public function wallets()
-    {
-        return $this->hasMany(WalletModel::class, "userID");
-    }
 
     public function authenticate($token)
     {
@@ -47,15 +43,19 @@ class OrganizationModel extends BaseModel
         return ['isAuthenticated' => false, 'error' => 'Expired session'];
     }
 
-    public function authenticatePublicKey($details)
+    public function authenticateWithPublicKey($details)
     {
         $publicKey = $details["publicKey"];
 
-        $user = $this->find(["publicKey" => $publicKey]);
-
+        $user = $this->where(["publicKey" => $publicKey])->exists();
         if (!$user) {
             return ["data" => null, "error" => "Invalid credential"];
         }
+
+        // $user = $this->find(["publicKey" => $publicKey]);
+        // if (!$user or sizeof($user) == 0) {
+        //     return ["data" => null, "error" => "Invalid credential"];
+        // }
 
         return ["data" => $this->getStruct()->where("publicKey", $publicKey)->first(), "error" => null];
     }
@@ -75,7 +75,7 @@ class OrganizationModel extends BaseModel
         $user->publicKey = $publicKey;
         $user->save();
 
-        return ["data" => ["publicKey" => $publicKey]];
+        return ["data" => ["publicKey" => $publicKey], "error" => null];
     }
 
     public function getStruct()

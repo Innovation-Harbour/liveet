@@ -1,13 +1,14 @@
 -- phpMyAdmin SQL Dump
--- version 5.0.4
+-- version 4.9.2
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Jan 03, 2021 at 11:45 PM
--- Server version: 10.4.17-MariaDB
--- PHP Version: 8.0.0
+-- Host: 127.0.0.1
+-- Generation Time: Jan 19, 2021 at 03:00 AM
+-- Server version: 10.4.11-MariaDB
+-- PHP Version: 7.4.1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -53,7 +54,28 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id`, `name`, `phone`, `email`, `address`, `userType`, `phoneVerified`, `emailVerified`, `username`, `password`, `publicKey`, `authToken`, `emailVerificationToken`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
-(3, 'Tella Abdulrasheed', '08134738157', 'rasheed@touchandpay.me', 'Lagos', 0, 0, 0, 'rashtell', '4cf1736ddf7d42aba830831643cd6dd0c3f0cc12e85ab5688b5f999e98ec8d37', 'OzdyIQ2TzIYD', NULL, '6587455810569865541056566896116695967896597', '[0,1,2,3,4,5,6,7,8,9]', '1609628433', '1609628775', NULL);
+(3, 'Tella Abdulrasheed', '08134738157', 'rasheed@touchandpay.me', 'Lagos', 0, 0, 0, 'rashtell', '4cf1736ddf7d42aba830831643cd6dd0c3f0cc12e85ab5688b5f999e98ec8d37', '1T4jwElhC2ea', NULL, '6587455810569865541056566896116695967896597', '[0,1,2,3,4,5,6,7,8,9]', '1609628433', '1610985342', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `locations`
+--
+
+DROP TABLE IF EXISTS `locations`;
+CREATE TABLE `locations` (
+  `id` int(11) NOT NULL,
+  `organizationID` int(11) DEFAULT NULL,
+  `busID` varchar(50) DEFAULT NULL,
+  `lat` varchar(30) DEFAULT NULL,
+  `lng` varchar(30) DEFAULT NULL,
+  `issuerID` varchar(255) DEFAULT NULL,
+  `issuerName` varchar(200) DEFAULT NULL,
+  `time` varchar(20) DEFAULT NULL,
+  `dateCreated` varchar(15) DEFAULT NULL,
+  `dateUpdated` varchar(15) DEFAULT NULL,
+  `dateDeleted` varchar(15) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -86,31 +108,9 @@ CREATE TABLE `organizations` (
 -- Dumping data for table `organizations`
 --
 
--- INSERT INTO `organizations` (`id`, `name`, `phone`, `email`, `address`, `userType`, `phoneVerified`, `emailVerified`, `username`, `password`, `publicKey`, `authToken`, `emailVerificationToken`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
--- (4, 'TAP', '08134738157', 'info@lamata.com', 'Lagos', 1, 0, 0, NULL, NULL, 'jylP5Qedpr81cRJP2xzxUZBjIgStrAfZYEb6lsSB', NULL, NULL, '[]', '1609629663', '1609629663', NULL);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `locations`
---
-
-DROP TABLE IF EXISTS `locations`;
-CREATE TABLE `locations` (
-  `id` int(11) NOT NULL,
-  `userID` int(11) NOT NULL,
-  `entryPoint` varchar(100) DEFAULT NULL,
-  `entryTime` varchar(15) DEFAULT NULL,
-  `exitPoint` varchar(100) DEFAULT NULL,
-  `exitTime` varchar(15) DEFAULT NULL,
-  `cardType` varchar(50) NOT NULL,
-  `cardSerial` varchar(50) NOT NULL,
-  `busID` varchar(50) NOT NULL,
-  `amount` varchar(50) NOT NULL,
-  `dateCreated` varchar(15) DEFAULT NULL,
-  `dateUpdated` varchar(15) DEFAULT NULL,
-  `dateDeleted` varchar(15) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO `organizations` (`id`, `name`, `phone`, `email`, `address`, `userType`, `phoneVerified`, `emailVerified`, `username`, `password`, `publicKey`, `authToken`, `emailVerificationToken`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
+(5, 'TAP', '08134738157', 'info@touchandpay.me', 'Lagos', 1, 0, 0, NULL, NULL, 'GWgnQQWIdnjLlnZoKvPGaTsGuURmhZzVUjAWorwp', NULL, NULL, '[]', '1610985391', '1611009962', NULL),
+(6, 'LAMATA', '08134738158', 'helo@touchandpay.me', 'Lagos', 1, 0, 0, NULL, NULL, 'XpKuiFLTNWp7FpnLKTr1UEo55Ny0QJhER33alJa3', NULL, NULL, '[]', '1611019693', '1611019693', NULL);
 
 -- --------------------------------------------------------
 
@@ -139,23 +139,6 @@ CREATE TABLE `users` (
   `dateDeleted` varchar(15) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `wallets`
---
-
-DROP TABLE IF EXISTS `wallets`;
-CREATE TABLE `wallets` (
-  `id` int(11) NOT NULL,
-  `userID` int(11) NOT NULL,
-  `previousBalance` varchar(100) NOT NULL DEFAULT '0',
-  `currentBalance` varchar(100) NOT NULL DEFAULT '0',
-  `dateCreated` varchar(15) DEFAULT NULL,
-  `dateUpdated` varchar(15) DEFAULT NULL,
-  `dateDeleted` varchar(15) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 --
 -- Indexes for dumped tables
 --
@@ -167,27 +150,21 @@ ALTER TABLE `admins`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `organizations`
---
-ALTER TABLE `organizations`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `locations`
 --
 ALTER TABLE `locations`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `users`
+-- Indexes for table `organizations`
 --
-ALTER TABLE `users`
+ALTER TABLE `organizations`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `wallets`
+-- Indexes for table `users`
 --
-ALTER TABLE `wallets`
+ALTER TABLE `users`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -201,27 +178,21 @@ ALTER TABLE `admins`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `organizations`
---
-ALTER TABLE `organizations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
 -- AUTO_INCREMENT for table `locations`
 --
 ALTER TABLE `locations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `organizations`
+--
+ALTER TABLE `organizations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `wallets`
---
-ALTER TABLE `wallets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 

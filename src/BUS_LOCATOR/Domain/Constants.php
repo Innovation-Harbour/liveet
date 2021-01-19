@@ -7,8 +7,7 @@ class Constants
   const PRODUCTION_HOST = 'apis.touchandpay.me';
   const DEVELOPMENT_HOST = 'localhost';
   const DEVELOPMENT_BASE_PATH = "/lamata/ral-bus-locator-apis";
-  const PRODUCTION_BASE_PATH = "/lamata/ral-bus-locator-apis
-  ";
+  const PRODUCTION_BASE_PATH = "/lamata/ral-bus-locator-apis";
 
   const USERTYPE_USER = 4;
   const USERTYPE_ADMIN = 0;

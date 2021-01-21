@@ -52,6 +52,12 @@ isset($group) && $group->group(
     function (RouteCollectorProxy $organizationGroup) {
 
         $organizationGroup->post(
+            '/login/organization',
+
+            OrganizationController::class . ':loginOrganization'
+        );
+
+        $organizationGroup->post(
             '/authenticate/organization',
 
             OrganizationController::class . ':authenticateOrganization'

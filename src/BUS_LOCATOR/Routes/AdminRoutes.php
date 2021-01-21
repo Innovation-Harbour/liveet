@@ -84,6 +84,11 @@ isset($group) && $group->group(
             '/logout/admin/{id}',
             AdminController::class . ':logoutAdminById'
         );
+
+        $adminGroup->post(
+            '/generate/hash',
+            AdminController::class . ':generateHash'
+        );
     }
 )
     ->addMiddleware(new AuthenticationMiddleware((new AdminModel())));

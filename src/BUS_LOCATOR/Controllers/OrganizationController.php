@@ -46,9 +46,14 @@ class OrganizationController extends BaseController
         return $json->withJsonResponse($response, $payload)->withHeader('token', 'bearer ' . $token);
     }
 
+    public function loginOrganization(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        return (new BaseController)->login($request, $response, new OrganizationModel(), ['username', 'password']);
+    }
+
     public function createOrganization(Request $request, ResponseInterface $response)
     {
-        return (new BaseController)->create($request, $response, new OrganizationModel(), ['name', 'phone', 'email', 'address'], ['isAccount' => false, 'sendMail' => true, 'userType' => MailHandler::USER_TYPE_ORGANIZATION]);
+        return (new BaseController)->create($request, $response, new OrganizationModel(), ['username', 'password', 'name', 'phone', 'email', 'address'], ['isAccount' => true, 'sendMail' => true, 'userType' => MailHandler::USER_TYPE_ORGANIZATION]);
     }
 
     public function getOrganizations(Request $request, ResponseInterface $response): ResponseInterface
@@ -91,66 +96,7 @@ class OrganizationController extends BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-
-
     /** */
-
-    public function loginOrganization(Request $request, ResponseInterface $response)
-    {
-
-        $json = new JSON();
-
-        $inputs = ["email", "password"];
-        $model = (new OrganizationModel());
-
-        ['data' => $data, 'error' => $error] = (new OrganizationController())->getValidJsonOrError($request);
-
-
-        if ($error) {
-
-            return $json->withJsonResponse($response, $error);
-        }
-
-        $allInputs =  (new OrganizationController())->valuesExistsOrError($data, $inputs);
-
-        if ($allInputs['error']) {
-
-            return $json->withJsonResponse($response, $allInputs['error']);
-        }
-
-        if ($allInputs['password'] == self::BUS_LOCATOR_RESET_PASSWORD) {
-            //TODO Redirect organization to change password page
-        }
-
-        $kmg = new KeyManager();
-        $password = $kmg->getDigest($allInputs['password']);
-
-        $cLib = new CodeLibrary();
-        $publicKey = $cLib->genID(12, 1);
-
-        $allInputs['password'] = $password;
-        $allInputs['publicKey'] = $publicKey;
-
-        $data = $model->login($allInputs);
-
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 401, 'data' => null);
-
-            return $json->withJsonResponse($response, $payload);
-        }
-
-        $token = (new KeyManager())->createClaims(json_decode($data["data"], true));
-
-        if (isset($data["organizations"])) {
-            $data["data"]["organizations"] = $data["organizations"];
-        }
-
-        unset($data["data"]["publicKey"]);
-
-        $payload = array('successMessage' => 'Login successful', 'statusCode' => 200, 'data' => $data['data'], 'token' => $token);
-
-        return $json->withJsonResponse($response, $payload)->withHeader('token', 'bearer ' . $token);
-    }
 
     public function getOrganization(Request $request, ResponseInterface $response): ResponseInterface
     {

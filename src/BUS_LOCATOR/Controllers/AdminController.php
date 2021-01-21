@@ -177,4 +177,31 @@ class AdminController extends BaseController
 
         return (new BaseController)->logoutById($request, $response, new AdminModel());
     }
+
+    public function generateHash(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $json = new JSON();
+        $model = new AdminModel();
+        $inputs = [];
+        $options = ['isAccount' => true ];
+        $override = [];
+
+        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $allInputs = $this->valuesExistsOrError($data, $inputs);
+        if ($allInputs['error']) {
+            return $json->withJsonResponse($response, $allInputs['error']);
+        }
+
+        $allInputs = $this->appendSecurity($allInputs, $options);
+
+        $data = $allInputs["password"];
+
+        $payload = ['successMessage' => 'Generated successfully', 'statusCode' => 200, 'data' => $data];
+
+        return $json->withJsonResponse($response, $payload);
+    }
 }

@@ -78,18 +78,38 @@ class OrganizationModel extends BaseModel
         return ["data" => ["publicKey" => $publicKey], "error" => null];
     }
 
-    public function getStruct()
+
+    public function login($details)
     {
-        return $this->select('id', 'name', 'phone', 'email', 'userType', 'publicKey', 'dateCreated', 'dateUpdated');
+        $username = $details['username'];
+        $password = $details['password'];
+        $publicKey = $details['publicKey'];
+
+        if (!(new BaseModel())->isExist($this->where('username', $username)->where('password', $password))) {
+            return ['error' => 'Invalid Login credential', 'data' => null];
+        }
+
+        // self::where('username', $username)->where('password', $password)->update([
+        //     'publicKey' => $publicKey
+        // ]);
+
+        $user = self::select('id', 'username', 'name', 'phone', 'email', 'userType', 'phoneVerified', 'emailVerified', 'publicKey', 'dateCreated', 'dateUpdated')->where('username', $username)->where('username', $username)->where('password', $password)->first();
+
+        return ['data' => $user, 'error' => ''];
     }
 
     public function create($details)
     {
+        $username = $details['username'];
+        $password = $details['password'];
         $name = $details['name'];
         $phone = $details['phone'];
         $email = $details['email'];
-        $address = $details['address'];
+        $address = $details['address'] ?? "";
 
+        if ($this->isExist(self::select('id')->where('username', $username))) {
+            return ['error' => 'Username exists', 'data' => null];
+        }
         if ($this->isExist(self::select('id')->where('phone', $phone))) {
             return ['error' => 'Phone number exists', 'data' => null];
         }
@@ -97,6 +117,8 @@ class OrganizationModel extends BaseModel
             return ['error' => 'Email exists', 'data' => null];
         }
 
+        $this->username = $username;
+        $this->password = $password;
         $this->phone = $phone;
         $this->name = $name;
         $this->phone = $phone;
@@ -106,12 +128,17 @@ class OrganizationModel extends BaseModel
 
         $this->save();
 
-        $id = $this->select('id')->where('phone', $phone)->where('email', $email)->first()['id'];
+        $id = $this->select('id', 'username', 'name', 'phone', 'email', 'userType', 'publicKey', 'dateCreated', 'dateUpdated')->where('username', $username)->where('phone', $phone)->first()['id'];
 
-        $this->generateNewPublicKey(["id" => $id]);
+        // $this->generateNewPublicKey(["id" => $id]);
 
         $organization = $this->get($id);
 
         return ['data' => $organization['data'], 'error' => $organization['error']];
+    }
+
+    public function getStruct()
+    {
+        return $this->select('id', 'username', 'name', 'phone', 'email', 'userType', 'phoneVerified', 'emailVerified', 'publicKey', 'dateCreated', 'dateUpdated');
     }
 }

@@ -44,4 +44,27 @@ class LocationController extends BaseController
 
         return (new BaseController)->getByDateWithConditions($request, $response, new LocationModel(), ["organizationID" => $id, "busID" => $busID]);
     }
+
+    public function getSelfBusLocationsByOptions(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        ["id" => $id] = self::getTokenInputsFromRequest($request);
+
+        ['busID' => $busID, "issuerID" => $issuerID, "from" => $from, "to" => $to, 'error' => $error] = $this->getRouteParams($request, ["busID", "issuerID", "from", "to"]);
+
+        $from = (isset($from) and $from != "-") ? $from : (int)(date("U")) - 86400;
+        $to = (isset($to) and $to != "-")  ? $to : date("U");
+
+        $conditions =  ["organizationID" => $id];
+        $override = ["from" => $from, "to" => $to];
+
+        if ($issuerID != "-") {
+            $conditions["issuerID"] = $issuerID;
+        }
+
+        if ($busID != "-") {
+            $conditions["busID"] = $busID;
+        }
+
+        return (new BaseController)->getByDateWithConditions($request, $response, new LocationModel(), $conditions, null, $override);
+    }
 }

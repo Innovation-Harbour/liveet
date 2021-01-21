@@ -47,7 +47,7 @@ class OrganizationController extends BaseController
     }
 
     public function loginOrganization(Request $request, ResponseInterface $response): ResponseInterface
-    {
+    {        
         return (new BaseController)->login($request, $response, new OrganizationModel(), ['username', 'password']);
     }
 

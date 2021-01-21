@@ -506,15 +506,17 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByDateWithConditions(Request $request, ResponseInterface $response, $model, $conditions, $return = null): ResponseInterface
+    public function getByDateWithConditions(Request $request, ResponseInterface $response, $model, $conditions, $return = null, $override = []): ResponseInterface
     {
         $json = new JSON();
 
         ['from' => $from, 'to' => $to, 'error' => $error] = $this->getRouteParams($request, ["from", "to"]);
-
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
+
+        $from = isset($override["from"]) ? $override["from"] : $from;
+        $to = isset($override["to"]) ? $override["to"] : $to;
 
         $data = $model->getByDateWithConditions($from, $to, $conditions, $return);
 

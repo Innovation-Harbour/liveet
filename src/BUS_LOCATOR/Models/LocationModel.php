@@ -60,6 +60,7 @@ class LocationModel extends BaseModel
 
     public function getByDateWithConditions($from, $to, $conditions, $return = null)
     {
+$conditions["organizationID"] = 5;
         if (!$this->isExist(static::select('id')->where($conditions)->where('time', '>=', $from)->where("time", "<=", $to))) {
             return ['data' => null, 'error' => 'No more data'];
         }

@@ -435,7 +435,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getAll(Request $request, ResponseInterface $response, $model, $return = null): ResponseInterface
+    public function getAll(Request $request, ResponseInterface $response, $model, $return = null, $conditions=null, $options): ResponseInterface
     {
         $json = new JSON();
 
@@ -447,7 +447,7 @@ class BaseController
 
         ['limit' => $limit, 'error' => $error] = $this->getPageLimit($request);
 
-        $data = $model->getAll($page, $limit, $return);
+        $data = $model->getAll($page, $limit, $return, $conditions, $options);
 
         if ($data['error']) {
             $payload = array('errorMessage' => $data['error'], 'errorStatus' => '1', 'statusCode' => 400);
@@ -552,7 +552,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getById(Request $request, ResponseInterface $response, $model, $return = null): ResponseInterface
+    public function getById(Request $request, ResponseInterface $response, $model, $return = null, $options = []): ResponseInterface
     {
         $json = new JSON();
 
@@ -562,7 +562,7 @@ class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->get($id, $return);
+        $data = $model->get($id, $return, $options);
 
         if ($data['error']) {
             $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);

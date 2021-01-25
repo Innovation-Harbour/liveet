@@ -67,4 +67,11 @@ class LocationController extends BaseController
 
         return (new BaseController)->getByDateWithConditions($request, $response, new LocationModel(), $conditions, null, $override);
     }
+
+    public function getIssuers(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        ["id" => $id] = self::getTokenInputsFromRequest($request);
+
+        return (new BaseController)->getAll($request, $response, new LocationModel(), ["issuerName", "issuerID"], ["organizationID" => $id], ["distinct" => true]);
+    }
 }

@@ -45,6 +45,12 @@ isset($group) && $group->group(
 
             LocationController::class . ':getSelfBusLocationsByOptions'
         );
+
+        $organizationGroup->get(
+            '/get/issuers',
+
+            LocationController::class . ':getIssuers'
+        );
     }
 )
     ->addMiddleware(new AuthenticationMiddleware((new OrganizationModel())));

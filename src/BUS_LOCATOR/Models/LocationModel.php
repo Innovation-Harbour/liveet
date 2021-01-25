@@ -68,4 +68,6 @@ class LocationModel extends BaseModel
 
         return ['data' => $allmodels, 'error' => ''];
     }
+
+    
 }

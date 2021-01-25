@@ -57,7 +57,7 @@ class BaseModel extends Model
         return static::select();
     }
 
-    public function getAll($page, $limit, $return = null)
+    public function getAll($page, $limit, $return = null, $conditions = null, $options = ["distinct" => false])
     {
         $start = ($page - 1) * $limit;
 
@@ -67,7 +67,27 @@ class BaseModel extends Model
 
         // $allmodels = $this->getStruct()->where('id', '>', '0')->offset($start)->limit($limit)->get();
 
-        $allmodels = $return ? $this->select($return)->where('id', '>', $start)->limit($limit)->get() : $this->getStruct()->where('id', '>', $start)->limit($limit)->get();
+        $allmodels = !$options["distinct"]  ? (
+            !$conditions ? (
+                $return ? 
+                    $this->select($return)->where('id', '>', $start)->limit($limit)->get() :
+                    $this->getStruct()->where('id', '>', $start)->limit($limit)->get()
+            ) : (
+                $return ? 
+                    $this->select($return)->where('id', '>', $start)->limit($limit)->get() : 
+                    $this->getStruct()->where('id', '>', $start)->where($conditions)->limit($limit)->get()
+                )
+            ) : (
+            !$conditions ? (
+                $return ? 
+                    $this->select($return)->where('id', '>', $start)->limit($limit)->distinct()->get() :
+                    $this->getStruct()->where('id', '>', $start)->limit($limit)->distinct()->get()
+                ) : (
+                $return ? 
+                    $this->select($return)->where('id', '>', $start)->limit($limit)->distinct()->get() : 
+                    $this->getStruct()->where('id', '>', $start)->where($conditions)->limit($limit)->distinct()->get()
+                )
+        );
 
         $total = static::count();
 
@@ -133,13 +153,13 @@ class BaseModel extends Model
         return ['data' => $allmodels, 'error' => ''];
     }
 
-    public function get($id, $return = null)
+    public function get($id, $return = null, $options = ["distinct" => false])
     {
         if (!$this::find($id)) {
             return ['data' => null, 'error' => 'Does not exist'];
         }
 
-        $model = $return ? $this->select($return)->where('id', $id)->first() : $this->getStruct()->where('id', $id)->first();
+        $model = ($return ? $this->select($return)->where('id', $id)->first() : $this->getStruct()->where('id', $id)->first());
 
         return ['data' => $model, 'error' => ''];
     }

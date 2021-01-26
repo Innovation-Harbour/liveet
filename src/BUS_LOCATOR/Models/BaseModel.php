@@ -57,39 +57,34 @@ class BaseModel extends Model
         return static::select();
     }
 
-    public function getAll($page, $limit, $return = null, $conditions = null, $options = ["distinct" => false])
+    public function getAll($page, $limit, $return = null, $conditions = null, $options = null)
     {
-        $start = ($page - 1) * $limit;
+        $minID = $this->min("id");
 
-        if (!$this->isExist(static::select('id')->where('id', '>', $start)->limit($limit))) {
+        $start = $minID + (($page - 1) * $limit) - 1;
+
+        if (!$this->isExist(static::select('id')->where('id', '>', $start))) {
             return ['data' => null, 'error' => 'No more data'];
         }
 
         // $allmodels = $this->getStruct()->where('id', '>', '0')->offset($start)->limit($limit)->get();
 
-        $allmodels = !$options["distinct"]  ? (
-            !$conditions ? (
-                $return ? 
-                    $this->select($return)->where('id', '>', $start)->limit($limit)->get() :
-                    $this->getStruct()->where('id', '>', $start)->limit($limit)->get()
-            ) : (
-                $return ? 
-                    $this->select($return)->where('id', '>', $start)->limit($limit)->get() : 
-                    $this->getStruct()->where('id', '>', $start)->where($conditions)->limit($limit)->get()
-                )
-            ) : (
-            !$conditions ? (
-                $return ? 
-                    $this->select($return)->where('id', '>', $start)->limit($limit)->distinct()->get() :
-                    $this->getStruct()->where('id', '>', $start)->limit($limit)->distinct()->get()
-                ) : (
-                $return ? 
-                    $this->select($return)->where('id', '>', $start)->limit($limit)->distinct()->get() : 
-                    $this->getStruct()->where('id', '>', $start)->where($conditions)->limit($limit)->distinct()->get()
-                )
-        );
+        $query = $return ?
+            $this->select($return)->where('id', '>', $start) :
+            $this->getStruct()->where('id', '>', $start);
 
-        $total = static::count();
+        if ($conditions) {
+            $query = $query->where($conditions);
+        }
+
+        if ($options and isset($options["distinct"]) and $options["distinct"]) {
+            $query = $query->distinct();
+        }
+
+        $query = $query->limit($limit);
+
+        $allmodels = $query->get();
+        $total = $query->count();
 
         return ['data' => ["all" => $allmodels, "total" => $total], 'error' => ''];
     }
@@ -142,13 +137,23 @@ class BaseModel extends Model
         return ['data' => $allmodels, 'error' => ''];
     }
 
-    public function getByDateWithConditions($from, $to, $conditions, $return = null)
+    public function getByDateWithConditions($from, $to, $conditions, $return = null, $options = null)
     {
         if (!$this->isExist(static::select('id')->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to))) {
             return ['data' => null, 'error' => 'No more data'];
         }
 
-        $allmodels = $return ? $this->select($return)->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get() : $this->getStruct()->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get();
+        $query = $return ? $this->select($return)->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to) : $this->getStruct()->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to);
+
+        if (isset($options["distinct"]) and $options["distinct"]) {
+            $query = $query->distinct();
+        }
+
+        if (isset($options["max"])) {
+            $max = [""];
+        }
+
+        $allmodels = $query->get();
 
         return ['data' => $allmodels, 'error' => ''];
     }

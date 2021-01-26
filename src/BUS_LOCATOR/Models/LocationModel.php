@@ -58,16 +58,41 @@ class LocationModel extends BaseModel
         return self::select('id', 'busID', 'lat', 'lng', 'issuerID', 'issuerName', 'time', 'dateCreated', 'dateUpdated');
     }
 
-    public function getByDateWithConditions($from, $to, $conditions, $return = null)
+    public function getByDateWithConditions($from, $to, $conditions, $return = null, $options = null)
     {
-        if (!$this->isExist(static::select('id')->where($conditions)->where('time', '>=', $from)->where("time", "<=", $to))) {
-            return ['data' => null, 'error' => 'No more data'];
+        // if (!$this->isExist(static::select('id')->where($conditions)->where('time', '>=', $from)->where("time", "<=", $to))) {
+        //     return ['data' => null, 'error' => 'No more data'];
+        // }
+
+        $query = $return ? $this->select($return) : $this->getStruct();
+
+        if (isset($options["raw"])) {
+
+            $query = $query->selectRaw($options["raw"]);
         }
 
-        $allmodels = $return ? $this->select($return)->where($conditions)->where('time', '>=', $from)->where("time", "<=", $to)->get() : $this->getStruct()->where($conditions)->where('time', '>=', $from)->where("time", "<=", $to)->get();
+        $query = $query->where($conditions);
+
+        if ($from != "-") {
+            $query = $query->where("time", '>=', $from);
+        }
+
+        if ($to != "-") {
+            $query = $query->where("time", "<=", $to);
+        }
+
+        if (isset($options["distinct"]) and $options["distinct"]) {
+            $query = $query->distinct();
+        }
+
+        if (isset($options["groupby"])) {
+            $query = $query->groupBy($options["groupby"]);
+        }
+
+        // var_dump($query->toSql(), $from, $to, $conditions, $return, $options);
+
+        $allmodels = $query->get();
 
         return ['data' => $allmodels, 'error' => ''];
     }
-
-    
 }

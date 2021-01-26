@@ -435,7 +435,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getAll(Request $request, ResponseInterface $response, $model, $return = null, $conditions=null, $options): ResponseInterface
+    public function getAll(Request $request, ResponseInterface $response, $model, $return = null, $conditions = null, $options = ["distinct" => false]): ResponseInterface
     {
         $json = new JSON();
 
@@ -506,7 +506,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByDateWithConditions(Request $request, ResponseInterface $response, $model, $conditions, $return = null, $override = []): ResponseInterface
+    public function getByDateWithConditions(Request $request, ResponseInterface $response, $model, $conditions, $return = null, $override = [], $options = ["distinct" => null, "max" => null]): ResponseInterface
     {
         $json = new JSON();
 
@@ -518,7 +518,7 @@ class BaseController
         $from = isset($override["from"]) ? $override["from"] : $from;
         $to = isset($override["to"]) ? $override["to"] : $to;
 
-        $data = $model->getByDateWithConditions($from, $to, $conditions, $return);
+        $data = $model->getByDateWithConditions($from, $to, $conditions, $return, $options);
 
         if ($data['error']) {
             $payload = array('errorMessage' => $data['error'], 'errorStatus' => '1', 'statusCode' => 400);

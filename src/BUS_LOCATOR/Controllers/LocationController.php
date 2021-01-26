@@ -51,8 +51,12 @@ class LocationController extends BaseController
 
         ['busID' => $busID, "issuerID" => $issuerID, "from" => $from, "to" => $to, 'error' => $error] = $this->getRouteParams($request, ["busID", "issuerID", "from", "to"]);
 
-        $from = (isset($from) and $from != "-") ? $from : (int)(date("U")) - 86400;
-        $to = (isset($to) and $to != "-")  ? $to : date("U");
+        if (isset($from) and $from == "-") {
+            // $from = (int)(date("U")) - 86400;
+            $options = [ "groupby" => ["busID"], "raw"=>"max(time) as time"];
+        }
+
+        // $to = (isset($to) and $to != "-")  ? $to : date("U");
 
         $conditions =  ["organizationID" => $id];
         $override = ["from" => $from, "to" => $to];
@@ -65,7 +69,7 @@ class LocationController extends BaseController
             $conditions["busID"] = $busID;
         }
 
-        return (new BaseController)->getByDateWithConditions($request, $response, new LocationModel(), $conditions, null, $override);
+        return (new BaseController)->getByDateWithConditions($request, $response, new LocationModel(), $conditions, null, $override, $options);
     }
 
     public function getIssuers(Request $request, ResponseInterface $response): ResponseInterface

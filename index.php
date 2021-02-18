@@ -3,7 +3,7 @@
 require 'vendor/autoload.php';
 require 'bootstrap.php';
 
-use BUS_LOCATOR\Domain\Constants;
+use Liveet\Domain\Constants;
 use Rashtell\Domain\JSON;
 use Slim\Factory\AppFactory;
 
@@ -12,9 +12,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Routing\RouteCollectorProxy;
 
 use Slim\Middleware\ContentLengthMiddleware;
-use BUS_LOCATOR\Middlewares\CORSMiddleware;
-use BUS_LOCATOR\Middlewares\LogMiddleware;
-use BUS_LOCATOR\Middlewares\ToJsonMiddleware;
+use Liveet\Middlewares\CORSMiddleware;
+use Liveet\Middlewares\LogMiddleware;
+use Liveet\Middlewares\ToJsonMiddleware;
 use Slim\Exception\HttpNotFoundException;
 
 // error_reporting(0);
@@ -45,7 +45,7 @@ $app->add(new ContentLengthMiddleware());
 $app->group(
     $basePath,
     function (RouteCollectorProxy $appGroup) {
-        require 'src/BUS_LOCATOR/Routes/index.php';
+        require 'src/Liveet/Routes/index.php';
     }
 );
 

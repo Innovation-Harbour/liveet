@@ -20,10 +20,6 @@ class Mailer
     public $htmlBody = '';
     public $textBody = '';
 
-    public function __construct()
-    {
-    }
-
     public function setUpMail()
     {
         $mail = new PHPMailer();
@@ -48,12 +44,15 @@ class Mailer
         //Set the subject line
         $mail->Subject = $this->subject;
 
+        //Set the body
+        $mail->Body = $this->htmlBody;
+
         //Read an HTML message body from an external file, convert referenced images to embedded,
         //convert HTML into a basic plain-text alternative body
-        $mail->msgHTML($this->htmlBody);
+        // $mail->msgHTML($this->htmlBody);
 
         //Replace the plain text body with one created manually
-        $mail->AltBody = $this->textBody;
+        $mail->AltBody = $this->textBody; 
 
         //Attach an image file
         // $mail->addAttachment('images/phpmailer_mini.png');

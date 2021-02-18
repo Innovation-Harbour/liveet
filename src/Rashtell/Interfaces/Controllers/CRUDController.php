@@ -7,7 +7,7 @@ use Slim\Psr7\Request;
 
 interface CRUDController
 {
-    public function create(Request $request, Response $response): Response;
+    public function createSelf(Request $request, Response $response): Response;
 
     public function getALL(Request $request, Response $response): Response;
 

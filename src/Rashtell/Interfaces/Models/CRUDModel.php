@@ -4,7 +4,7 @@ namespace Rashtell\Interfaces\Models;
 
 interface CRUDModel
 {
-    public function create(array $inputs): array;
+    public function createSelf(array $inputs): array;
 
     public function getALL(): array;
 

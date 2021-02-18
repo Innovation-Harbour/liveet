@@ -1,7 +1,7 @@
 {
-  "name": "rashtell/lamata_bus_locator_apis",
+  "name": "rashtell/liveet_apis",
   "type": "project",
-  "description":"APIs for locating lamata buses on the map",
+  "description":"APIs for Liveet project",
   "require": {
     "illuminate/database": "^7.1",
     "slim/slim": "^4.4",
@@ -18,7 +18,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "BUS_LOCATOR\\": "src/BUS_LOCATOR/",
+      "Liveet\\": "src/Liveet/",
       "Rashtell\\":"src/Rashtell/"
     }
   }

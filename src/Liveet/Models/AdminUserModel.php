@@ -13,6 +13,7 @@ class AdminUserModel extends BaseModel
     protected $table = 'admin_user';
     protected $dateFormat = 'U';
     protected $hidden = ["admin_password"];
+    protected $primaryKey = 'admin_user_id';
 
     public function adminFeatures()
     {
@@ -22,6 +23,31 @@ class AdminUserModel extends BaseModel
     public function adminAcitivityLogs()
     {
         return $this->hasMany(AdminActivityLogModel::class, "admin_user_id, admin_user_id");
+    }
+
+    public function authenticate($token)
+    {
+        $authDetails = (new BaseModel())->getTokenInputs($token);
+
+        if ($authDetails == []) {
+            return ['isAuthenticated' => false, 'error' => 'Invalid token'];
+        }
+
+        $public_key = $authDetails['public_key'];
+        $admin_username = $authDetails['admin_username'];
+        $usertype = $authDetails['usertype'];
+
+        $users =  self::where('public_key', $public_key)
+            ->where('admin_username', '=', $admin_username)
+            ->where('usertype', '=', $usertype)
+            ->take(1)
+            ->get();
+
+        foreach ($users as $user) {
+            return ($user->exists) ? ['isAuthenticated' => true, 'error' => ''] : ['isAuthenticated' => false, 'error' => 'Expired session'];
+        }
+
+        return ['isAuthenticated' => false, 'error' => 'Expired session'];
     }
 
     public function getDashboard()
@@ -37,96 +63,58 @@ class AdminUserModel extends BaseModel
 
     public function createSelf($details)
     {
-        $inputError = $this->checkInputError($details, ["email", "phone", "username"]);
+        $inputError = $this->checkInputError($details, ["admin_username", "admin_email",]);
         if (null != $inputError) {
             return $inputError;
         }
 
-        $username = $details['username'];
-        $password = $details['password'];
-        $name = $details['name'];
-        $phone = $details['phone'];
-        $email = $details['email'];
-        $address = $details['address'];
+        $admin_username = $details['admin_username'];
+        $admin_password = $details['admin_password'];
+        $admin_fullname = $details['admin_fullname'];
+        $admin_email = $details['admin_email'];
         $public_key = $details['public_key'];
-        $emailVerificationToken = $details['emailVerificationToken'];
-        $priviledges = json_encode($details['priviledges']);
+        $email_verification_token = $details['email_verification_token'];
+        $admin_priviledges = json_encode($details['admin_priviledges']);
 
-        $this->username = $username;
-        $this->password = $password;
-        $this->name = $name;
-        $this->phone = $phone;
-        $this->email = $email;
-        $this->address = $address;
+        $this->admin_username = $admin_username;
+        $this->admin_password = $admin_password;
+        $this->admin_fullname = $admin_fullname;
+        $this->admin_email = $admin_email;
         $this->public_key = $public_key;
-        $this->emailVerificationToken = $emailVerificationToken;
-        $this->priviledges = $priviledges;
-        $this->userType = Constants::USERTYPE_ADMIN;
+        $this->email_verification_token = $email_verification_token;
+        $this->admin_priviledges = $admin_priviledges;
+        $this->usertype = Constants::USERTYPE_ADMIN;
 
         $this->save();
 
-        $id = $this->select('id')->where('username', $username)->first()['id'];
+        $admin_user_id = $this->select('admin_user_id')->where('admin_username', $admin_username)->first()['admin_user_id'];
 
-        $admin = $this->get($id);
+        $admin = $this->get($admin_user_id, null, null, ["idKey" => "admin_user_id"]);
 
         return ['data' => $admin['data'], 'error' => $admin['error']];
     }
 
     public function login($details)
     {
-        $username = $details['username'];
-        $password = $details['password'];
+        $admin_username = $details['admin_username'];
+        $admin_password = $details['admin_password'];
         $public_key = $details['public_key'];
 
-        if (!(new BaseModel())->isExist($this->where('username', $username)->where('password', $password))) {
+        if (!(new BaseModel())->isExist($this->where('admin_username', $admin_username)->where('admin_password', $admin_password))) {
             return ['error' => 'Invalid Login credential', 'data' => null];
         }
 
-        self::where('username', $username)->where('password', $password)->update([
+        self::where('admin_username', $admin_username)->where('admin_password', $admin_password)->update([
             'public_key' => $public_key
         ]);
 
-        $admin = self::select('id', 'username', 'name', 'phone', 'email', 'address', 'userType', 'phoneVerified', 'emailVerified', 'priviledges', 'public_key', 'dateCreated', 'dateUpdated')->where('username', $username)->where('public_key', $public_key)->where('password', $password)->first();
+        $admin = self::select('admin_user_id', 'admin_fullname', 'admin_username', 'admin_password', 'admin_email', 'admin_priviledges', 'email_verified',  'public_key', 'usertype', 'created_at', 'updated_at')->where('admin_username', $admin_username)->where('public_key', $public_key)->where('admin_password', $admin_password)->first();
 
         return ['data' => $admin, 'error' => ''];
     }
 
     public function getStruct()
     {
-        return self::select('admin_user_id', 'admin_fullname', 'admin_username', 'admin_password', 'admin_phone', 'admin_email',  'phone_verified', 'email_verified', 'created_at', 'updated_at');
-    }
-
-    public function updateSelf($details)
-    {
-        $inputError = $this->checkInputError($details, ["id", "email", "phone", "username"]);
-        if (null != $inputError) {
-            return $inputError;
-        }
-
-        $id = $details['id'];
-        $username = $details['username'];
-        $name = $details['name'];
-        $phone = $details['phone'];
-        $email = $details['email'];
-        $address = $details['address'];
-
-        $admin = $this->find($id);
-
-        $admin->username = $username;
-        $admin->name = $name;
-        $admin->phone = $phone;
-        $admin->email = $email;
-        $admin->address = $address;
-
-        $admin->save();
-
-        $admin = $this->get($id);
-
-        return ['data' => $admin['data'], 'error' => $admin['error']];
-    }
-
-    public function updateById($details)
-    {
-        return $this->updateSelf($details);
+        return self::select('admin_user_id', 'admin_fullname', 'admin_username', 'admin_password', 'admin_email', 'admin_priviledges', 'email_verified',  'usertype', 'created_at', 'updated_at');
     }
 }

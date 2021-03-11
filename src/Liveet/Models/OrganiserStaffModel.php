@@ -93,7 +93,7 @@ class OrganiserStaffModel extends BaseModel
         //     'public_key' => $public_key
         // ]);
 
-        $user = self::select('id', 'username', 'name', 'phone', 'email', 'userType', 'phoneVerified', 'emailVerified', 'public_key', 'dateCreated', 'dateUpdated')->where('username', $username)->where('username', $username)->where('password', $password)->first();
+        $user = self::select('id', 'username', 'name', 'phone', 'email', 'usertype', 'phoneVerified', 'emailVerified', 'public_key', 'dateCreated', 'dateUpdated')->where('username', $username)->where('username', $username)->where('password', $password)->first();
 
         return ['data' => $user, 'error' => ''];
     }
@@ -124,11 +124,11 @@ class OrganiserStaffModel extends BaseModel
         $this->phone = $phone;
         $this->email = $email;
         $this->address = $address;
-        $this->userType = Constants::USER_TYPE_ORGANIZATION;
+        $this->usertype = Constants::USER_TYPE_ORGANIZATION;
 
         $this->save();
 
-        $id = $this->select('id', 'username', 'name', 'phone', 'email', 'userType', 'public_key', 'dateCreated', 'dateUpdated')->where('username', $username)->where('phone', $phone)->first()['id'];
+        $id = $this->select('id', 'username', 'name', 'phone', 'email', 'usertype', 'public_key', 'dateCreated', 'dateUpdated')->where('username', $username)->where('phone', $phone)->first()['id'];
 
         // $this->generateNewPublicKey(["id" => $id]);
 

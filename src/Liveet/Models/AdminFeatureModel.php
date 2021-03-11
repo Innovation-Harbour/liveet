@@ -9,6 +9,7 @@ class AdminFeatureModel extends BaseModel
 
     protected $table = 'admin_feature';
     protected $dateFormat = 'U';
+    protected $primaryKey = 'admin_feature_id';
 
     public function adminUsers()
     {

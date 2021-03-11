@@ -53,12 +53,12 @@ class OrganizationController extends BaseController
 
     public function createOrganization(Request $request, ResponseInterface $response)
     {
-        return (new BaseController)->createSelf($request, $response, new OrganizationModel(), ['username', 'password', 'name', 'phone', 'email', 'address'], ['isAccount' => true, 'sendMail' => true, 'userType' => MailHandler::USER_TYPE_ORGANIZATION]);
+        return (new BaseController)->createSelf($request, $response, new OrganizationModel(), ['username', 'password', 'name', 'phone', 'email', 'address'], ['isAccount' => true, 'sendMail' => true, 'usertype' => MailHandler::USER_TYPE_ORGANIZATION]);
     }
 
     public function getOrganizations(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->getAll($request, $response, new OrganizationModel());
+        return (new BaseController)->getByPage($request, $response, new OrganizationModel());
     }
 
     public function getOrganizationById(Request $request, ResponseInterface $response): ResponseInterface

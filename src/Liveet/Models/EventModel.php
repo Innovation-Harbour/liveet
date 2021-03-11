@@ -10,6 +10,8 @@ class EventModel extends BaseModel
     
     protected $table = 'event';
     protected $dateFormat = 'U';
+    protected $primaryKey = 'event_id';
+
 
     public function organiser()
     {

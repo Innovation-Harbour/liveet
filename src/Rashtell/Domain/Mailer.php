@@ -52,7 +52,7 @@ class Mailer
         // $mail->msgHTML($this->htmlBody);
 
         //Replace the plain text body with one created manually
-        $mail->AltBody = $this->textBody; 
+        $mail->AltBody = $this->textBody;
 
         //Attach an image file
         // $mail->addAttachment('images/phpmailer_mini.png');
@@ -64,8 +64,8 @@ class Mailer
         $mail = $this->setUpMail();
 
         //send the message, check for errors
-        // if (!$mail->send()) {
-        if (!mail($this->to, $this->subject, $this->textBody)) {
+        if (!$mail->send()) {
+            // if (!mail($this->to, $this->subject, $this->htmlBody)) {
 
             return ["error" => 'Message error: ' . $mail->ErrorInfo, "success" => ""];
         } else {

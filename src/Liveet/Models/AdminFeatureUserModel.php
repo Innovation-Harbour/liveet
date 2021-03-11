@@ -12,6 +12,7 @@ class AdminFeatureUserModel extends BaseModel
     protected $table = 'admin_feature_user';
     public $incrementing = true;
     protected $dateFormat = 'U';
+    protected $primaryKey = 'admin_feature_user_id';
 
     public function getStruct()
     {

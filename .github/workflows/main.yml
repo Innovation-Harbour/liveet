@@ -30,7 +30,7 @@ jobs:
 
       - name: FTP-Deploy-Action
         uses: SamKirkland/FTP-Deploy-Action@3.1.1
-        with:
-          ftp-server: ftp://ftp.liveet.com/apis.liveet.com
-          ftp-username: rashtell2@gmail.com
-          ftp-password: ${{ secrets.FTP_PASSWORD }}
+        # with:
+          # ftp-server: ftp://ftp.liveet.com/apis.liveet.com
+          # ftp-username: rashtell2@gmail.com
+          # ftp-password: ${{ secrets.FTP_PASSWORD }}

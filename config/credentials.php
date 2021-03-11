@@ -1,19 +1,16 @@
 <?php
 
+require 'vendor/autoload.php';
+
 use Liveet\Domain\Constants;
+use Dotenv\Dotenv;
 
-$db_host = 'localhost';
-$db_name = 'touchandpay_liveet';
-$db_user = 'root';
-$db_pass = '';
+$dotenv = Dotenv::createImmutable(__DIR__."/..");
+$dotenv->load();
 
-$basePath = Constants::DEVELOPMENT_BASE_PATH;
+$db_host = $_ENV['DB_HOST'];
+$db_name = $_ENV['DB_NAME'];
+$db_user = $_ENV['DB_USER'];
+$db_pass = $_ENV['DB_PWD'];
 
-if ($_SERVER['HTTP_HOST'] == Constants::PRODUCTION_HOST) {
-  $db_host = 'localhost';
-  $db_name = 'touchandpay_liveet';
-  $db_user = 'root';
-  $db_pass = '';
-
-  $basePath = Constants::PRODUCTION_BASE_PATH;
-}
+$basePath = $_ENV['BASE_PATH'];

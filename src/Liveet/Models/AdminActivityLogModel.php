@@ -10,6 +10,7 @@ class AdminActivityLogModel extends BaseModel
 
     protected $table = 'admin_activity_log';
     protected $dateFormat = 'U';
+    protected $primaryKey = 'activity_log_id';
 
     public function adminUser()
     {

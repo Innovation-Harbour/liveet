@@ -18,13 +18,13 @@ class BaseModel extends Model
             return ['isAuthenticated' => false, 'error' => 'Invalid token'];
         }
 
-        $public_key = $authDetails['public_key'];
+        $publicKey = $authDetails['publicKey'];
         $username = $authDetails['username'];
-        $userType = $authDetails['userType'];
+        $usertype = $authDetails['usertype'];
 
-        $users =  self::where('public_key', $public_key)
+        $users =  self::where('publicKey', $publicKey)
             ->where('username', '=', $username)
-            ->where('userType', '=', $userType)
+            ->where('usertype', '=', $usertype)
             ->take(1)
             ->get();
 
@@ -47,26 +47,58 @@ class BaseModel extends Model
         return (array) $auth;
     }
 
-    public function checkInputError($details, $required)
+    public function checkInputError($details, $uniqueColumns, $model = null)
     {
-        $checkExistsError =  $this->checkExistsError($details, $required);
+        $checkExistsError =  $this->checkExistsError($details, $uniqueColumns, $model);
         if (null != $checkExistsError) {
             return $checkExistsError;
         }
 
-        $checkFormatError = $this->checkFormatError($details, $required);
+        $checkFormatError = $this->checkFormatError($details, $uniqueColumns);
         if (null != $checkFormatError) {
             return $checkFormatError;
         }
     }
 
-    public function checkExistsError($details, $required)
+    /**
+     * Create mode - no primaryKey 
+     * Checks if the unique columns exists in the details payload and 
+     * also have unique values in the parent model
+     * returns null if truly unique else returns an error stating the 
+     * column not found in the detail payload or with common value in 
+     * the parent model
+     * 
+     * Update mode - primaryKey is required
+     * Checks if the unique columns exists in the details payload and 
+     * also have unique values in the parent model excluding itself
+     * returns null if truly unique else returns an error stating the 
+     * column not found in the detail payload or with common value in 
+     * the parent model excluding itself
+     *
+     *
+     * @param associative-array $details
+     * @param multi-dimensional-assosia-array[["detailsKey"=>String,"columnName"=>String,"errorText"=>String,"primaryKey"=>Boolean]]|string $uniqueColumns
+     * @param Model $model
+     * @return array[$error=>String]|null 
+     */
+    public function checkExistsError($details, $uniqueColumns, $model = null)
     {
+        $model = $model ?? $this;
         $existExceptions =  ["password"];
         $isCreate = true;
-        if (isset($details["id"])) {
-            $model = $this->find($details["id"]);
-            if (!$model) {
+        $id = null;
+
+        $id = (isset($uniqueColumns["id"]) && gettype($uniqueColumns["id"])) === "string" ? $uniqueColumns["id"] : $id;
+        foreach ($uniqueColumns as $uniqueColumn) {
+            if (gettype($uniqueColumn) === "array" && isset($uniqueColumn["primaryKey"])) {
+                $id =  $uniqueColumn["columnName"];
+                break;
+            }
+        }
+
+        if (isset($details[$id])) {
+            $modelExists = $this->find($details[$id]);
+            if (!$modelExists) {
                 return ['error' => Constants::ERROR_NOT_FOUND];
             }
 
@@ -74,14 +106,25 @@ class BaseModel extends Model
         }
 
         $returnVal = null;
-        foreach ($required as $key) {
+        foreach ($uniqueColumns as $uniqueColumn) {
+            $columnName = null;
+            $key = null;
+            $errorText = null;
+
+            $key = gettype($uniqueColumn) === "string" ? $uniqueColumn : $key;
+            if (gettype($uniqueColumn) === "array") {
+                $key = $uniqueColumn["detailsKey"] ?? $key;
+                $columnName = $uniqueColumn["columnName"] ?? $columnName;
+                $errorText = $uniqueColumn["errorText"] ?? $errorText;
+            }
+
             if (!isset($details[$key])) {
-                $returnVal = ["error" => $key . " is required"];
+                $returnVal = ["error" => ($errorText ?? $key) . " is required"];
                 break;
             }
 
             if (!$details[$key]) {
-                $returnVal = ["error" => $details[$key] . " is invalid"];
+                $returnVal = ["error" => ($errorText ?? $key) . " is invalid"];
                 break;
             }
 
@@ -90,13 +133,13 @@ class BaseModel extends Model
             }
 
             if ($isCreate) {
-                if ($this->isExist($this->select('id')->where($key, $details[$key]))) {
-                    $returnVal = ['error' => $key . ' exists'];
+                if ($model->isExist($model->where($columnName ?? $key, $details[$key]))) {
+                    $returnVal = ['error' => ($errorText ?? $key) . ' exists'];
                     break;
                 }
             } else {
-                if ($this->isExist($this::select('id')->where($key, $details[$key])->where('id', '!=', $details["id"]))) {
-                    $returnVal = ['error' => $key . ' exists'];
+                if ($model->isExist($model->where($columnName ?? $key, $details[$key])->where($id, '!=', $details[$id]))) {
+                    $returnVal = ['error' => ($errorText ?? $key) . ' exists'];
                     break;
                 }
             }
@@ -107,14 +150,25 @@ class BaseModel extends Model
 
     public function checkFormatError($details, $required)
     {
-        foreach ($required as $key) {
-            if (!isset($details[$key])) {
-                return ["error" => $key . " is required"];
+        foreach ($required as $require) {
+            $columnName = null;
+            $key = null;
+            $errorText = null;
+
+            $key = gettype($require) === "string" ? $require : $key;
+            if (gettype($require) === "array") {
+                $key = $require["detailsKey"];
+                $columnName = $require["columnName"];
+                $errorText = $require["errorText"];
             }
 
-            $arrsUnallowed = array("admin", "administrator", "username", "social", "intagram", "facebook", "twitter", "error");
+            if (!isset($details[$key])) {
+                return ["error" => ($errorText ?? $key) . " is required"];
+            }
 
-            if ($key == "username" && (!$details["username"] || preg_match('/[^a-z_\-0-9]/i', $details["username"]) || in_array($details["username"], $arrsUnallowed))) {
+            $username = array("admin", "administrator", "username", "social", "intagram", "facebook", "twitter", "error");
+
+            if ($key == "username" && (!$details["username"] || preg_match('/[^a-z_\-0-9]/i', $details["username"]) || in_array($details["username"], $username))) {
 
                 return ['error' => 'Invalid username'];
             }
@@ -132,7 +186,9 @@ class BaseModel extends Model
         return static::select();
     }
 
-    public function getAll($page, $limit, $return = null, $conditions = null, $options = null)
+    //TODO create a query contructor to append conditions, relationships and other query options
+
+    public function getByPage($page, $limit, $return = null, $conditions = null, $relationships = [], $queryOptions = null)
     {
         $minID = $this->min("id");
 
@@ -152,11 +208,15 @@ class BaseModel extends Model
             $query = $query->where($conditions);
         }
 
-        if ($options and isset($options["distinct"]) and $options["distinct"]) {
+        if ($queryOptions && isset($queryOptions["distinct"]) && $queryOptions["distinct"]) {
             $query = $query->distinct();
         }
 
         $query = $query->limit($limit);
+
+        if ($relationships) {
+            $query = $query->with($relationships);
+        }
 
         $allmodels = $query->get();
         $total = $query->count();
@@ -164,15 +224,319 @@ class BaseModel extends Model
         return ['data' => ["all" => $allmodels, "total" => $total], 'error' => ''];
     }
 
-    public function getByDate($from, $to, $return = null)
+    public function getByDate($from, $to, $return = null, $conditions = [],  $relationships = null, $queryOptions = [])
     {
-        if (!$this->isExist(static::select('id')->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to))) {
+        $columnDateCreated = 'dateCreated';
+        if (isset($queryOptions["dateCreatedColumn"])) {
+            $columnDateCreated = $queryOptions["dateCreatedColumn"];
+        }
+
+        if (!$this->select('id')->where($columnDateCreated, '>=', $from)->where($columnDateCreated, "<=", $to)->where($conditions)->exists()) {
             return ['data' => null, 'error' => Constants::ERROR_EMPTY_DATA];
         }
 
-        $allmodels = $return ? $this->select($return)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get() : $this->getStruct()->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get();
+        $query = $return ?
+            $this->select($return)
+            :
+            $this->getStruct();
 
-        return ['data' => $allmodels, 'error' => ''];
+        $query = $query->where($columnDateCreated, '>=', $from)->where($columnDateCreated, "<=", $to);
+
+        if ($conditions) {
+            $query = $query->where($conditions);
+        }
+
+        $total = $query->count();
+
+        if ($relationships) {
+            $query = $query->with($relationships);
+        }
+
+        $allmodels = $query->get();
+
+        return ['data' => ["all" => $allmodels, "total" => $total], 'error' => ''];
+    }
+
+    public function get($id, $return = null, $relationships = [], $queryOptions = null)
+    {
+        $idKey = $queryOptions["idKey"] ?? "id";
+
+        if (!$this->where([$idKey => $id])->exists()) {
+            return ['data' => null, 'error' => Constants::ERROR_NOT_FOUND];
+        }
+
+        $query = ($return ? $this->select($return) : $this->getStruct());
+
+        $query = $query->where($idKey, $id);
+
+        if ($relationships) {
+            $query = $query->with($relationships);
+        }
+
+        $model = $query->first();
+
+        return ['data' => $model, 'error' => ''];
+    }
+
+    public function getByConditions($conditions, $return = null, $relationships = [], $queryOptions = null)
+    {
+        if (!$this->select("id")->where($conditions)->exists()) {
+            return ['data' => null, 'error' => Constants::ERROR_NOT_FOUND];
+        }
+
+        $query = $return ? $this->select($return) : $this->getStruct();
+
+        if ($conditions) {
+            $query = $query->where($conditions);
+        }
+
+        if ($relationships) {
+            $query = $query->with($relationships);
+        }
+
+        $model = $query->get();
+
+        return ['data' => $model, 'error' => ''];
+    }
+
+    public function updateByColumnNames($columnNames, $allInputs, $checks = [], $queryOptions = [])
+    {
+        $inputError = $this->checkInputError($allInputs, $checks);
+        if (null != $inputError) {
+            return $inputError;
+        }
+
+        $query = $this;
+        $conditions = [];
+        foreach ($columnNames as $columnName) {
+            $query = $query->where($columnName, $allInputs[$columnName]);
+            $conditions[$columnName] = $allInputs[$columnName];
+
+            if (!$query->exists()) {
+                return ['error' => 'No match found', 'data' => null];
+            }
+        }
+
+        if (isset($queryOptions["modelOverrides"])) {
+            foreach ($queryOptions["modelOverrides"] as $modelOverrides) {
+                $allInputs[$modelOverrides["property"]] = $modelOverrides["model"]->where($modelOverrides["modelColumn"], $allInputs[$modelOverrides["inputKey"]])->first()[$modelOverrides["property"]];
+            }
+        }
+
+        $query->update($allInputs);
+
+        $model = $this->getByConditions($conditions);
+
+        return ['data' => $model['data'], 'error' => $model['error']];
+    }
+
+    public function updateByConditions($conditions, $allInputs, $checks = [])
+    {
+        $inputError = $this->checkInputError($allInputs, $checks);
+        if (null != $inputError) {
+            return $inputError;
+        }
+
+        $query = $this->where($conditions);
+        if (!$query->exists()) {
+            return ['error' => 'Error while updating', 'data' => null];
+        }
+
+        $query = $this->where($conditions);
+        if (!$query->exists()) {
+            return ['error' => 'Error while updating', 'data' => null];
+        }
+
+        $query->update($allInputs);
+
+        $model = $this->getByConditions($conditions);
+
+        return ['data' => $model['data'], 'error' => $model['error']];
+    }
+
+    public function updatePassword($id, $newPassword, $oldPassword)
+    {
+        $model = $this->find($id);
+        if (!$model) {
+            return ['error' => 'Error while updating the password', 'data' => null];
+        }
+
+        $password  = $model->password;
+
+        if ($oldPassword != $password) {
+
+            return ['error' => 'Incorrect password, please try again', "data" => [],];
+        }
+
+        $model->password = $newPassword;
+        $model->publicKey = null;
+        $model->save();
+
+        $model = $this->get($id);
+
+        return ['data' => $model['data'], 'error' => $model['error']];
+    }
+
+    public function resetPassword($id, $newPassword)
+    {
+        $model = $this->find($id);
+        if (!$model) {
+            return ['error' => 'Error while updating the password', 'data' => null];
+        }
+
+        $model->password = $newPassword;
+        $model->publicKey = null;
+        $model->save();
+
+        $model = $this->get($id);
+        $model["data"]["password"] = Constants::DEFAULT_RESET_PASSWORD;
+
+        return ['data' => $model['data'], 'error' => $model['error']];
+    }
+
+    public function forgotPassword($allInputs)
+    {
+        $email = $allInputs["email"];
+        $forgotPasswordToken = $allInputs["email_verification_token"];
+
+        if (!$this->select("id")->where("email", $email)->exists()) {
+            return ['error' => 'Email not registered', 'data' => null];
+        }
+
+        if ($this->select("emailVerified")->where("email", $email)->first()["emailVerified"] !== Constants::EMAIL_VERIFIED) {
+            return ['error' => 'Email not verified', 'data' => null];
+        }
+
+        $this->select("emailVerified")->where("email", $email)->update(["forgotPasswordToken" => $forgotPasswordToken]);
+
+
+        return ['data' => null, 'error' => null];
+    }
+
+    public function verifyForgotPassword($allInputs)
+    {
+        $forgotPasswordToken = $allInputs["forgotPasswordVerificationToken"];
+
+        if (!$this->select("id")->where("forgotPasswordToken", $forgotPasswordToken)->exists()) {
+            return ['error' => '', 'data' => null];
+        }
+
+        $this->select("emailVerified")->where("forgotPasswordToken", $forgotPasswordToken)->update(["forgotPasswordToken" => null]);
+
+        $model = self::select("id", "username",  "publicKey", "usertype")->where("forgotPasswordToken", $forgotPasswordToken)->first();
+
+        return ['data' => $model, 'error' => null];
+    }
+
+    public function verifyEmail($email_verification_token, $status)
+    {
+        if (!$this->isExist($this->select('id')->where('email_verification_token', $email_verification_token))) {
+            return ['error' => 'User not found, please register again', 'data' => null];
+        }
+
+        $id = $this->select('id')->where('email_verification_token', $email_verification_token)->first()['id'];
+
+        $model = static::find($id);
+
+        if ($model->verified > 0) {
+            return ["error" => "This email has already been verified, please login.", "data" => []];
+        }
+
+        $model->verified = $status;
+        $model->save();
+
+        $model = $this->get($id);
+
+        return ['data' => $model['data'], 'error' => $model['error']];
+    }
+
+    public function verifyUser($id, $status)
+    {
+        $model = $this->find($id);
+        if (!$model) {
+            return ['error' => 'Error while updating the status', 'data' => null];
+        }
+
+        if ($model->verified == 0) {
+            return ['error' => 'Email not verified'];
+        }
+
+        if ($model->verified > 1) {
+            return ['error' => "User already verified"];
+        }
+
+        $model->verified = $status;
+        $model->save();
+
+        $model = $this->get($id);
+
+        return ['data' => $model['data'], 'error' => $model['error']];
+    }
+
+    public function updateForgotPassword($id, $password)
+    {
+        $model = $this->find($id);
+        if (!$model) {
+            return ['error' => 'Error while changing the password', 'data' => null];
+        }
+
+        $model->password = $password;
+        $model->publicKey = null;
+        $model->save();
+
+        $model = $this->get($id);
+
+        return ['data' => $model['data'], 'error' => $model['error']];
+    }
+
+
+    public function deleteById($id)
+    {
+        $model = static::find($id);
+
+        if (!$model) {
+            return ['error' => 'User does not exist', 'data' => null];
+        }
+
+        $model->runSoftDelete();
+
+        return ['data' => ['deleted' => true], 'error' => ''];
+    }
+
+    public function logout($id)
+    {
+        $model = static::find($id);
+
+        if (!$model) {
+            return ["error" => "User does not exist", "data" => []];
+        }
+
+        $model->publicKey = null;
+        $model->save();
+
+        return ["data" => ["logout" => true], "error" => null];
+    }
+
+    /** Deprecation */
+
+    public function updateColumns($id, $allInputs)
+    {
+        $model = $this->find($id);
+        if (!$model) {
+            return ['error' => 'Error while updating', 'data' => null];
+        }
+
+        $model->update($allInputs);
+
+        // foreach ($allInputs as $columnName => $columnValue) {
+
+        //     $model->$columnName = $columnValue;
+        //     $model->save();
+        // }
+
+        $model = $this->get($id);
+
+        return ['data' => $model['data'], 'error' => $model['error']];
     }
 
     public function getByDateWithRelationship($from, $to, $relationships, $return = null)
@@ -210,38 +574,6 @@ class BaseModel extends Model
         }
 
         return ['data' => $allmodels, 'error' => ''];
-    }
-
-    public function getByDateWithConditions($from, $to, $conditions, $return = null, $options = null)
-    {
-        if (!$this->isExist(static::select('id')->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to))) {
-            return ['data' => null, 'error' => Constants::ERROR_EMPTY_DATA];
-        }
-
-        $query = $return ? $this->select($return)->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to) : $this->getStruct()->where($conditions)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to);
-
-        if (isset($options["distinct"]) and $options["distinct"]) {
-            $query = $query->distinct();
-        }
-
-        if (isset($options["max"])) {
-            $max = [""];
-        }
-
-        $allmodels = $query->get();
-
-        return ['data' => $allmodels, 'error' => ''];
-    }
-
-    public function get($id, $return = null, $options = ["distinct" => false])
-    {
-        if (!$this::find($id)) {
-            return ['data' => null, 'error' => Constants::ERROR_NOT_FOUND];
-        }
-
-        $model = ($return ? $this->select($return)->where('id', $id)->first() : $this->getStruct()->where('id', $id)->first());
-
-        return ['data' => $model, 'error' => ''];
     }
 
     public function getWithRelationships($id, $relationships, $return = null)
@@ -284,168 +616,5 @@ class BaseModel extends Model
                 }
             }
         }
-    }
-
-    public function getByColumn($columnName, $columnValue, $return = null)
-    {
-        if (!$this->getStruct()->where($columnName, $columnValue)->exists()) {
-            return ['data' => null, 'error' => Constants::ERROR_NOT_FOUND];
-        }
-
-        $model = $return ? $this->select($return)->where($columnName, $columnValue)->get() : $this->getStruct()->where($columnName, $columnValue)->get();
-
-        return ['data' => $model, 'error' => ''];
-    }
-
-    protected function updateByColumn($column, $allInputs)
-    {
-        $model = $this->where($column, $allInputs[$column]);
-        if (!isset($model)) {
-            return ['error' => 'Error while updating', 'data' => null];
-        }
-
-        $model->update($allInputs);
-
-        // foreach ($allInputs as $columnName => $columnValue) {
-
-        //     $model->$columnName = $columnValue;
-        //     $model->save();
-        // }
-
-        $model = $this->getByColumn($column, $allInputs[$column]);
-
-        return ['data' => $model['data'], 'error' => $model['error']];
-    }
-
-    protected function updateColumns($id, $allInputs)
-    {
-        $model = $this->find($id);
-        if (!$model) {
-            return ['error' => 'Error while updating', 'data' => null];
-        }
-
-        $model->update($allInputs);
-
-        // foreach ($allInputs as $columnName => $columnValue) {
-
-        //     $model->$columnName = $columnValue;
-        //     $model->save();
-        // }
-
-        $model = $this->get($id);
-
-        return ['data' => $model['data'], 'error' => $model['error']];
-    }
-
-    public function updatePassword($id, $newPassword, $oldPassword)
-    {
-        $model = $this->find($id);
-        if (!$model) {
-            return ['error' => 'Error while updating the password', 'data' => null];
-        }
-
-        $password  = $model->password;
-
-        if ($oldPassword != $password) {
-
-            return ['error' => 'Incorrect password, please try again', "data" => [],];
-        }
-
-        $model->password = $newPassword;
-        $model->public_key = null;
-        $model->save();
-
-        $model = $this->get($id);
-
-        return ['data' => $model['data'], 'error' => $model['error']];
-    }
-
-    public function resetPassword($id, $newPassword)
-    {
-        $model = $this->find($id);
-        if (!$model) {
-            return ['error' => 'Error while updating the password', 'data' => null];
-        }
-
-        $model->password = $newPassword;
-        $model->public_key = null;
-        $model->save();
-
-        $model = $this->get($id);
-        $model["data"]["password"] = BaseController::Liveet_RESET_PASSWORD;
-
-        return ['data' => $model['data'], 'error' => $model['error']];
-    }
-
-    public function verifyEmail($emailVerificationToken, $status)
-    {
-        if (!$this->isExist($this->select('id')->where('emailVerificationToken', $emailVerificationToken))) {
-            return ['error' => 'User not found, please register again', 'data' => null];
-        }
-
-        $id = $this->select('id')->where('emailVerificationToken', $emailVerificationToken)->first()['id'];
-
-        $model = static::find($id);
-
-        if ($model->verified > 0) {
-            return ["error" => "This email has already been verified, please login.", "data" => []];
-        }
-
-        $model->verified = $status;
-        $model->save();
-
-        $model = $this->get($id);
-
-        return ['data' => $model['data'], 'error' => $model['error']];
-    }
-
-    public function verifyUser($id, $status)
-    {
-        $model = $this->find($id);
-        if (!$model) {
-            return ['error' => 'Error while updating the status', 'data' => null];
-        }
-
-        if ($model->verified == 0) {
-            return ['error' => 'Email not verified'];
-        }
-
-        if ($model->verified > 1) {
-            return ['error' => "User already verified"];
-        }
-
-        $model->verified = $status;
-        $model->save();
-
-        $model = $this->get($id);
-
-        return ['data' => $model['data'], 'error' => $model['error']];
-    }
-
-    public function deleteById($id)
-    {
-        $model = static::find($id);
-
-        if (!$model) {
-            return ['error' => 'User does not exist', 'data' => null];
-        }
-
-        $model->runSoftDelete();
-
-        return ['data' => ['deleted' => true], 'error' => ''];
-    }
-
-    public function logout($id)
-    {
-        $model = static::find($id);
-
-        if (!$model) {
-            return ["error" => "User does not exist", "data" => []];
-        }
-
-        $model->public_key = null;
-        $model->save();
-
-        return ["data" => ["logout" => true], "error" => ""];
     }
 }

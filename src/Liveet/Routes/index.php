@@ -2,14 +2,10 @@
 
 use Slim\Routing\RouteCollectorProxy;
 
-$appGroup->group(
-    '/v1',
-    function (RouteCollectorProxy $group) {
+isset($appGroup) && $appGroup->group(
+    '',
+    function (RouteCollectorProxy $vGroup) {
 
-        // require "src/Liveet/Routes/AdminRoutes.php";
-
-        // require "src/Liveet/Routes/OrganizationRoutes.php";
-
-        require "src/Liveet/Routes/TestRoutes.php";
+        require "src/Liveet/Routes/v1/index.php";
     }
 );

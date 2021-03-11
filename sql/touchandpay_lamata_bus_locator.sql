@@ -35,14 +35,14 @@ CREATE TABLE `admins` (
   `phone` varchar(100) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `address` varchar(200) DEFAULT NULL,
-  `userType` int(11) NOT NULL DEFAULT 0,
+  `usertype` int(11) NOT NULL DEFAULT 0,
   `phoneVerified` int(11) NOT NULL DEFAULT 0,
   `emailVerified` int(11) NOT NULL DEFAULT 0,
   `username` varchar(100) DEFAULT NULL,
   `password` varchar(256) DEFAULT NULL,
   `public_key` varchar(256) DEFAULT NULL,
   `authToken` varchar(1000) DEFAULT NULL,
-  `emailVerificationToken` varchar(256) DEFAULT NULL,
+  `email_verification_token` varchar(256) DEFAULT NULL,
   `priviledges` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`priviledges`)),
   `dateCreated` varchar(15) DEFAULT NULL,
   `dateUpdated` varchar(15) DEFAULT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE `admins` (
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `name`, `phone`, `email`, `address`, `userType`, `phoneVerified`, `emailVerified`, `username`, `password`, `public_key`, `authToken`, `emailVerificationToken`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
+INSERT INTO `admins` (`id`, `name`, `phone`, `email`, `address`, `usertype`, `phoneVerified`, `emailVerified`, `username`, `password`, `public_key`, `authToken`, `email_verification_token`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
 (3, 'Tella Abdulrasheed', '08134738157', 'rasheed@touchandpay.me', 'Lagos', 0, 0, 0, 'rashtell', '4cf1736ddf7d42aba830831643cd6dd0c3f0cc12e85ab5688b5f999e98ec8d37', '1T4jwElhC2ea', NULL, '6587455810569865541056566896116695967896597', '[0,1,2,3,4,5,6,7,8,9]', '1609628433', '1610985342', NULL);
 
 -- --------------------------------------------------------
@@ -90,14 +90,14 @@ CREATE TABLE `organizations` (
   `phone` varchar(100) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `address` varchar(200) DEFAULT NULL,
-  `userType` int(11) NOT NULL DEFAULT 0,
+  `usertype` int(11) NOT NULL DEFAULT 0,
   `phoneVerified` int(11) NOT NULL DEFAULT 0,
   `emailVerified` int(11) NOT NULL DEFAULT 0,
   `username` varchar(100) DEFAULT NULL,
   `password` varchar(256) DEFAULT NULL,
   `public_key` varchar(256) DEFAULT NULL,
   `authToken` varchar(1000) DEFAULT NULL,
-  `emailVerificationToken` varchar(256) DEFAULT NULL,
+  `email_verification_token` varchar(256) DEFAULT NULL,
   `priviledges` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`priviledges`)),
   `dateCreated` varchar(15) DEFAULT NULL,
   `dateUpdated` varchar(15) DEFAULT NULL,
@@ -108,7 +108,7 @@ CREATE TABLE `organizations` (
 -- Dumping data for table `organizations`
 --
 
-INSERT INTO `organizations` (`id`, `name`, `phone`, `email`, `address`, `userType`, `phoneVerified`, `emailVerified`, `username`, `password`, `public_key`, `authToken`, `emailVerificationToken`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
+INSERT INTO `organizations` (`id`, `name`, `phone`, `email`, `address`, `usertype`, `phoneVerified`, `emailVerified`, `username`, `password`, `public_key`, `authToken`, `email_verification_token`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
 (5, 'TAP', '08134738157', 'info@touchandpay.me', 'Lagos', 1, 0, 0, NULL, NULL, 'GWgnQQWIdnjLlnZoKvPGaTsGuURmhZzVUjAWorwp', NULL, NULL, '[]', '1610985391', '1611009962', NULL),
 (6, 'LAMATA', '08134738158', 'helo@touchandpay.me', 'Lagos', 1, 0, 0, NULL, NULL, 'XpKuiFLTNWp7FpnLKTr1UEo55Ny0QJhER33alJa3', NULL, NULL, '[]', '1611019693', '1611019693', NULL);
 
@@ -125,14 +125,14 @@ CREATE TABLE `users` (
   `phone` varchar(100) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `address` varchar(200) DEFAULT NULL,
-  `userType` int(11) NOT NULL DEFAULT 0,
+  `usertype` int(11) NOT NULL DEFAULT 0,
   `phoneVerified` int(11) NOT NULL DEFAULT 0,
   `emailVerified` int(11) NOT NULL DEFAULT 0,
   `username` varchar(100) DEFAULT NULL,
   `password` varchar(256) DEFAULT NULL,
   `public_key` varchar(256) DEFAULT NULL,
   `authToken` varchar(1000) DEFAULT NULL,
-  `emailVerificationToken` varchar(256) DEFAULT NULL,
+  `email_verification_token` varchar(256) DEFAULT NULL,
   `priviledges` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`priviledges`)),
   `dateCreated` varchar(15) DEFAULT NULL,
   `dateUpdated` varchar(15) DEFAULT NULL,

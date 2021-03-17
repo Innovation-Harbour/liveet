@@ -9,12 +9,12 @@ class EventTicketUserModel extends BaseModel
 {
     use SoftDeletes;
     
-    protected $table = 'event_ticket_users';
+    protected $table = "event_ticket_users";
     public $incrementing = true;
-    protected $dateFormat = 'U';
+    protected $dateFormat = "U";
 
     public function getStruct()
     {
-        return self::select('event_ticket_user_id', 'event_ticket_id', 'user_id', 'user_face_id', 'created_at', 'updated_at');
+        return self::select("event_ticket_user_id", "event_ticket_id", "user_id", "user_face_id", "created_at", "updated_at");
     }
 }

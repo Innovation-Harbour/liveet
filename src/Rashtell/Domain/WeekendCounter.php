@@ -46,7 +46,7 @@ class WeekendCounter{
     }
 
     function dayOfWeek($day){
-        return date('w', $day);
+        return date("w", $day);
     }
 
     function getDayFirstMinute($day){

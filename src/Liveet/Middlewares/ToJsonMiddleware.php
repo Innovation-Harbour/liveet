@@ -22,11 +22,11 @@ class ToJsonMiddleware implements MiddlewareInterface
         $validJson = $json->jsonFormat($data);
 
         if ($validJson == NULL) {
-            $g = array('error' => array('message' => 'The parameter is not a valid object', 'status' => '1'));
+            $g = array("error" => array("message" => "The parameter is not a valid object", "status" => "1"));
             return $json->withJsonResponse($response, $g);
         }
 
-        $request->withAttribute('isJson', true);
+        $request->withAttribute("isJson", true);
         // $request->withBody($validJson);
 
         $response = $handler->handle($request);

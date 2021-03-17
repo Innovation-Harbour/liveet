@@ -8,8 +8,8 @@ class PaymentModel extends BaseModel
 {
     use SoftDeletes;
     
-    protected $table = 'payment';
-    protected $dateFormat = 'U';
+    protected $table = "payment";
+    protected $dateFormat = "U";
 
     public function user()
     {
@@ -21,25 +21,8 @@ class PaymentModel extends BaseModel
         return $this->belongsTo(EventTicketModel::class, "event_ticket_id", "event_ticket_id");
     }
 
-    public function createSelf($details)
-    {
-        $userID = $details["userID"];
-        $previousBalance = $details["previousBalance"];
-        $currentBalance = $details["currentBalance"];
-        $locationType = $details["locationType"];
-
-        $this->userID = $userID;
-        $this->previousBalance = $previousBalance;
-        $this->currentBalance = $currentBalance;
-        $this->locationType = $locationType;
-
-        $this->save();
-
-        return ["data" => $this->getStruct()->where("userID", $userID)->latest()->first(), "error" => ""];
-    }
-
     public function getStruct()
     {
-        return self::select('payment_id', 'event_ticket_id', 'user_id', 'payment_desc', 'payment_amount', 'payment_discount_amount', 'created_at', 'updated_at');
+        return self::select("payment_id", "event_ticket_id", "user_id", "payment_desc", "payment_amount", "payment_discount_amount", "created_at", "updated_at");
     }
 }

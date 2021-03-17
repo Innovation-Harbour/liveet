@@ -10,11 +10,11 @@ interface CRUDModel
 
     public function getALLUser(): array;
 
-    public function getOneUser(int $id): array;
+    public function getOneUser(int $pk): array;
 
     public function updateUser(array $inputs): array;
 
-    public function deleteUser(int $id): array;
+    public function deleteUser(int $pk): array;
 
-    public function logoutUser($id): array;
+    public function logoutUser($pk): array;
 }

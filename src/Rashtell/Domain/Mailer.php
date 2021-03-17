@@ -6,19 +6,19 @@ namespace Rashtell\Domain;
  * This example shows sending a message using a local sendmail binary.
  */
 
-date_default_timezone_set('Etc/UTC');
+date_default_timezone_set("Etc/UTC");
 //Import the PHPMailer class into the global namespace
 use PHPMailer\PHPMailer\PHPMailer;
 
 class Mailer
 {
-    public $from = '';
-    public $fromName = '';
-    public $to = '';
-    public $toName = '';
-    public $subject = '';
-    public $htmlBody = '';
-    public $textBody = '';
+    public $from = "";
+    public $fromName = "";
+    public $to = "";
+    public $toName = "";
+    public $subject = "";
+    public $htmlBody = "";
+    public $textBody = "";
 
     public function setUpMail()
     {
@@ -55,7 +55,7 @@ class Mailer
         $mail->AltBody = $this->textBody;
 
         //Attach an image file
-        // $mail->addAttachment('images/phpmailer_mini.png');
+        // $mail->addAttachment("images/phpmailer_mini.png");
         return $mail;
     }
 
@@ -67,9 +67,9 @@ class Mailer
         if (!$mail->send()) {
             // if (!mail($this->to, $this->subject, $this->htmlBody)) {
 
-            return ["error" => 'Message error: ' . $mail->ErrorInfo, "success" => ""];
+            return ["error" => "Message error: " . $mail->ErrorInfo, "success" => ""];
         } else {
-            return ["success" => 'Message sent!', "error" => ""];
+            return ["success" => "Message sent!", "error" => ""];
         }
     }
 }

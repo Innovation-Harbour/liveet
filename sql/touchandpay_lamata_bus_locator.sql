@@ -43,7 +43,7 @@ CREATE TABLE `admins` (
   `public_key` varchar(256) DEFAULT NULL,
   `authToken` varchar(1000) DEFAULT NULL,
   `email_verification_token` varchar(256) DEFAULT NULL,
-  `priviledges` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`priviledges`)),
+  `priviledges` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT "[]" CHECK (json_valid(`priviledges`)),
   `dateCreated` varchar(15) DEFAULT NULL,
   `dateUpdated` varchar(15) DEFAULT NULL,
   `dateDeleted` varchar(15) DEFAULT NULL
@@ -54,7 +54,7 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id`, `name`, `phone`, `email`, `address`, `usertype`, `phoneVerified`, `emailVerified`, `username`, `password`, `public_key`, `authToken`, `email_verification_token`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
-(3, 'Tella Abdulrasheed', '08134738157', 'rasheed@touchandpay.me', 'Lagos', 0, 0, 0, 'rashtell', '4cf1736ddf7d42aba830831643cd6dd0c3f0cc12e85ab5688b5f999e98ec8d37', '1T4jwElhC2ea', NULL, '6587455810569865541056566896116695967896597', '[0,1,2,3,4,5,6,7,8,9]', '1609628433', '1610985342', NULL);
+(3, "Tella Abdulrasheed", "08134738157", "rasheed@touchandpay.me", "Lagos", 0, 0, 0, "rashtell", "4cf1736ddf7d42aba830831643cd6dd0c3f0cc12e85ab5688b5f999e98ec8d37", "1T4jwElhC2ea", NULL, "6587455810569865541056566896116695967896597", "[0,1,2,3,4,5,6,7,8,9]", "1609628433", "1610985342", NULL);
 
 -- --------------------------------------------------------
 
@@ -65,7 +65,7 @@ INSERT INTO `admins` (`id`, `name`, `phone`, `email`, `address`, `usertype`, `ph
 DROP TABLE IF EXISTS `locations`;
 CREATE TABLE `locations` (
   `id` int(11) NOT NULL,
-  `organizationID` int(11) DEFAULT NULL,
+  `organiserID` int(11) DEFAULT NULL,
   `busID` varchar(50) DEFAULT NULL,
   `lat` varchar(30) DEFAULT NULL,
   `lng` varchar(30) DEFAULT NULL,
@@ -80,11 +80,11 @@ CREATE TABLE `locations` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `organizations`
+-- Table structure for table `organisers`
 --
 
-DROP TABLE IF EXISTS `organizations`;
-CREATE TABLE `organizations` (
+DROP TABLE IF EXISTS `organisers`;
+CREATE TABLE `organisers` (
   `id` int(11) NOT NULL,
   `name` varchar(100) DEFAULT NULL,
   `phone` varchar(100) DEFAULT NULL,
@@ -98,19 +98,19 @@ CREATE TABLE `organizations` (
   `public_key` varchar(256) DEFAULT NULL,
   `authToken` varchar(1000) DEFAULT NULL,
   `email_verification_token` varchar(256) DEFAULT NULL,
-  `priviledges` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`priviledges`)),
+  `priviledges` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT "[]" CHECK (json_valid(`priviledges`)),
   `dateCreated` varchar(15) DEFAULT NULL,
   `dateUpdated` varchar(15) DEFAULT NULL,
   `dateDeleted` varchar(15) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `organizations`
+-- Dumping data for table `organisers`
 --
 
-INSERT INTO `organizations` (`id`, `name`, `phone`, `email`, `address`, `usertype`, `phoneVerified`, `emailVerified`, `username`, `password`, `public_key`, `authToken`, `email_verification_token`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
-(5, 'TAP', '08134738157', 'info@touchandpay.me', 'Lagos', 1, 0, 0, NULL, NULL, 'GWgnQQWIdnjLlnZoKvPGaTsGuURmhZzVUjAWorwp', NULL, NULL, '[]', '1610985391', '1611009962', NULL),
-(6, 'LAMATA', '08134738158', 'helo@touchandpay.me', 'Lagos', 1, 0, 0, NULL, NULL, 'XpKuiFLTNWp7FpnLKTr1UEo55Ny0QJhER33alJa3', NULL, NULL, '[]', '1611019693', '1611019693', NULL);
+INSERT INTO `organisers` (`id`, `name`, `phone`, `email`, `address`, `usertype`, `phoneVerified`, `emailVerified`, `username`, `password`, `public_key`, `authToken`, `email_verification_token`, `priviledges`, `dateCreated`, `dateUpdated`, `dateDeleted`) VALUES
+(5, "TAP", "08134738157", "info@touchandpay.me", "Lagos", 1, 0, 0, NULL, NULL, "GWgnQQWIdnjLlnZoKvPGaTsGuURmhZzVUjAWorwp", NULL, NULL, "[]", "1610985391", "1611009962", NULL),
+(6, "LAMATA", "08134738158", "helo@touchandpay.me", "Lagos", 1, 0, 0, NULL, NULL, "XpKuiFLTNWp7FpnLKTr1UEo55Ny0QJhER33alJa3", NULL, NULL, "[]", "1611019693", "1611019693", NULL);
 
 -- --------------------------------------------------------
 
@@ -133,7 +133,7 @@ CREATE TABLE `users` (
   `public_key` varchar(256) DEFAULT NULL,
   `authToken` varchar(1000) DEFAULT NULL,
   `email_verification_token` varchar(256) DEFAULT NULL,
-  `priviledges` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`priviledges`)),
+  `priviledges` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT "[]" CHECK (json_valid(`priviledges`)),
   `dateCreated` varchar(15) DEFAULT NULL,
   `dateUpdated` varchar(15) DEFAULT NULL,
   `dateDeleted` varchar(15) DEFAULT NULL
@@ -156,9 +156,9 @@ ALTER TABLE `locations`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `organizations`
+-- Indexes for table `organisers`
 --
-ALTER TABLE `organizations`
+ALTER TABLE `organisers`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -184,9 +184,9 @@ ALTER TABLE `locations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `organizations`
+-- AUTO_INCREMENT for table `organisers`
 --
-ALTER TABLE `organizations`
+ALTER TABLE `organisers`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --

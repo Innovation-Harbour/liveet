@@ -8,9 +8,9 @@ interface CRUDModel
 
     public function getALL(): array;
 
-    public function getOne(int $id): array;
+    public function getOne(int $pk): array;
 
     public function update(array $inputs): array;
 
-    public function delete(int $id): array;
+    public function delete(int $pk): array;
 }

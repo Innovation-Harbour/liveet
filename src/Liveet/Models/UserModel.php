@@ -10,8 +10,8 @@ class UserModel extends BaseModel
 {
     use SoftDeletes;
 
-    protected $table = 'user';
-    protected $dateFormat = 'U';
+    protected $table = "user";
+    protected $dateFormat = "U";
 
     public function eventTickets()
     {
@@ -29,18 +29,18 @@ class UserModel extends BaseModel
         $authDetails = (new BaseModel())->getTokenInputs($token);
 
         if ($authDetails == []) {
-            return ['isAuthenticated' => false, 'error' => 'Invalid token'];
+            return ["isAuthenticated" => false, "error" => "Invalid token"];
         }
 
-        $public_key = $authDetails['public_key'];
+        $public_key = $authDetails["public_key"];
 
-        $user =  self::where('public_key', $public_key)
-            // ->where('token', '=', $token)
+        $user =  self::where("public_key", $public_key)
+            // ->where("token", "=", $token)
             ->first();
 
-        return ($user->exists) ? ['isAuthenticated' => true, 'error' => ''] : ['isAuthenticated' => false, 'error' => 'Expired session'];
+        return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
 
-        return ['isAuthenticated' => false, 'error' => 'Expired session'];
+        return ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
     public function authenticateWithPublicKey($details)
@@ -62,11 +62,11 @@ class UserModel extends BaseModel
 
     public function generateNewPublicKey($details)
     {
-        $id = $details['id'];
+        $pk = $details[$this->primaryKey];
         $cLib = new CodeLibrary();
         $public_key = $cLib->genID(40, 1);
 
-        $user = $this->find($id);
+        $user = $this->find($pk);
 
         if (!$user) {
             return ["data" => null, "error" => "Organization not found"];
@@ -81,64 +81,38 @@ class UserModel extends BaseModel
 
     public function login($details)
     {
-        $username = $details['username'];
-        $password = $details['password'];
-        $public_key = $details['public_key'];
+        $username = $details["username"];
+        $password = $details["password"];
+        $public_key = $details["public_key"];
 
-        if (!(new BaseModel())->isExist($this->where('username', $username)->where('password', $password))) {
-            return ['error' => 'Invalid Login credential', 'data' => null];
+        if (!(new BaseModel())->isExist($this->where("username", $username)->where("password", $password))) {
+            return ["error" => "Invalid Login credential", "data" => null];
         }
 
-        // self::where('username', $username)->where('password', $password)->update([
-        //     'public_key' => $public_key
+        // self::where("username", $username)->where("password", $password)->update([
+        //     "public_key" => $public_key
         // ]);
 
-        $user = self::select('id', 'username', 'name', 'phone', 'email', 'usertype', 'phoneVerified', 'emailVerified', 'public_key', 'dateCreated', 'dateUpdated')->where('username', $username)->where('username', $username)->where('password', $password)->first();
+        $pkKey = $this->primaryKey;
+        $user = self::select(
+            $pkKey,
+            "username",
+            "name",
+            "phone",
+            "email",
+            "usertype",
+            "phoneVerified",
+            "emailVerified",
+            "public_key",
+            "dateCreated",
+            "dateUpdated"
+        )->where("username", $username)->where("username", $username)->where("password", $password)->first();
 
-        return ['data' => $user, 'error' => ''];
-    }
-
-    public function createSelf($details)
-    {
-        $username = $details['username'];
-        $password = $details['password'];
-        $name = $details['name'];
-        $phone = $details['phone'];
-        $email = $details['email'];
-        $address = $details['address'] ?? "";
-
-        if ($this->isExist(self::select('id')->where('username', $username))) {
-            return ['error' => 'Username exists', 'data' => null];
-        }
-        if ($this->isExist(self::select('id')->where('phone', $phone))) {
-            return ['error' => 'Phone number exists', 'data' => null];
-        }
-        if ($this->isExist(self::select('id')->where('email', $email))) {
-            return ['error' => 'Email exists', 'data' => null];
-        }
-
-        $this->username = $username;
-        $this->password = $password;
-        $this->phone = $phone;
-        $this->name = $name;
-        $this->phone = $phone;
-        $this->email = $email;
-        $this->address = $address;
-        $this->usertype = Constants::USER_TYPE_ORGANIZATION;
-
-        $this->save();
-
-        $id = $this->select('id', 'username', 'name', 'phone', 'email', 'usertype', 'public_key', 'dateCreated', 'dateUpdated')->where('username', $username)->where('phone', $phone)->first()['id'];
-
-        // $this->generateNewPublicKey(["id" => $id]);
-
-        $organization = $this->get($id);
-
-        return ['data' => $organization['data'], 'error' => $organization['error']];
+        return ["data" => $user, "error" => ""];
     }
 
     public function getStruct()
     {
-        return $this->select('user_id', 'user_fullname', 'user_phone', 'user_email', 'user_password', 'user_picture', 'user_phone_verified', 'user_email_verified', 'public_key', 'created_at', 'updated_at');
+        return $this->select("user_id", "user_fullname", "user_phone", "user_email", "user_password", "user_picture", "user_phone_verified", "user_email_verified", "public_key", "created_at", "updated_at");
     }
 }

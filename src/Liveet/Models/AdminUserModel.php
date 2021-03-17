@@ -10,14 +10,16 @@ class AdminUserModel extends BaseModel
 {
     use SoftDeletes;
 
-    protected $table = 'admin_user';
-    protected $dateFormat = 'U';
+    protected $table = "admin_user";
+    protected $dateFormat = "U";
     protected $hidden = ["admin_password"];
-    protected $primaryKey = 'admin_user_id';
+    public $primaryKey = "admin_user_id";
+    protected $guarded = [];
+    public $passwordKey = "admin_password";
 
     public function adminFeatures()
     {
-        return $this->belongsToMany(AdminFeatureModel::class, "admin_feature_user", "admin_user_id", "admin_feature_id", "admin_user_id", "admin_feature_id");
+        return $this->belongsToMany(AdminFeatureModel::class, "admin_feature_user", $this->primaryKey, "admin_feature_id", $this->primaryKey, "admin_feature_id");
     }
 
     public function adminAcitivityLogs()
@@ -30,27 +32,27 @@ class AdminUserModel extends BaseModel
         $authDetails = (new BaseModel())->getTokenInputs($token);
 
         if ($authDetails == []) {
-            return ['isAuthenticated' => false, 'error' => 'Invalid token'];
+            return ["isAuthenticated" => false, "error" => "Invalid token"];
         }
 
-        $public_key = $authDetails['public_key'];
-        $admin_username = $authDetails['admin_username'];
-        $usertype = $authDetails['usertype'];
+        $public_key = $authDetails["public_key"];
+        $admin_username = $authDetails["admin_username"];
+        $usertype = $authDetails["usertype"];
 
-        $users =  self::where('public_key', $public_key)
-            ->where('admin_username', '=', $admin_username)
-            ->where('usertype', '=', $usertype)
+        $users =  self::where("public_key", $public_key)
+            ->where("admin_username", "=", $admin_username)
+            ->where("usertype", "=", $usertype)
             ->take(1)
             ->get();
 
         foreach ($users as $user) {
-            return ($user->exists) ? ['isAuthenticated' => true, 'error' => ''] : ['isAuthenticated' => false, 'error' => 'Expired session'];
+            return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
         }
 
-        return ['isAuthenticated' => false, 'error' => 'Expired session'];
+        return ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
-    public function getDashboard()
+    public function getDashboard($pk)
     {
         $adminsCount = self::count();
 
@@ -61,20 +63,20 @@ class AdminUserModel extends BaseModel
         return ["error" => "", "data" => $dashboard];
     }
 
-    public function createSelf($details)
+    public function createSelf($details, $checks = [])
     {
         $inputError = $this->checkInputError($details, ["admin_username", "admin_email",]);
         if (null != $inputError) {
             return $inputError;
         }
 
-        $admin_username = $details['admin_username'];
-        $admin_password = $details['admin_password'];
-        $admin_fullname = $details['admin_fullname'];
-        $admin_email = $details['admin_email'];
-        $public_key = $details['public_key'];
-        $email_verification_token = $details['email_verification_token'];
-        $admin_priviledges = json_encode($details['admin_priviledges']);
+        $admin_username = $details["admin_username"];
+        $admin_password = $details["admin_password"];
+        $admin_fullname = $details["admin_fullname"];
+        $admin_email = $details["admin_email"];
+        $public_key = $details["public_key"];
+        $email_verification_token = $details["email_verification_token"];
+        $admin_priviledges = json_encode($details["admin_priviledges"]);
 
         $this->admin_username = $admin_username;
         $this->admin_password = $admin_password;
@@ -87,34 +89,37 @@ class AdminUserModel extends BaseModel
 
         $this->save();
 
-        $admin_user_id = $this->select('admin_user_id')->where('admin_username', $admin_username)->first()['admin_user_id'];
+        $pkKey = $this->primaryKey;
+        $admin_user_id = $this->select($pkKey)->where("admin_username", $admin_username)->first()[$this->primaryKey];
 
-        $admin = $this->get($admin_user_id, null, null, ["idKey" => "admin_user_id"]);
+        $admin = $this->getByPK($admin_user_id, null, null, ["idKey" => $this->primaryKey]);
 
-        return ['data' => $admin['data'], 'error' => $admin['error']];
+        return ["data" => $admin["data"], "error" => $admin["error"]];
     }
 
     public function login($details)
     {
-        $admin_username = $details['admin_username'];
-        $admin_password = $details['admin_password'];
-        $public_key = $details['public_key'];
+        $admin_username = $details["admin_username"];
+        $admin_password = $details["admin_password"];
+        $public_key = $details["public_key"];
 
-        if (!(new BaseModel())->isExist($this->where('admin_username', $admin_username)->where('admin_password', $admin_password))) {
-            return ['error' => 'Invalid Login credential', 'data' => null];
+        if (!(new BaseModel())->isExist($this->where("admin_username", $admin_username)->where("admin_password", $admin_password))) {
+            return ["error" => "Invalid Login credential", "data" => null];
         }
 
-        self::where('admin_username', $admin_username)->where('admin_password', $admin_password)->update([
-            'public_key' => $public_key
+        self::where("admin_username", $admin_username)->where("admin_password", $admin_password)->update([
+            "public_key" => $public_key
         ]);
 
-        $admin = self::select('admin_user_id', 'admin_fullname', 'admin_username', 'admin_password', 'admin_email', 'admin_priviledges', 'email_verified',  'public_key', 'usertype', 'created_at', 'updated_at')->where('admin_username', $admin_username)->where('public_key', $public_key)->where('admin_password', $admin_password)->first();
+        $pkColumnName = $this->primaryKey;
+        $admin = self::select($pkColumnName, "admin_fullname", "admin_username", "admin_email", "admin_priviledges", "email_verified",  "public_key", "usertype", "created_at", "updated_at")->where("admin_username", $admin_username)->where("public_key", $public_key)->where("admin_password", $admin_password)->first();
 
-        return ['data' => $admin, 'error' => ''];
+        return ["data" => $admin, "error" => ""];
     }
 
     public function getStruct()
     {
-        return self::select('admin_user_id', 'admin_fullname', 'admin_username', 'admin_password', 'admin_email', 'admin_priviledges', 'email_verified',  'usertype', 'created_at', 'updated_at');
+        $pkKey = $this->primaryKey;
+        return self::select($pkKey, "admin_fullname", "admin_username", "admin_password", "admin_email", "admin_priviledges", "email_verified",  "usertype", "created_at", "updated_at");
     }
 }

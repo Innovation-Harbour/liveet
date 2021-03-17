@@ -18,7 +18,7 @@ class LogMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        error_log($request->getMethod() . ' -- ' . $request->getUri());
+        error_log($request->getMethod() . " -- " . $request->getUri());
 
         $response = $handler->handle($request);
 

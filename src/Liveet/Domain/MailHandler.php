@@ -10,17 +10,15 @@ class MailHandler
     const TEMPLATE_FORGOT_PASSWORD = 2;
 
     const USER_TYPE_ADMIN = "admins";
-    const USER_TYPE_ORGANIZATION = "organizations";
-    const USER_TYPE_AGENT = "agents";
-    const USER_TYPE_EXTERNAL_AGENT = "externalAgents";
-    const USER_TYPE_CUSTOMER = "customers";
+    const USER_TYPE_ORGANISER = "organiser";
+    const USERTYPE_ORGANISER_STAFF = "organiser_staff";
 
-    public $from = 'info@lawma.com';
-    public $fromName = 'Liveet';
-    private $template = '';
-    private  $usertype = '';
-    private $to = '';
-    private $params = '';
+    public $from = "info@liveet.com";
+    public $fromName = "Liveet";
+    private $template = "";
+    private  $usertype = "";
+    private $to = "";
+    private $params = "";
 
     public function __construct($template, $usertype, $to, array $params)
     {
@@ -49,7 +47,7 @@ class MailHandler
                                 <h1>Hello {$username}</h1>
                                 <div align='center'>
                                     <p>
-                                        Please confirm your lawma account by clicking the link below.
+                                        Please confirm your liveet account by clicking the link below.
                                     </p>
                                     <a href='{$link}'>Click here to verify your email address</a>
                                 </div>
@@ -84,7 +82,7 @@ class MailHandler
                                 <h1>Hello {$username}</h1>
                                 <div align='center'>
                                     <p>
-                                        Please confirm your lawma account by clicking the link below.
+                                        Please confirm your liveet account by clicking the link below.
                                     </p>
                                     <a href='{$link}'>Click here to verify your email address</a>
                                 </div>
@@ -107,7 +105,7 @@ class MailHandler
 
         switch ($this->template) {
             case self::TEMPLATE_CONFIRM_EMAIL:
-                $subject = 'Confirm your account';
+                $subject = "Confirm your account";
 
                 $link = "https://" . Constants::PRODUCTION_HOST . Constants::PRODUCTION_BASE_PATH . "/" . $this->usertype . "/update/verify/email/" . $this->params["email_verification_token"];
 
@@ -115,7 +113,7 @@ class MailHandler
                 break;
 
             case self::TEMPLATE_FORGOT_PASSWORD:
-                $subject = 'Reset your password';
+                $subject = "Reset your password";
 
                 $link = "https://" . Constants::PRODUCTION_HOST . Constants::PRODUCTION_BASE_PATH . "/" . $this->usertype . "/forgot/password/" . $this->params["forgotPasswordToken"];
 

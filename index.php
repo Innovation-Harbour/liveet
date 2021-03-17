@@ -1,6 +1,6 @@
 <?php
 
-require 'bootstrap.php';
+require "bootstrap.php";
 
 use Liveet\Domain\Constants;
 use Rashtell\Domain\JSON;
@@ -20,7 +20,7 @@ use Slim\Exception\HttpNotFoundException;
 
 $app = AppFactory::create();
 
-$app->options('/{routes:.+}', function ($request, $response, $args) {
+$app->options("/{routes:.+}", function ($request, $response, $args) {
     return $response;
 });
 
@@ -36,7 +36,7 @@ $app->add(new ContentLengthMiddleware());
 
 // $basePath = Constants::DEVELOPMENT_BASE_PATH;
 
-// if ($_SERVER['HTTP_HOST'] == Constants::PRODUCTION_HOST) {
+// if ($_SERVER["HTTP_HOST"] == Constants::PRODUCTION_HOST) {
 //     $basePath = Constants::PRODUCTION_BASE_PATH;
 // }
 
@@ -44,7 +44,7 @@ $app->add(new ContentLengthMiddleware());
 $app->group(
     $basePath,
     function (RouteCollectorProxy $appGroup) {
-        require 'src/Liveet/Routes/index.php';
+        require "src/Liveet/Routes/index.php";
     }
 );
 
@@ -53,17 +53,17 @@ $app->group(
 /**
  * test
  */
-$app->get($basePath . '/v1/test', function (Request $request, Response $response) {
+$app->get($basePath . "/v1/test", function (Request $request, Response $response) {
 
-    $data = array('testing /login' => 'true');
+    $data = array("testing /login" => "true");
 
     return $response
-        ->withHeader('Content-Type', 'application/json')
-        ->withHeader('Access-Control-Allow-Origin', '*')
-        ->withHeader('Access-Control-Allow-Headers', array('Content-Type', 'X-Requested-With', 'Authorization', 'PI'))
-        ->withHeader('Access-Control-Allow-Methods', array('GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'))
+        ->withHeader("Content-Type", "application/json")
+        ->withHeader("Access-Control-Allow-Origin", "*")
+        ->withHeader("Access-Control-Allow-Headers", array("Content-Type", "X-Requested-With", "Authorization", "PI"))
+        ->withHeader("Access-Control-Allow-Methods", array("GET", "POST", "PUT", "DELETE", "OPTIONS"))
         ->withStatus(200);
-    // ->getBody()->write('Hello World');
+    // ->getBody()->write("Hello World");
     // ->withJson($data);
 });
 
@@ -73,13 +73,13 @@ $app->get($basePath . '/v1/test', function (Request $request, Response $response
  * NOTE: make sure this route is defined last
  */
 
-$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function ($request, $response) {
+$app->map(["GET", "POST", "PUT", "DELETE", "PATCH"], "/{routes:.+}", function ($request, $response) {
 
     // throw new HttpNotFoundException($request);
 
     $json = new JSON();
     // var_dump($request);
-    return $json->withJsonResponse($response, ['errorMessage' => '404 Endpoint not found', 'errorStatus' => 1, 'statusCode' => 404, 'data' => ['method' => $request->getMethod(), 'url' => $request->getServerParams()["REQUEST_SCHEME"] . "://"
+    return $json->withJsonResponse($response, ["errorMessage" => "404 Endpoint not found", "errorStatus" => 1, "statusCode" => 404, "data" => ["method" => $request->getMethod(), "url" => $request->getServerParams()["REQUEST_SCHEME"] . "://"
         . $request->getServerParams()["HTTP_HOST"] . $request->getServerParams()["REQUEST_URI"]]]);
 });
 

@@ -60,7 +60,7 @@ class JSON
 
 		extract($payload);
 
-		$errorStatus = isset($errorStatus) ? $errorStatus : 0;
+		$errorStatus = isset($errorStatus) ? $errorStatus : 1;
 		$errorMessage = isset($errorMessage) ? $errorMessage : "";
 		$successMessage = isset($successMessage) ? $successMessage : "";
 		$statusCode = isset($statusCode) ? $statusCode : 200;
@@ -92,16 +92,16 @@ class JSON
 				));
 
 		return $response->withStatus(200)
-			->withHeader('Content-Type', 'application/json')
-			->withHeader('Access-Control-Allow-Origin', '*')
-			->withHeader('Access-Control-Allow-Headers', array('Content-Type', 'X-Requested-With', 'Authorization', 'PI'))
-			->withHeader('Access-Control-Allow-Methods', array('GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'))
+			->withHeader("Content-Type", "application/json")
+			->withHeader("Access-Control-Allow-Origin", "*")
+			->withHeader("Access-Control-Allow-Headers", array("Content-Type", "X-Requested-With", "Authorization", "PI"))
+			->withHeader("Access-Control-Allow-Methods", array("GET", "POST", "PUT", "DELETE", "OPTIONS"))
 			->withJson($payload);
 	}
 
 	function cleanException($ex)
 	{
-		$poison = array("'", "\\", "\"");
+		$poison = array("\"", "\\", "\"");
 		$exf = str_replace($poison, "", $ex);
 		return $exf;
 	}

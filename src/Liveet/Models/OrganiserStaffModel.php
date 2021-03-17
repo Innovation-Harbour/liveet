@@ -10,8 +10,12 @@ class OrganiserStaffModel extends BaseModel
 {
     use SoftDeletes;
 
-    protected $table = 'organiser_staff';
-    protected $dateFormat = 'U';
+    protected $table = "organiser_staff";
+    protected $dateFormat = "U";
+    public $primaryKey = "organiser_staff_id";
+    protected $hidden = ["organiser_staff_password"];
+    protected $guarded = [];
+    public $passwordKey = "organiser_staff_password";
 
     public function organiser()
     {
@@ -20,27 +24,24 @@ class OrganiserStaffModel extends BaseModel
 
     public function organiserActivityLogs()
     {
-        return $this->hasMany(OrganiserActivityLogModel::class, "organiser_staff_id", "organiser_staff_id");
+        return $this->hasMany(OrganiserActivityLogModel::class, $this->primaryKey, $this->primaryKey);
     }
-
 
     public function authenticate($token)
     {
         $authDetails = (new BaseModel())->getTokenInputs($token);
 
         if ($authDetails == []) {
-            return ['isAuthenticated' => false, 'error' => 'Invalid token'];
+            return ["isAuthenticated" => false, "error" => "Invalid token"];
         }
 
-        $public_key = $authDetails['public_key'];
+        $public_key = $authDetails["public_key"];
 
-        $user =  self::where('public_key', $public_key)
-            // ->where('token', '=', $token)
+        $user =  self::where("public_key", $public_key)
+            // ->where("token", "=", $token)
             ->first();
 
-        return ($user->exists) ? ['isAuthenticated' => true, 'error' => ''] : ['isAuthenticated' => false, 'error' => 'Expired session'];
-
-        return ['isAuthenticated' => false, 'error' => 'Expired session'];
+        return ($user && $user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
     public function authenticateWithPublicKey($details)
@@ -62,11 +63,11 @@ class OrganiserStaffModel extends BaseModel
 
     public function generateNewPublicKey($details)
     {
-        $id = $details['id'];
+        $pk = $details[$this->primaryKey];
         $cLib = new CodeLibrary();
         $public_key = $cLib->genID(40, 1);
 
-        $user = $this->find($id);
+        $user = $this->find($pk);
 
         if (!$user) {
             return ["data" => null, "error" => "Organization not found"];
@@ -78,67 +79,71 @@ class OrganiserStaffModel extends BaseModel
         return ["data" => ["public_key" => $public_key], "error" => null];
     }
 
-
     public function login($details)
     {
-        $username = $details['username'];
-        $password = $details['password'];
-        $public_key = $details['public_key'];
+        $organiser_staff_username = $details["organiser_staff_username"];
+        $organiser_staff_password = $details["organiser_staff_password"];
+        $public_key = $details["public_key"];
 
-        if (!(new BaseModel())->isExist($this->where('username', $username)->where('password', $password))) {
-            return ['error' => 'Invalid Login credential', 'data' => null];
+        if (!(new BaseModel())->isExist($this->where("organiser_staff_username", $organiser_staff_username)->where("organiser_staff_password", $organiser_staff_password))) {
+            return ["error" => "Invalid Login credential", "data" => null];
         }
 
-        // self::where('username', $username)->where('password', $password)->update([
-        //     'public_key' => $public_key
-        // ]);
+        self::where("organiser_staff_username", $organiser_staff_username)->where("organiser_staff_password", $organiser_staff_password)->update([
+            "public_key" => $public_key
+        ]);
 
-        $user = self::select('id', 'username', 'name', 'phone', 'email', 'usertype', 'phoneVerified', 'emailVerified', 'public_key', 'dateCreated', 'dateUpdated')->where('username', $username)->where('username', $username)->where('password', $password)->first();
+        $pkKey = $this->primaryKey;
+        $user = self::select($pkKey, "organiser_id", "organiser_staff_name", "organiser_staff_username", "organiser_staff_phone", "organiser_staff_email", "organiser_staff_profile_picture", "organiser_staff_priviledges", "phone_verified", "email_verified", "usertype", "public_key", "created_at", "updated_at")->where("organiser_staff_username", $organiser_staff_username)->where("organiser_staff_password", $organiser_staff_password)->first();
 
-        return ['data' => $user, 'error' => ''];
+        return ["data" => $user, "error" => ""];
     }
 
-    public function createSelf($details)
+    public function getDashboard($pk)
     {
-        $username = $details['username'];
-        $password = $details['password'];
-        $name = $details['name'];
-        $phone = $details['phone'];
-        $email = $details['email'];
-        $address = $details['address'] ?? "";
+        $organiserStaff =  $this->where($this->primaryKey, $pk)->first();
+        $organiser_id = $organiserStaff["organiser_id"];
+        $staffCount = $this->where("organiser_id", $organiser_id)->count();
 
-        if ($this->isExist(self::select('id')->where('username', $username))) {
-            return ['error' => 'Username exists', 'data' => null];
-        }
-        if ($this->isExist(self::select('id')->where('phone', $phone))) {
-            return ['error' => 'Phone number exists', 'data' => null];
-        }
-        if ($this->isExist(self::select('id')->where('email', $email))) {
-            return ['error' => 'Email exists', 'data' => null];
-        }
+        $dashboard = [
+            "staffCount" => $staffCount,
+        ];
 
-        $this->username = $username;
-        $this->password = $password;
-        $this->phone = $phone;
-        $this->name = $name;
-        $this->phone = $phone;
-        $this->email = $email;
-        $this->address = $address;
-        $this->usertype = Constants::USER_TYPE_ORGANIZATION;
-
-        $this->save();
-
-        $id = $this->select('id', 'username', 'name', 'phone', 'email', 'usertype', 'public_key', 'dateCreated', 'dateUpdated')->where('username', $username)->where('phone', $phone)->first()['id'];
-
-        // $this->generateNewPublicKey(["id" => $id]);
-
-        $organization = $this->get($id);
-
-        return ['data' => $organization['data'], 'error' => $organization['error']];
+        return ["error" => "", "data" => $dashboard];
     }
 
     public function getStruct()
     {
-        return $this->select('organiser_staff_id', 'organiser_id', 'organiser_staff_name', 'organiser_staff_username', 'organiser_staff_password', 'organiser_staff_email', 'email_verified', 'public_key', 'created_at', 'updated_at');
+        $pkKey = $this->primaryKey;
+        return $this->select($pkKey, "organiser_id", "organiser_staff_name", "organiser_staff_username", "organiser_staff_phone", "organiser_staff_email", "organiser_staff_profile_picture", "organiser_staff_priviledges", "phone_verified", "email_verified", "usertype", "created_at", "updated_at");
+    }
+
+    public function updateByConditions($conditions, $allInputs, $checks = [], $queryOptions = [])
+    {
+        if (isset($queryOptions["useParentModel"]) && $queryOptions["useParentModel"]) {
+            return parent::updateByConditions($conditions, $allInputs, $checks, $queryOptions);
+        }
+
+        $inputError = $this->checkInputError($allInputs, $checks);
+        if (null != $inputError) {
+            return $inputError;
+        }
+
+        $query = $this->where($conditions);
+        if (!$query->exists()) {
+            return ["error" => "Error while updating", "data" => null];
+        };
+
+        $this->where("usertype", Constants::USERTYPE_ORGANISER_ADMIN)->where($conditions)->update(
+            ["organiser_staff_username" => $allInputs["organiser_staff_username"], "organiser_staff_name" => $allInputs["organiser_staff_name"], "organiser_staff_phone" => $allInputs["organiser_staff_phone"], "organiser_staff_profile_picture" => $allInputs["organiser_staff_profile_picture"]]
+        );
+
+        OrganiserModel::where("organiser_id", $allInputs["organiser_id"])->update(
+            ["organiser_username" => $allInputs["organiser_staff_username"], "organiser_name" => $allInputs["organiser_staff_name"], "organiser_phone" => $allInputs["organiser_staff_phone"], "organiser_address" => $allInputs["organiser_staff_address"]]
+        );
+
+        $model = $this->getByConditions($conditions);
+
+        return ["data" => $model["data"], "error" => $model["error"]];
     }
 }

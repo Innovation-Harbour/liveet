@@ -14,7 +14,13 @@ class AdminUserController extends BaseController
 
     public function loginAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->login($request, $response, new AdminUserModel(), ['admin_username', 'admin_password'], ["publicKeyKey" => "public_key", "passwordKey" => "admin_password"]);
+        return (new BaseController)->login($request, $response, new AdminUserModel(), ["admin_username", "admin_password"], ["publicKeyKey" => "public_key", "passwordKey" => "admin_password"], [
+            "dataOptions" => [
+                "overrideKeys" => [
+                    // "username" => "admin_username", "password" => "admin_password"
+                ]
+            ],
+        ]);
     }
 
     public function createAdminUser(Request $request, ResponseInterface $response): ResponseInterface
@@ -25,7 +31,7 @@ class AdminUserController extends BaseController
 
         $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
         if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", 'statusCode' => 400];
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
 
             return $json->withJsonResponse($response, $error);
         }
@@ -36,18 +42,18 @@ class AdminUserController extends BaseController
             new AdminUserModel(),
             [
                 "required" => [
-                    'admin_username', 'admin_password', 'admin_fullname', 'admin_email', 'admin_priviledges'
+                    "admin_username", "admin_password", "admin_fullname", "admin_email", "admin_priviledges"
                 ],
 
                 "expected" => [
-                    'admin_username', 'admin_password', 'admin_fullname', 'admin_email', 'admin_priviledges', "admin_profile_picture"
+                    "admin_username", "admin_password", "admin_fullname", "admin_email", "admin_priviledges", "admin_profile_picture", "admin_profile_pictureType", "public_key", "email_verification_token"
                 ],
             ],
             [
                 "dataOptions" => [
-                    "overrideKeys" => [
-                        "admin_username" => "admin_username", "admin_password" => "admin_password", "admin_fullname" => "admin_fullname", "admin_email" => "admin_email", "admin_priviledges" => "admin_priviledges", "admin_profile_picture" => "admin_profile_picture"
-                    ]
+                    // "overrideKeys" => [
+                    //     "username" => "admin_username", "password" => "admin_password", "fullname" => "admin_fullname", "email" => "admin_email", "priviledges" => "admin_priviledges", "profile_picture" => "admin_profile_picture"
+                    // ]
                 ],
                 "securityOptions" => [
                     "hasPassword" => true, "hasPublicKey" => true, "passwordKey" => "admin_password", "publicKeyKey" => "public_key"
@@ -55,7 +61,7 @@ class AdminUserController extends BaseController
                 "emailOptions" => [
 
                     [
-                        "emailKey" => "admin_email", 'nameKey' => "admin_fullname", 'usertype' => MailHandler::USER_TYPE_ADMIN, 'mailtype' => MailHandler::TEMPLATE_CONFIRM_EMAIL
+                        "emailKey" => "admin_email", "nameKey" => "admin_fullname", "usertype" => MailHandler::USER_TYPE_ADMIN, "mailtype" => MailHandler::TEMPLATE_CONFIRM_EMAIL
                     ],
                 ],
                 "imageOptions" => [
@@ -67,82 +73,167 @@ class AdminUserController extends BaseController
         );
     }
 
-    public function getAllAdminUsers(Request $request, ResponseInterface $response): ResponseInterface
+    public function getAdminUsers(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-
         if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", 'statusCode' => 400];
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        return (new BaseController)->getByPage($request, $response, new AdminUserModel(), null, null, null, ["idKey" => "admin_user_id"]);
+        return (new BaseController)->getByPage($request, $response, new AdminUserModel());
     }
 
-    /**
-    public function getAdminDashboard(Request $request, ResponseInterface $response): ResponseInterface
+    public function getAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->getDashboard($request, $response, new AdminUserModel());
+        $json = new JSON();
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
+        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+
+        return (new BaseController)->getByPK($request, $response, new AdminUserModel());
     }
 
-    public function getAdmin(Request $request, ResponseInterface $response): ResponseInterface
+    public function updateAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $json = new JSON();
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
+        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+
+        return (new BaseController)->updateByPK(
+            $request,
+            $response,
+            (new AdminUserModel()),
+            [
+                "required" => [
+                    "admin_username", "admin_fullname", "admin_priviledges"
+                ],
+
+                "expected" => [
+                    "admin_user_id", "admin_username", "admin_fullname", "admin_email", "admin_priviledges", "admin_profile_picture"
+                ]
+            ],
+            [
+
+                "imageOptions" => [
+                    [
+                        "imageKey" => "admin_profile_picture"
+                    ]
+                ]
+            ],
+            [],
+            [
+                [
+                    "detailsKey" => "admin_user_id", "columnName" => "admin_user_id", "errorText" =>
+                    "Admin User Id", "primaryKey" => true
+                ],
+                [
+                    "detailsKey" => "admin_username", "columnName" => "admin_username", "errorText" =>
+                    "Admin username"
+                ],
+                [
+                    "detailsKey" => "admin_email", "columnName" => "admin_email", "errorText" =>
+                    "Admin email"
+                ]
+            ]
+
+        );
+    }
+
+    public function logoutAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $json = new JSON();
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
+        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+
+        return (new BaseController)->logoutByPK($request, $response, new AdminUserModel());
+    }
+
+    public function getAdminUserDashboard(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        return (new BaseController)->getSelfDashboard($request, $response, new AdminUserModel());
+    }
+
+    public function getAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
         return (new BaseController)->getSelf($request, $response, new AdminUserModel());
     }
 
-    //super admin exclusive
-    public function getAdminById(Request $request, ResponseInterface $response): ResponseInterface
+    public function updateAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        return (new BaseController)->updateSelf(
+            $request,
+            $response,
+            new AdminUserModel(),
+            [
+                "required" => [
+                    "admin_username", "admin_fullname"
+                ],
 
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-
-        if (!in_array(Constants::PRIVILEDGE_GET_ANY_ADMIN, $ownerPriviledges)) {
-            $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
-
-            return $json->withJsonResponse($response, $error);
-        }
-        return (new BaseController)->getById($request, $response, new AdminUserModel());
+                "expected" => [
+                    "admin_username", "admin_fullname", "admin_profile_picture"
+                ],
+            ],
+            [
+                "imageOptions" => [
+                    [
+                        "imageKey" => "admin_profile_picture"
+                    ]
+                ]
+            ],
+            [],
+            [
+                [
+                    "detailsKey" => "admin_user_id", "columnName" => "admin_user_id", "errorText" =>
+                    "Admin User Id", "primaryKey" => true
+                ],
+                [
+                    "detailsKey" => "admin_username", "columnName" => "admin_username", "errorText" =>
+                    "Admin username"
+                ]
+            ]
+        );
     }
 
-    public function updateAdmin(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return (new BaseController)->updateSelf($request, $response, new AdminUserModel(), ['id', 'mobile_number', 'name', 'gender', 'email',  'phone', 'address', 'gps']);
-    }
-
-    //super admin exclusive
-    public function updateAdminById(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-
-        if (!in_array(Constants::PRIVILEDGE_UPDATE_ANY_ADMIN, $ownerPriviledges)) {
-
-            $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
-
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->updateById($request, $response, new AdminUserModel(), ['id', 'mobile_number', 'name', 'gender', 'email',  'phone', 'address', 'gps', 'priviledges']);
-    }
-
-    public function updateAdminPassword(Request $request, ResponseInterface $response): ResponseInterface
+    public function updateAdminUserPassword(Request $request, ResponseInterface $response): ResponseInterface
     {
         return (new BaseController)->updatePassword($request, $response, new AdminUserModel());
     }
 
+    public function logoutAdminUser(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        return (new BaseController)->logoutSelf($request, $response, new AdminUserModel());
+    }
+
+    /**
+
     //super admin exclusive
-    public function resetAdminPassword(Request $request, ResponseInterface $response): ResponseInterface
+    public function resetAdminUserPassword(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
 
@@ -151,7 +242,7 @@ class AdminUserController extends BaseController
         $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
 
         if (!in_array(Constants::PRIVILEDGE_RESET_PASSWORDS, $ownerPriviledges)) {
-            $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
+            $error = ["errorMessage" => "You do not have sufficient privelege to perform this action", "statusCode", "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
@@ -159,18 +250,13 @@ class AdminUserController extends BaseController
         return (new BaseController)->resetPassword($request, $response, new AdminUserModel());
     }
 
-    public function verifyAdminEmail(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return (new BaseController)->verifyEmail($request, $response, new AdminUserModel());
-    }
-
-    public function deleteAdmin(Request $request, ResponseInterface $response): ResponseInterface
+    public function deleteAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
         return (new BaseController)->deleteSelf($request, $response, new AdminUserModel());
     }
 
     //super admin exclusive
-    public function deleteAdminById(Request $request, ResponseInterface $response): ResponseInterface
+    public function deleteAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
 
@@ -179,63 +265,40 @@ class AdminUserController extends BaseController
         $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
 
         if (!in_array(Constants::PRIVILEDGE_DELETE_ANY_ADMIN, $ownerPriviledges)) {
-            $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
+            $error = ["errorMessage" => "You do not have sufficient privelege to perform this action", "statusCode", "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        return (new BaseController)->deleteById($request, $response, new AdminUserModel());
+        return (new BaseController)->deleteByPK($request, $response, new AdminUserModel());
     }
 
-    public function logoutAdmin(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return (new BaseController)->logoutSelf($request, $response, new AdminUserModel());
-    }
-
-    //super admin exclusive
-    public function logoutAdminById(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-
-        if (!in_array(Constants::PRIVILEDGE_LOGOUT_ANY_ADMIN, $ownerPriviledges)) {
-            $error = ['errorMessage' => "You do not have sufficient privelege to perform this action", "statusCode", 'errorStatus' => 1, 'statusCode' => 406];
-
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->logoutById($request, $response, new AdminUserModel());
-    }
+     **/
 
     public function generateHash(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
         $model = new AdminUserModel();
         $inputs = [];
-        $options = ['isAccount' => true];
+        $options = ["isAccount" => true];
         $override = [];
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $allInputs = $this->valuesExistsOrError($data, $inputs);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         $allInputs = $this->appendSecurity($allInputs, $options);
 
         $data = $allInputs["password"];
 
-        $payload = ['successMessage' => 'Generated successfully', 'statusCode' => 200, 'data' => $data];
+        $payload = ["successMessage" => "Generated successfully", "statusCode" => 200, "data" => $data];
 
         return $json->withJsonResponse($response, $payload);
     }
-
-     **/
 }

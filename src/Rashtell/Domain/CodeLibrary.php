@@ -25,10 +25,10 @@ class CodeLibrary
 
 	function is_anum($str)
 	{
-		if (!preg_match('/[^A-Za-z]/', $str)) {
+		if (!preg_match("/[^A-Za-z]/", $str)) {
 			return false;
 		}
-		if (!preg_match('/[^0-9]/', $str)) {
+		if (!preg_match("/[^0-9]/", $str)) {
 			return false;
 		}
 		return true;
@@ -44,8 +44,8 @@ class CodeLibrary
 
 	function  base64ToImage($string, $output, $quality = 65)
 	{
-		$ifp = fopen($output, 'wb');
-		$data = explode(',', $string);
+		$ifp = fopen($output, "wb");
+		$data = explode(",", $string);
 		//$output = $output.".jpg";
 		try {
 			if (count($data) == 2) {
@@ -89,18 +89,18 @@ class CodeLibrary
 		$imgsize = getimagesize($source_file);
 		$width = $imgsize[0];
 		$height = $imgsize[1];
-		$mime = $imgsize['mime'];
+		$mime = $imgsize["mime"];
 		switch ($mime) {
-			case 'image/gif':
+			case "image/gif":
 				$image_create = "imagecreatefromgif";
 				$image = "imagegif";
 				break;
-			case 'image/png':
+			case "image/png":
 				$image_create = "imagecreatefrompng";
 				$image = "imagepng";
 				$quality = $quality / 100;
 				break;
-			case 'image/jpeg':
+			case "image/jpeg":
 				$image_create = "imagecreatefromjpeg";
 				$image = "imagejpeg";
 				$quality = $quality;
@@ -143,12 +143,12 @@ class CodeLibrary
 			$mail->Host = gethostbyname("mail.sisibox.com");
 			$mail->Username = $opts->username; //"postmaster@healthtouch.me";
 			$mail->Password = $opts->password; //"sanwoadmin001--"; 
-			$mail->setFrom('no-reply@sisibox.com', 'sisibox service');
+			$mail->setFrom("no-reply@sisibox.com", "sisibox service");
 			for ($o = 0; $o < count($opts->email); $o++) {
 				$mail->addAddress(trim($opts->email[$o]));
 			}
 			//$mail->addAddress("elias@touchandpay.me");
-			$mail->addReplyTo('no-reply@sisibox.com', 'sisibox service');
+			$mail->addReplyTo("no-reply@sisibox.com", "sisibox service");
 			$mail->isHTML(true);
 			$mail->Port = 25;
 			$message = $opts->message;
@@ -156,17 +156,17 @@ class CodeLibrary
 			$mail->Body = $message;
 			if (isset($opts->attachments)) {
 				for ($u = 0; $u < count($opts->attachments); $u++) {
-					$mail->AddAttachment(dirname(__FILE__) . '../../../' . $opts->attachments[$u]);
+					$mail->AddAttachment(dirname(__FILE__) . "../../../" . $opts->attachments[$u]);
 				}
 			}
 			if (!$mail->send()) {
-				return 'Mailer Error: ' . $mail->ErrorInfo;
+				return "Mailer Error: " . $mail->ErrorInfo;
 				//return false;
 			} else {
 				return true;
 			}
 		} catch (Exception $e) {
-			echo 'Mailer Error: ' . $mail->ErrorInfo;
+			echo "Mailer Error: " . $mail->ErrorInfo;
 			return false;
 			//echo $e->getMessage();
 		}
@@ -197,16 +197,16 @@ class CodeLibrary
 
 			// More headers
 			$sender = isset($opts->sender)? $opts->sender : "no-reply";
-			$headers .= 'From: '.$sender.' <no-reply@sisibox.com>' . "\r\n";*/
-			//$headers .= 'Cc: elias.akin@yahoo.com' . "\r\n";
+			$headers .= "From: ".$sender." <no-reply@sisibox.com>" . "\r\n";*/
+			//$headers .= "Cc: elias.akin@yahoo.com" . "\r\n";
 			if (!mail($to, $subject, $message, $headers)) {
-				//echo 'Mailer Error: ' . $mail->ErrorInfo;
+				//echo "Mailer Error: " . $mail->ErrorInfo;
 				return false;
 			} else {
 				return true;
 			}
 		} catch (Exception $e) {
-			//echo 'Mailer Error: ' . $mail->ErrorInfo;
+			//echo "Mailer Error: " . $mail->ErrorInfo;
 			return false;
 			//echo $e->getMessage();
 		}
@@ -214,53 +214,53 @@ class CodeLibrary
 
 	function num2word($num = false)
 	{
-		$num = str_replace(array(',', ' '), '', trim($num));
+		$num = str_replace(array(",", " "), "", trim($num));
 		if (!$num) {
 			return false;
 		}
 		$num = (int) $num;
 		$words = array();
 		$list1 = array(
-			'', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven',
-			'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
+			"", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
+			"twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"
 		);
-		$list2 = array('', 'ten', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred');
+		$list2 = array("", "ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety", "hundred");
 		$list3 = array(
-			'', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion', 'sextillion', 'septillion',
-			'octillion', 'nonillion', 'decillion', 'undecillion', 'duodecillion', 'tredecillion', 'quattuordecillion',
-			'quindecillion', 'sexdecillion', 'septendecillion', 'octodecillion', 'novemdecillion', 'vigintillion'
+			"", "thousand", "million", "billion", "trillion", "quadrillion", "quintillion", "sextillion", "septillion",
+			"octillion", "nonillion", "decillion", "undecillion", "duodecillion", "tredecillion", "quattuordecillion",
+			"quindecillion", "sexdecillion", "septendecillion", "octodecillion", "novemdecillion", "vigintillion"
 		);
 		$num_length = strlen($num);
 		$levels = (int) (($num_length + 2) / 3);
 		$max_length = $levels * 3;
-		$num = substr('00' . $num, -$max_length);
+		$num = substr("00" . $num, -$max_length);
 		$num_levels = str_split($num, 3);
 		for ($i = 0; $i < count($num_levels); $i++) {
 			$levels--;
 			$hundreds = (int) ($num_levels[$i] / 100);
-			$hundreds = ($hundreds ? ' ' . $list1[$hundreds] . ' hundred' . ' ' : '');
+			$hundreds = ($hundreds ? " " . $list1[$hundreds] . " hundred" . " " : "");
 			$tens = (int) ($num_levels[$i] % 100);
-			$singles = '';
+			$singles = "";
 			if ($tens < 20) {
-				$tens = ($tens ? ' ' . $list1[$tens] . ' ' : '');
+				$tens = ($tens ? " " . $list1[$tens] . " " : "");
 			} else {
 				$tens = (int) ($tens / 10);
-				$tens = ' ' . $list2[$tens] . ' ';
+				$tens = " " . $list2[$tens] . " ";
 				$singles = (int) ($num_levels[$i] % 10);
-				$singles = ' ' . $list1[$singles] . ' ';
+				$singles = " " . $list1[$singles] . " ";
 			}
-			$words[] = $hundreds . $tens . $singles . (($levels && (int) ($num_levels[$i])) ? ' ' . $list3[$levels] . ' ' : '');
+			$words[] = $hundreds . $tens . $singles . (($levels && (int) ($num_levels[$i])) ? " " . $list3[$levels] . " " : "");
 		} //end for loop
 		$commas = count($words);
 		if ($commas > 1) {
 			$commas = $commas - 1;
 		}
-		return implode(' ', $words);
+		return implode(" ", $words);
 	}
 
-	function isValidMd5($md5 = '')
+	function isValidMd5($md5 = "")
 	{
-		return preg_match('/^[a-f0-9]{32}$/', $md5);
+		return preg_match("/^[a-f0-9]{32}$/", $md5);
 	}
 
 	public function in_array_partial($arr, $keyword)

@@ -20,15 +20,15 @@ class KeyManager{
             $k = $this->cshrk;
         }
         $digest = substr($k["k"], 0, $k["slt"]).$raw.substr($k["k"], $k["slt"], strlen($k["k"]));
-        $encryptedPassword = hash('sha256', $digest);
+        $encryptedPassword = hash("sha256", $digest);
         return $encryptedPassword;
     }
     
     public function validateClaim($token){
         if($token == null) return false;
         try{
-            $encryptedKey = hash('ripemd160', $this->key);
-            $decoded = JWT::decode($token, $encryptedKey, array('HS256'));            
+            $encryptedKey = hash("ripemd160", $this->key);
+            $decoded = JWT::decode($token, $encryptedKey, array("HS256"));            
             return $decoded;
         }catch(Exception $e){
             return false;
@@ -43,7 +43,7 @@ class KeyManager{
             "nbf" => time()
         );
         $f = array_merge($claims, $token);
-        $encryptedKey = hash('ripemd160', $this->key);
+        $encryptedKey = hash("ripemd160", $this->key);
         $jwt = JWT::encode($f, $encryptedKey);
         return $jwt;
     }

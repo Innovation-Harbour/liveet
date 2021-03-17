@@ -15,24 +15,24 @@ class BaseModel extends Model
         $authDetails = (new BaseModel())->getTokenInputs($token);
 
         if ($authDetails == []) {
-            return ['isAuthenticated' => false, 'error' => 'Invalid token'];
+            return ["isAuthenticated" => false, "error" => "Invalid token"];
         }
 
-        $publicKey = $authDetails['publicKey'];
-        $username = $authDetails['username'];
-        $usertype = $authDetails['usertype'];
+        $public_key = $authDetails["public_key"] ?? "";
+        $username = $authDetails["username"] ?? "";
+        $usertype = $authDetails["usertype"] ?? "";
 
-        $users =  self::where('publicKey', $publicKey)
-            ->where('username', '=', $username)
-            ->where('usertype', '=', $usertype)
+        $users =  self::where("public_key", $public_key)
+            ->where("username", "=", $username)
+            ->where("usertype", "=", $usertype)
             ->take(1)
             ->get();
 
         foreach ($users as $user) {
-            return ($user->exists) ? ['isAuthenticated' => true, 'error' => ''] : ['isAuthenticated' => false, 'error' => 'Expired session'];
+            return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
         }
 
-        return ['isAuthenticated' => false, 'error' => 'Expired session'];
+        return ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
     public function getTokenInputs($token)
@@ -86,20 +86,20 @@ class BaseModel extends Model
         $model = $model ?? $this;
         $existExceptions =  ["password"];
         $isCreate = true;
-        $id = null;
+        $pk = null;
 
-        $id = (isset($uniqueColumns["id"]) && gettype($uniqueColumns["id"])) === "string" ? $uniqueColumns["id"] : $id;
+        $pk = (isset($uniqueColumns[$this->primaryKey]) && gettype($uniqueColumns[$this->primaryKey])) === "string" ? $uniqueColumns[$this->primaryKey] : $pk;
         foreach ($uniqueColumns as $uniqueColumn) {
             if (gettype($uniqueColumn) === "array" && isset($uniqueColumn["primaryKey"])) {
-                $id =  $uniqueColumn["columnName"];
+                $pk =  $uniqueColumn["columnName"];
                 break;
             }
         }
 
-        if (isset($details[$id])) {
-            $modelExists = $this->find($details[$id]);
+        if (isset($details[$pk])) {
+            $modelExists = $this->find($details[$pk]);
             if (!$modelExists) {
-                return ['error' => Constants::ERROR_NOT_FOUND];
+                return ["error" => Constants::ERROR_NOT_FOUND];
             }
 
             $isCreate = false;
@@ -134,12 +134,12 @@ class BaseModel extends Model
 
             if ($isCreate) {
                 if ($model->isExist($model->where($columnName ?? $key, $details[$key]))) {
-                    $returnVal = ['error' => ($errorText ?? $key) . ' exists'];
+                    $returnVal = ["error" => ($errorText ?? $key) . " exists"];
                     break;
                 }
             } else {
-                if ($model->isExist($model->where($columnName ?? $key, $details[$key])->where($id, '!=', $details[$id]))) {
-                    $returnVal = ['error' => ($errorText ?? $key) . ' exists'];
+                if ($model->isExist($model->where($columnName ?? $key, $details[$key])->where($pk, "!=", $details[$pk]))) {
+                    $returnVal = ["error" => ($errorText ?? $key) . " exists"];
                     break;
                 }
             }
@@ -168,9 +168,9 @@ class BaseModel extends Model
 
             $username = array("admin", "administrator", "username", "social", "intagram", "facebook", "twitter", "error");
 
-            if ($key == "username" && (!$details["username"] || preg_match('/[^a-z_\-0-9]/i', $details["username"]) || in_array($details["username"], $username))) {
+            if ($key == "username" && (!$details["username"] || preg_match("/[^a-z_\-0-9]/i", $details["username"]) || in_array($details["username"], $username))) {
 
-                return ['error' => 'Invalid username'];
+                return ["error" => "Invalid username"];
             }
         }
     }
@@ -188,21 +188,46 @@ class BaseModel extends Model
 
     //TODO create a query contructor to append conditions, relationships and other query options
 
+    public function createSelf($allInputs, $checks = [])
+    {
+        $inputError = $this->checkInputError($allInputs, $checks);
+        if (null != $inputError) {
+            return $inputError;
+        }
+
+        foreach ($allInputs as $key => $value) {
+            $this->$key = $value;
+        }
+        $this->save();
+
+        $pk = null;
+        if (isset($checks[0]["columnName"])) {
+            $uniqueColumnKey = $checks[0]["columnName"];
+            $pk = $this->select($this->primaryKey)->where($uniqueColumnKey, $allInputs[$uniqueColumnKey])->first()[$this->primaryKey];
+        } else {
+            $pk = $this->select($this->primaryKey)->latest($this->primaryKey)->first()[$this->primaryKey];
+        }
+
+        $model = $this->getByPK($pk);
+
+        return ["data" => $model["data"], "error" => $model["error"]];
+    }
+
     public function getByPage($page, $limit, $return = null, $conditions = null, $relationships = [], $queryOptions = null)
     {
-        $minID = $this->min("id");
+        $minID = $this->min($this->primaryKey);
 
         $start = $minID + (($page - 1) * $limit) - 1;
 
-        if (!$this->isExist(static::select('id')->where('id', '>', $start))) {
-            return ['data' => null, 'error' => Constants::ERROR_EMPTY_DATA];
+        if (!$this->isExist(static::select($this->primaryKey)->where($this->primaryKey, ">", $start))) {
+            return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
         }
 
-        // $allmodels = $this->getStruct()->where('id', '>', '0')->offset($start)->limit($limit)->get();
+        // $allmodels = $this->getStruct()->where($this->primaryKey, ">", "0")->offset($start)->limit($limit)->get();
 
         $query = $return ?
-            $this->select($return)->where('id', '>', $start) :
-            $this->getStruct()->where('id', '>', $start);
+            $this->select($return)->where($this->primaryKey, ">", $start) :
+            $this->getStruct()->where($this->primaryKey, ">", $start);
 
         if ($conditions) {
             $query = $query->where($conditions);
@@ -221,18 +246,18 @@ class BaseModel extends Model
         $allmodels = $query->get();
         $total = $query->count();
 
-        return ['data' => ["all" => $allmodels, "total" => $total], 'error' => ''];
+        return ["data" => ["total" => $total, "all" => $allmodels], "error" => ""];
     }
 
     public function getByDate($from, $to, $return = null, $conditions = [],  $relationships = null, $queryOptions = [])
     {
-        $columnDateCreated = 'dateCreated';
+        $columnDateCreated = "dateCreated";
         if (isset($queryOptions["dateCreatedColumn"])) {
             $columnDateCreated = $queryOptions["dateCreatedColumn"];
         }
 
-        if (!$this->select('id')->where($columnDateCreated, '>=', $from)->where($columnDateCreated, "<=", $to)->where($conditions)->exists()) {
-            return ['data' => null, 'error' => Constants::ERROR_EMPTY_DATA];
+        if (!$this->select($this->primaryKey)->where($columnDateCreated, ">=", $from)->where($columnDateCreated, "<=", $to)->where($conditions)->exists()) {
+            return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
         }
 
         $query = $return ?
@@ -240,7 +265,7 @@ class BaseModel extends Model
             :
             $this->getStruct();
 
-        $query = $query->where($columnDateCreated, '>=', $from)->where($columnDateCreated, "<=", $to);
+        $query = $query->where($columnDateCreated, ">=", $from)->where($columnDateCreated, "<=", $to);
 
         if ($conditions) {
             $query = $query->where($conditions);
@@ -254,20 +279,18 @@ class BaseModel extends Model
 
         $allmodels = $query->get();
 
-        return ['data' => ["all" => $allmodels, "total" => $total], 'error' => ''];
+        return ["data" => ["total" => $total, "all" => $allmodels], "error" => ""];
     }
 
-    public function get($id, $return = null, $relationships = [], $queryOptions = null)
+    public function getByPK($pk, $return = null, $relationships = [], $queryOptions = null)
     {
-        $idKey = $queryOptions["idKey"] ?? "id";
-
-        if (!$this->where([$idKey => $id])->exists()) {
-            return ['data' => null, 'error' => Constants::ERROR_NOT_FOUND];
+        if (!$this->where([$this->primaryKey => $pk])->exists()) {
+            return ["data" => null, "error" => Constants::ERROR_NOT_FOUND];
         }
 
         $query = ($return ? $this->select($return) : $this->getStruct());
 
-        $query = $query->where($idKey, $id);
+        $query = $query->where($this->primaryKey, $pk);
 
         if ($relationships) {
             $query = $query->with($relationships);
@@ -275,13 +298,13 @@ class BaseModel extends Model
 
         $model = $query->first();
 
-        return ['data' => $model, 'error' => ''];
+        return ["data" => $model, "error" => ""];
     }
 
     public function getByConditions($conditions, $return = null, $relationships = [], $queryOptions = null)
     {
-        if (!$this->select("id")->where($conditions)->exists()) {
-            return ['data' => null, 'error' => Constants::ERROR_NOT_FOUND];
+        if (!$this->select($this->primaryKey)->where($conditions)->exists()) {
+            return ["data" => null, "error" => Constants::ERROR_NOT_FOUND];
         }
 
         $query = $return ? $this->select($return) : $this->getStruct();
@@ -296,7 +319,28 @@ class BaseModel extends Model
 
         $model = $query->get();
 
-        return ['data' => $model, 'error' => ''];
+        return ["data" => $model, "error" => ""];
+    }
+
+    public function updateByPK($pk, $allInputs, $checks = [])
+    {
+        $inputError = $this->checkInputError($allInputs, $checks);
+        if (null != $inputError) {
+            return $inputError;
+        }
+
+        unset($allInputs[$this->primaryKey]);
+
+        $query = $this->find($pk);
+        if (!$query) {
+            return ["error" => Constants::ERROR_NOT_FOUND, "data" => null];
+        }
+
+        $query->update($allInputs);
+
+        $model = $this->getByPK($pk);
+
+        return ["data" => $model["data"], "error" => $model["error"]];
     }
 
     public function updateByColumnNames($columnNames, $allInputs, $checks = [], $queryOptions = [])
@@ -313,7 +357,7 @@ class BaseModel extends Model
             $conditions[$columnName] = $allInputs[$columnName];
 
             if (!$query->exists()) {
-                return ['error' => 'No match found', 'data' => null];
+                return ["error" => "No match found", "data" => null];
             }
         }
 
@@ -327,10 +371,10 @@ class BaseModel extends Model
 
         $model = $this->getByConditions($conditions);
 
-        return ['data' => $model['data'], 'error' => $model['error']];
+        return ["data" => $model["data"], "error" => $model["error"]];
     }
 
-    public function updateByConditions($conditions, $allInputs, $checks = [])
+    public function updateByConditions($conditions, $allInputs, $checks = [], $queryOptions = [])
     {
         $inputError = $this->checkInputError($allInputs, $checks);
         if (null != $inputError) {
@@ -339,59 +383,57 @@ class BaseModel extends Model
 
         $query = $this->where($conditions);
         if (!$query->exists()) {
-            return ['error' => 'Error while updating', 'data' => null];
-        }
-
-        $query = $this->where($conditions);
-        if (!$query->exists()) {
-            return ['error' => 'Error while updating', 'data' => null];
+            return ["error" => "Error while updating", "data" => null];
         }
 
         $query->update($allInputs);
 
         $model = $this->getByConditions($conditions);
 
-        return ['data' => $model['data'], 'error' => $model['error']];
+        return ["data" => $model["data"], "error" => $model["error"]];
     }
 
-    public function updatePassword($id, $newPassword, $oldPassword)
+    public function updatePassword($pk, $new_password, $old_password)
     {
-        $model = $this->find($id);
+        $model = $this->find($pk);
         if (!$model) {
-            return ['error' => 'Error while updating the password', 'data' => null];
+            return ["error" => "Error while updating the password", "data" => null];
         }
 
-        $password  = $model->password;
+        $password  = $model[$this->passwordKey];
+        if ($old_password != $password) {
 
-        if ($oldPassword != $password) {
-
-            return ['error' => 'Incorrect password, please try again', "data" => [],];
+            return ["error" => "Incorrect password, please try again", "data" => [],];
         }
 
-        $model->password = $newPassword;
-        $model->publicKey = null;
+        $model[$this->passwordKey] = $new_password;
+        $model->public_key = null;
         $model->save();
 
-        $model = $this->get($id);
+        $model = $this->getByPK($pk);
 
-        return ['data' => $model['data'], 'error' => $model['error']];
+        return ["data" => $model["data"][$this->primaryKey], "error" => $model["error"]];
     }
 
-    public function resetPassword($id, $newPassword)
+    public function resetPassword($pk, $new_password)
     {
-        $model = $this->find($id);
+        $model = $this->find($pk);
         if (!$model) {
-            return ['error' => 'Error while updating the password', 'data' => null];
+            return ["error" => "Error while updating the password", "data" => null];
         }
 
-        $model->password = $newPassword;
-        $model->publicKey = null;
+        $model->password = $new_password;
+        $model->public_key = null;
+
+        $email = $model->email;
+        //TODO send password to mail
+
         $model->save();
 
-        $model = $this->get($id);
+        $model = $this->getByPK($pk);
         $model["data"]["password"] = Constants::DEFAULT_RESET_PASSWORD;
 
-        return ['data' => $model['data'], 'error' => $model['error']];
+        return ["data" => $model["data"], "error" => $model["error"]];
     }
 
     public function forgotPassword($allInputs)
@@ -399,44 +441,44 @@ class BaseModel extends Model
         $email = $allInputs["email"];
         $forgotPasswordToken = $allInputs["email_verification_token"];
 
-        if (!$this->select("id")->where("email", $email)->exists()) {
-            return ['error' => 'Email not registered', 'data' => null];
+        if (!$this->select($this->primaryKey)->where("email", $email)->exists()) {
+            return ["error" => "Email not registered", "data" => null];
         }
 
         if ($this->select("emailVerified")->where("email", $email)->first()["emailVerified"] !== Constants::EMAIL_VERIFIED) {
-            return ['error' => 'Email not verified', 'data' => null];
+            return ["error" => "Email not verified", "data" => null];
         }
 
         $this->select("emailVerified")->where("email", $email)->update(["forgotPasswordToken" => $forgotPasswordToken]);
 
 
-        return ['data' => null, 'error' => null];
+        return ["data" => null, "error" => null];
     }
 
     public function verifyForgotPassword($allInputs)
     {
         $forgotPasswordToken = $allInputs["forgotPasswordVerificationToken"];
 
-        if (!$this->select("id")->where("forgotPasswordToken", $forgotPasswordToken)->exists()) {
-            return ['error' => '', 'data' => null];
+        if (!$this->select($this->primaryKey)->where("forgotPasswordToken", $forgotPasswordToken)->exists()) {
+            return ["error" => "", "data" => null];
         }
 
         $this->select("emailVerified")->where("forgotPasswordToken", $forgotPasswordToken)->update(["forgotPasswordToken" => null]);
 
-        $model = self::select("id", "username",  "publicKey", "usertype")->where("forgotPasswordToken", $forgotPasswordToken)->first();
+        $model = self::select($this->primaryKey, "username",  "public_key", "usertype")->where("forgotPasswordToken", $forgotPasswordToken)->first();
 
-        return ['data' => $model, 'error' => null];
+        return ["data" => $model, "error" => null];
     }
 
     public function verifyEmail($email_verification_token, $status)
     {
-        if (!$this->isExist($this->select('id')->where('email_verification_token', $email_verification_token))) {
-            return ['error' => 'User not found, please register again', 'data' => null];
+        if (!$this->isExist($this->select($this->primaryKey)->where("email_verification_token", $email_verification_token))) {
+            return ["error" => "User not found, please register again", "data" => null];
         }
 
-        $id = $this->select('id')->where('email_verification_token', $email_verification_token)->first()['id'];
+        $pk = $this->select($this->primaryKey)->where("email_verification_token", $email_verification_token)->first()[$this->primaryKey];
 
-        $model = static::find($id);
+        $model = static::find($pk);
 
         if ($model->verified > 0) {
             return ["error" => "This email has already been verified, please login.", "data" => []];
@@ -445,85 +487,98 @@ class BaseModel extends Model
         $model->verified = $status;
         $model->save();
 
-        $model = $this->get($id);
+        $model = $this->getByPK($pk);
 
-        return ['data' => $model['data'], 'error' => $model['error']];
+        return ["data" => $model["data"], "error" => $model["error"]];
     }
 
-    public function verifyUser($id, $status)
+    public function verifyUser($pk, $status)
     {
-        $model = $this->find($id);
+        $model = $this->find($pk);
         if (!$model) {
-            return ['error' => 'Error while updating the status', 'data' => null];
+            return ["error" => "Error while updating the status", "data" => null];
         }
 
         if ($model->verified == 0) {
-            return ['error' => 'Email not verified'];
+            return ["error" => "Email not verified"];
         }
 
         if ($model->verified > 1) {
-            return ['error' => "User already verified"];
+            return ["error" => "User already verified"];
         }
 
         $model->verified = $status;
         $model->save();
 
-        $model = $this->get($id);
+        $model = $this->getByPK($pk);
 
-        return ['data' => $model['data'], 'error' => $model['error']];
+        return ["data" => $model["data"], "error" => $model["error"]];
     }
 
-    public function updateForgotPassword($id, $password)
+    public function updateForgotPassword($pk, $password)
     {
-        $model = $this->find($id);
+        $model = $this->find($pk);
         if (!$model) {
-            return ['error' => 'Error while changing the password', 'data' => null];
+            return ["error" => "Error while changing the password", "data" => null];
         }
 
         $model->password = $password;
-        $model->publicKey = null;
+        $model->public_key = null;
         $model->save();
 
-        $model = $this->get($id);
+        $model = $this->getByPK($pk);
 
-        return ['data' => $model['data'], 'error' => $model['error']];
+        return ["data" => $model["data"], "error" => $model["error"]];
     }
 
 
-    public function deleteById($id)
+    public function deleteByPK($pk)
     {
-        $model = static::find($id);
+        $model = static::find($pk);
 
         if (!$model) {
-            return ['error' => 'User does not exist', 'data' => null];
+            return ["error" => "User does not exist", "data" => null];
         }
 
         $model->runSoftDelete();
 
-        return ['data' => ['deleted' => true], 'error' => ''];
+        return ["data" => ["deleted" => true], "error" => ""];
     }
 
-    public function logout($id)
+    public function logout($pk)
     {
-        $model = static::find($id);
+        $model = static::find($pk);
 
         if (!$model) {
-            return ["error" => "User does not exist", "data" => []];
+            return ["error" => "Invalid request. User does not exist", "data" => []];
         }
 
-        $model->publicKey = null;
+        $model->public_key = null;
         $model->save();
+
+        return ["data" => ["logout" => true], "error" => null];
+    }
+
+    public function logoutByCondition($conditions)
+    {
+        $query = $this->where($conditions);
+
+        if (!$query->exists()) {
+            return ["error" => "Invalid request. User does not exist", "data" => []];
+        }
+
+        $query->update(["public_key" => null]);
 
         return ["data" => ["logout" => true], "error" => null];
     }
 
     /** Deprecation */
 
-    public function updateColumns($id, $allInputs)
+    public function updateColumns($pk, $allInputs)
     {
-        $model = $this->find($id);
+        $model = $this->find($pk);
         if (!$model) {
-            return ['error' => 'Error while updating', 'data' => null];
+            return ["error" => "Error while updating", "data" => null];
         }
 
         $model->update($allInputs);
@@ -534,18 +589,18 @@ class BaseModel extends Model
         //     $model->save();
         // }
 
-        $model = $this->get($id);
+        $model = $this->getByPK($pk);
 
-        return ['data' => $model['data'], 'error' => $model['error']];
+        return ["data" => $model["data"], "error" => $model["error"]];
     }
 
     public function getByDateWithRelationship($from, $to, $relationships, $return = null)
     {
-        if (!$this->isExist(static::select('id')->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to))) {
-            return ['data' => null, 'error' => Constants::ERROR_EMPTY_DATA];
+        if (!$this->isExist(static::select($this->primaryKey)->where("dateCreated", ">=", $from)->where("dateCreated", "<=", $to))) {
+            return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
         }
 
-        $allmodels = $return ? $this->select($return)->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get() : $this->getStruct()->where('dateCreated', '>=', $from)->where("dateCreated", "<=", $to)->get();
+        $allmodels = $return ? $this->select($return)->where("dateCreated", ">=", $from)->where("dateCreated", "<=", $to)->get() : $this->getStruct()->where("dateCreated", ">=", $from)->where("dateCreated", "<=", $to)->get();
 
         foreach ($allmodels as $models) {
 
@@ -573,20 +628,20 @@ class BaseModel extends Model
             }
         }
 
-        return ['data' => $allmodels, 'error' => ''];
+        return ["data" => $allmodels, "error" => ""];
     }
 
-    public function getWithRelationships($id, $relationships, $return = null)
+    public function getWithRelationships($pk, $relationships, $return = null)
     {
-        if (!static::find($id)) {
-            return ['data' => null, 'error' => Constants::ERROR_NOT_FOUND];
+        if (!static::find($pk)) {
+            return ["data" => null, "error" => Constants::ERROR_NOT_FOUND];
         }
 
-        $model = $return ? $this->select($return)->where('id', $id)->first() : $this->getStruct()->where('id', $id)->first();
+        $model = $return ? $this->select($return)->where($this->primaryKey, $pk)->first() : $this->getStruct()->where($this->primaryKey, $pk)->first();
 
         $this->handleRelationships($relationships, $model);
 
-        return ['data' => $model, 'error' => ''];
+        return ["data" => $model, "error" => ""];
     }
 
     public function handleRelationships($relationships, $model)

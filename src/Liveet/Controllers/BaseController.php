@@ -11,6 +11,7 @@ use Rashtell\Domain\MCrypt;
 use Rashtell\Domain\JSON;
 use Liveet\Models\BaseModel;
 use DateTime;
+use Illuminate\Database\Eloquent\Model;
 use Liveet\Domain\Constants;
 
 class BaseController
@@ -26,18 +27,18 @@ class BaseController
         $validJson = $json->jsonFormat($data);
 
         if ($validJson == NULL) {
-            $error = array('errorMessage' => 'The parameter is not a valid objects', 'errorStatus' => 1, 'statusCode' => 400);
+            $error = array("errorMessage" => "The parameter is not a valid objects", "errorStatus" => 1, "statusCode" => 400);
 
-            return ['error' => $error, 'data' => null];
+            return ["error" => $error, "data" => null];
         }
 
         if (!isset($validJson->data)) {
-            $error = array('errorMessage' => 'The request object does not conform to standard', 'errorStatus' => 1, 'statusCode' => 400);
+            $error = array("errorMessage" => "The request object does not conform to standard", "errorStatus" => 1, "statusCode" => 400);
 
-            return ['error' => $error, 'data' => null];
+            return ["error" => $error, "data" => null];
         }
 
-        return ['data' => $validJson->data, 'error' => ""];
+        return ["data" => $validJson->data, "error" => ""];
     }
 
     protected function getPageNumOrError($request)
@@ -45,72 +46,72 @@ class BaseController
         $data = $request->getAttributes();
         $page = 1;
 
-        if (!(isset($data['page']))) {
-            // $error = array('errorMessage' => 'Page is required', 'errorStatus' => 1, 'statusCode' => 400);
+        if (!(isset($data["page"]))) {
+            // $error = array("errorMessage" => "Page is required", "errorStatus" => 1, "statusCode" => 400);
 
-            // return ['error' => $error, 'page' => null];
+            // return ["error" => $error, "page" => null];
             $page = 1;
         } else {
-            $page = $data['page'];
+            $page = $data["page"];
         }
 
 
         if (!(is_numeric($page) || (int) $page < 0)) {
-            // $error = array('errorMessage' => 'The page number is invalid', 'errorStatus' => 1, 'statusCode' => 400);
+            // $error = array("errorMessage" => "The page number is invalid", "errorStatus" => 1, "statusCode" => 400);
 
-            // return ['error' => $error, 'page' => null];
+            // return ["error" => $error, "page" => null];
             $page = 1;
         }
 
-        return ['page' => $page, 'error' => null];
+        return ["page" => $page, "error" => null];
     }
 
     protected function getPageLimit($request)
     {
         $data = $request->getAttributes();
 
-        $limit = isset($data['limit']) && is_numeric($data['limit']) ? $data['limit'] : 1000000000;
+        $limit = isset($data["limit"]) && is_numeric($data["limit"]) ? $data["limit"] : 1000000000;
 
-        ['page' => $page, 'error' => $error] = $this->getPageNumOrError($request);
+        ["page" => $page, "error" => $error] = $this->getPageNumOrError($request);
         // $start = ($page - 1) * $limit;
 
-        return ['limit' => $limit, 'error' => $error];
+        return ["limit" => $limit, "error" => $error];
     }
 
     protected function getDateOrError($request)
     {
         $data = $request->getAttributes();
 
-        if (!(isset($data['fromDate']) && isset($data['toDate']))) {
-            $error = array('errorMessage' => 'Date range is required', 'errorStatus' => 1, 'statusCode' => 400);
+        if (!(isset($data["fromDate"]) && isset($data["toDate"]))) {
+            $error = array("errorMessage" => "Date range is required", "errorStatus" => 1, "statusCode" => 400);
 
-            return ['error' => $error, 'page' => []];
+            return ["error" => $error, "page" => []];
         }
 
-        $fromDate = $data['fromDate'];
-        $toDate = $data['toDate'];
+        $fromDate = $data["fromDate"];
+        $toDate = $data["toDate"];
 
         if (!(is_numeric($fromDate) || is_numeric($toDate))) {
-            $error = array('errorMessage' => 'The date is invalid', 'errorStatus' => 1, 'statusCode' => 400);
+            $error = array("errorMessage" => "The date is invalid", "errorStatus" => 1, "statusCode" => 400);
 
-            return ['error' => $error, 'page' => []];
+            return ["error" => $error, "page" => []];
         }
 
-        return ['fromDate' => $fromDate, 'toDate' => $toDate, 'error' => ""];
+        return ["fromDate" => $fromDate, "toDate" => $toDate, "error" => ""];
     }
 
     protected function getRouteParams($request, $details)
     {
         $data = $request->getAttributes();
 
-        $existData = ['error' => null];
+        $existData = ["error" => null];
 
         foreach ($details as $detail) {
             if (!isset($data[$detail])) {
 
-                $error = array('errorMessage' => 'Invalid request: ' . $detail . " not set", 'errorStatus' => 1, 'statusCode' => 400);
+                $error = array("errorMessage" => "Invalid request: " . $detail . " not set", "errorStatus" => 1, "statusCode" => 400);
 
-                $existData = array_merge($existData, ['error' => $error]);
+                $existData = array_merge($existData, ["error" => $error]);
                 return $existData;
             }
 
@@ -124,27 +125,27 @@ class BaseController
 
     protected function getRouteTokenOrError($request)
     {
-        if (!isset($request->getAttributes()['token'])) {
-            $error = array('errorMessage' => 'Invalid url', 'errorStatus' => 1, 'statusCode' => 400);
+        if (!isset($request->getAttributes()["token"])) {
+            $error = array("errorMessage" => "Invalid url", "errorStatus" => 1, "statusCode" => 400);
             return ["error" => $error, "token" => ""];
         }
 
-        $token = $request->getAttributes()['token'];
+        $token = $request->getAttributes()["token"];
 
         return ["data" => $token, "error" => null];
     }
 
     protected function valuesExistsOrError($data, array $details = [])
     {
-        $existData = ['error' => null];
+        $existData = ["error" => null];
 
         foreach ($details as $detail) {
             if (!isset($data->$detail)) {
                 $json = new JSON();
 
-                $error = array('errorMessage' => 'All fields are required: ' . $detail . " not set", 'errorStatus' => 1, 'statusCode' => 400);
+                $error = array("errorMessage" => "All fields are required: " . $detail . " not set", "errorStatus" => 1, "statusCode" => 400);
 
-                $existData = array_merge($existData, ['error' => $error]);
+                $existData = array_merge($existData, ["error" => $error]);
                 return $existData;
             }
 
@@ -175,7 +176,7 @@ class BaseController
     {
         $headers = $request->getHeaders();
 
-        $authorization = isset($headers['Token']) ? $headers['Token'] : (isset($headers['token']) ? $headers['token'] : null);
+        $authorization = isset($headers["Token"]) ? $headers["Token"] : (isset($headers["token"]) ? $headers["token"] : null);
 
         if (!$authorization) {
             return null;
@@ -183,7 +184,7 @@ class BaseController
 
         $token = isset($authorization[0]) ? $authorization[0] : null;
 
-        $tokenArr = $token ? explode(' ', $token) : [];
+        $tokenArr = $token ? explode(" ", $token) : [];
 
         return isset($tokenArr[1]) ? $tokenArr[1] : null;
     }
@@ -198,7 +199,7 @@ class BaseController
 
                 if (!isset($data[$imageKey])) {
 
-                    // $imageExtError = ['errorMessage' => $imageKey . " not set", 'errorStatus' => 1, 'statusCode' => 400];
+                    // $imageExtError = ["errorMessage" => $imageKey . " not set", "errorStatus" => 1, "statusCode" => 400];
 
                     // $data["error"] = $imageExtError;
                     // break;
@@ -221,7 +222,7 @@ class BaseController
                         $imageExtError .= $acceptedImageType . $appender;
                     }
 
-                    $imageExtError = array('errorMessage' => $imageExtError, 'errorStatus' => 1, 'statusCode' => 400);
+                    $imageExtError = array("errorMessage" => $imageExtError, "errorStatus" => 1, "statusCode" => 400);
 
                     $data["error"] = $imageExtError;
 
@@ -275,11 +276,11 @@ class BaseController
             $image_type = $image_type_pieces[1];
 
             /*@ Create full path with image name and extension */
-            $store_at = $path . md5(uniqid()) . '.' . $image_type;
+            $store_at = $path . md5(uniqid()) . "." . $image_type;
 
             /*@ If image name available then use that  */
             if (!empty($image_name)) :
-                $store_at = $path . $image_name . '.' . $image_type;
+                $store_at = $path . $image_name . "." . $image_type;
             endif;
 
             $decoded_string = base64_decode($string_pieces[1]);
@@ -312,7 +313,7 @@ class BaseController
                 $password = (new KeyManager())->getDigest($allInputs[$passwordKey]);
 
                 if (!$allInputs[$passwordKey]) {
-                    $allInputs["error"] =  ['errorMessage' => "Password not set", 'errorStatus' => 1, 'statusCode' => 400];
+                    $allInputs["error"] =  ["errorMessage" => "Password not set", "errorStatus" => 1, "statusCode" => 400];
                 }
 
                 $allInputs[$passwordKey] = $password;
@@ -320,7 +321,7 @@ class BaseController
 
             if (isset($accountOptions["securityOptions"]["hasPublicKey"]) && $accountOptions["securityOptions"]["hasPublicKey"]) {
 
-                $publicKey = (new MCrypt())->mCryptThis(time() * rand(55555, 999999999));
+                $publicKey = (new CodeLibrary())->genID(12, 1);
                 $allInputs[$publicKeyKey] = $publicKey;
             }
         }
@@ -330,8 +331,8 @@ class BaseController
 
     public function sendMail($allInputs, $accountOptions = [])
     {
-        $success = '';
-        $error = '';
+        $success = "";
+        $error = "";
 
         if (isset($accountOptions["emailOptions"])) {
             foreach ($accountOptions["emailOptions"] as $emailOptions) {
@@ -339,14 +340,15 @@ class BaseController
                     $emailKey = $emailOptions["emailKey"];
                     $nameKey = $emailOptions["nameKey"];
 
-
                     $email_verification_token = (new MCrypt())->mCryptThis(time() * rand(111111111, 999999999));
+                    // $email_verification_token = (new KeyManager)->createClaims(["email" => $allInputs[$emailKey], "name" => $allInputs[$nameKey]], true);
+
                     $allInputs["email_verification_token"] = $email_verification_token;
 
                     //Send and email with the email_verification_token
                     $mail = new MailHandler($emailOptions["mailtype"], $emailOptions["usertype"], $allInputs[$emailKey], ["username" => $allInputs[$nameKey], "email_verification_token" => $allInputs["email_verification_token"]]);
 
-                    ['error' => $error, 'success' => $success] = $mail->sendMail();
+                    ["error" => $error, "success" => $success] = $mail->sendMail();
 
                     if ($error) {
                         continue;
@@ -387,66 +389,69 @@ class BaseController
      * 
      */
 
-    public function createSelf(Request $request, ResponseInterface $response, $model, array $inputs = ["required" => [], "expected" => []], array $accountOptions = [], $override = []): ResponseInterface
+    public function createSelf(Request $request, ResponseInterface $response, $model, array $inputs = ["required" => [], "expected" => []], array $accountOptions = [], array $override = [], array $checks = []): ResponseInterface
     {
         $json = new JSON();
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
-        $allInputs = $this->valuesExistsOrError($data, $inputs["required"]);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        $allInputs = $this->valuesExistsOrError($data, isset($inputs["required"]) ? $inputs["required"] : $inputs);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         $allInputs = $this->appendSecurity($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
         $allInputs = $this->parseImage($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
         $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
         $mailResponse = $this->sendMail($allInputs, $accountOptions);
-        if ($mailResponse['error']) {
+        if ($mailResponse["error"]) {
         }
 
         $allInputs = $mailResponse["allInputs"];
         $mailResponseSuccess =  $mailResponse["success"];
 
         $newAllInputs = [];
-        foreach ($inputs["expected"] as $key) {
-            $newAllInputs[$key] = $allInputs[$key];
+        if (isset($inputs["expected"])) {
+            foreach ($inputs["expected"] as $key) {
+                $newAllInputs[$key] = $allInputs[$key] ?? null;
+            }
+        } else {
+            $newAllInputs = $allInputs;
         }
 
         foreach ($override as $key => $value) {
-            $allInputs[$key] = $value;
+            $newAllInputs[$key] = $value;
         }
 
-        $data = $model->createSelf($allInputs);
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 406];
+        $data = $model->createSelf($newAllInputs, $checks);
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-
-        $payload = ['successMessage' => 'Created successfully. ' . $mailResponse["success"], 'statusCode' => 201, 'data' => $data['data'], 'errorMessage' => $mailResponse["error"]];
+        $payload = ["successMessage" => "Created successfully. " . $mailResponseSuccess, "statusCode" => 201, "data" => $data["data"], "errorMessage" => $mailResponse["error"]];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function createMany(Request $request, ResponseInterface $response, $model, array $inputs = ["required" => [], "expected" => []], array $accountOptions = [], $override = []): ResponseInterface
+    public function createManySelfs(Request $request, ResponseInterface $response, Model $model, array $inputs = ["required" => [], "expected" => []], array $accountOptions = [], array $override = []): ResponseInterface
     {
         $json = new JSON();
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
 
         if ($error) {
             return $json->withJsonResponse($response, $error);
@@ -456,23 +461,23 @@ class BaseController
 
         foreach ($data as $key => $eachData) {
 
-            $allInputs = $this->valuesExistsOrError($eachData, $inputs["required"]);
-            if ($allInputs['error']) {
+            $allInputs = $this->valuesExistsOrError($eachData, isset($inputs["required"]) ? $inputs["required"] : $inputs);
+            if ($allInputs["error"]) {
                 $returnData[$key] = $allInputs["error"];
                 continue;
             }
             $allInputs = $this->appendSecurity($allInputs, $accountOptions);
-            if ($allInputs['error']) {
+            if ($allInputs["error"]) {
                 $returnData[$key] = $allInputs["error"];
                 continue;
             }
             $allInputs = $this->parseImage($allInputs, $accountOptions);
-            if ($allInputs['error']) {
+            if ($allInputs["error"]) {
                 $returnData[$key] = $allInputs["error"];
                 continue;
             }
             $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
-            if ($allInputs['error']) {
+            if ($allInputs["error"]) {
                 $returnData[$key] = $allInputs["error"];
                 continue;
             }
@@ -480,9 +485,9 @@ class BaseController
                 $allInputs[$ovrKey] = $value;
             }
 
-            $modelData = $model->createMany($allInputs);
-            if ($modelData['error']) {
-                $error = ['errorMessage' => $modelData['error'], 'errorStatus' => 1, 'statusCode' => 406];
+            $modelData = $model->createManySelfs($allInputs);
+            if ($modelData["error"]) {
+                $error = ["errorMessage" => $modelData["error"], "errorStatus" => 1, "statusCode" => 406];
 
                 $returnData[$key] = $modelData["error"];
 
@@ -494,25 +499,25 @@ class BaseController
             $returnData[$key] = $modelData["data"];
         }
 
-        $payload = ['successMessage' => 'Success', 'statusCode' => 201, 'data' => $returnData];
+        $payload = ["successMessage" => "Success", "statusCode" => 201, "data" => $returnData];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function login(Request $request, ResponseInterface $response, $model, array $inputs, $queryOptions = ["passwordKey" => "password", "publicKeyKey" => "publicKey"]): ResponseInterface
+    public function login(Request $request, ResponseInterface $response, Model $model, array $inputs, array $queryOptions = ["passwordKey" => "password", "publicKeyKey" => "publicKey"], array $accountOptions = []): ResponseInterface
     {
         $json = new JSON();
         $passwordKey = $queryOptions["passwordKey"];
         $publicKeyKey = $queryOptions["publicKeyKey"];
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $allInputs =  $this->valuesExistsOrError($data, $inputs);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         if ($allInputs[$passwordKey] == Constants::DEFAULT_RESET_PASSWORD) {
@@ -528,10 +533,15 @@ class BaseController
         $allInputs[$passwordKey] = $password;
         $allInputs[$publicKeyKey] = $publicKey;
 
-        $data = $model->login($allInputs);
 
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 401, 'data' => null);
+        $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
+        }
+
+        $data = $model->login($allInputs);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 401, "data" => null);
 
             return $json->withJsonResponse($response, $payload);
         }
@@ -544,9 +554,9 @@ class BaseController
 
         unset($data["data"][$publicKeyKey]);
 
-        $payload = array('successMessage' => 'Login successful', 'statusCode' => 200, 'data' => $data['data'], 'token' => $token);
+        $payload = array("successMessage" => "Login successful", "statusCode" => 200, "data" => $data["data"], "token" => $token);
 
-        return $json->withJsonResponse($response, $payload)->withHeader('token', 'bearer ' . $token);
+        return $json->withJsonResponse($response, $payload)->withHeader("token", "bearer " . $token);
     }
 
     public function getSelfDashboard(Request $request, ResponseInterface $response, $model): ResponseInterface
@@ -555,62 +565,61 @@ class BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        ["id" => $id] = $authDetails;
+        [$model->primaryKey => $pk] = $authDetails;
 
-        $data = $model->getDashboard($id);
-
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
+        $data = $model->getDashboard($pk);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array('successMessage' => 'Dashboard request success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Dashboard request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getDashboardById(Request $request, ResponseInterface $response, $model, $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function getDashboardByPK(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
 
-        [$idKey => $id, 'error' => $error] = $this->getRouteParams($request, ["id"]);
+
+        [$model->primaryKey => $pk, "error" => $error] = $this->getRouteParams($request, [$model->primaryKey]);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->getDashboard($id);
+        $data = $model->getDashboard($pk);
 
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array('successMessage' => 'Dashboard request success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Dashboard request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByPage(Request $request, ResponseInterface $response, $model, $return = null, $conditions = null, $relationships = null, $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function getByPage(Request $request, ResponseInterface $response, $model, $return = null, $conditions = null, $relationships = null, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
 
-        ['page' => $page, 'error' => $error] = $this->getPageNumOrError($request);
-        ['limit' => $limit, 'error' => $error] = $this->getPageLimit($request);
+        ["page" => $page, "error" => $error] = $this->getPageNumOrError($request);
+        ["limit" => $limit, "error" => $error] = $this->getPageLimit($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $data = $model->getByPage($page, $limit, $return, $conditions, $relationships, $queryOptions);
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => '1', 'statusCode' => 400);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array('successMessage' => 'Request success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -638,57 +647,56 @@ class BaseController
         }
 
         $data = $model->getByDate($from, $to, $return, $conditions, $relationships, $queryOptions);
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => '1', 'statusCode' => 400);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array('successMessage' => 'Request success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getSelf(Request $request, ResponseInterface $response, $model,  $return = null, $relationships = null,  $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function getSelf(Request $request, ResponseInterface $response, $model,  $return = null, $relationships = null,  $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
+
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        [$idKey => $id] = $authDetails;
+        [$model->primaryKey => $pk] = $authDetails;
 
-        $data = $model->get($id, $return, $relationships, $queryOptions);
+        $data = $model->getByPK($pk, $return, $relationships, $queryOptions);
 
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array('successMessage' => 'Request success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getById(Request $request, ResponseInterface $response, $model, $return = null, $relationships = null,  $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function getByPK(Request $request, ResponseInterface $response, $model, $return = null, $relationships = null,  $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
 
-        [$idKey => $id, 'error' => $error] = $this->getRouteParams($request, ["id"]);
+        [$model->primaryKey => $pk, "error" => $error] = $this->getRouteParams($request, [$model->primaryKey]);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->get($id, $return, $relationships, $queryOptions);
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
+        $data = $model->getByPK($pk, $return, $relationships, $queryOptions);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array('successMessage' => 'Requst success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Requst success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -699,99 +707,128 @@ class BaseController
 
         $data = $model->getByConditions($conditions, $return, $relationships);
 
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array('successMessage' => 'Requst success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Requst success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function updateSelf(Request $request, ResponseInterface $response, $model, array $inputs, array $accountOptions = [], $override = []): ResponseInterface
+    public function updateSelf(Request $request, ResponseInterface $response, $model, array $inputs = ["required" => [], "expected" => []], array $accountOptions = [], $override = [], $checks = []): ResponseInterface
     {
         $json = new JSON();
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $authDetails = static::getTokenInputsFromRequest($request);
+        $pk = $authDetails[$model->primaryKey];
 
-        $allInputs = $this->valuesExistsOrError($data, $inputs);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        $allInputs = $this->valuesExistsOrError($data, isset($inputs["required"]) ? $inputs["required"] : $inputs);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         $allInputs = $this->parseImage($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
         $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
-        $allInputs["id"] = $authDetails["id"];
+        $newAllInputs = [];
+        if (isset($inputs["expected"])) {
+            foreach ($inputs["expected"] as $key) {
+                $newAllInputs[$key] = $allInputs[$key] ?? null;
+            }
+        } else {
+            $newAllInputs = $allInputs;
+        }
 
-        $data = $model->updateSelf($allInputs);
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 406];
+        foreach ($override as $key => $value) {
+            $newAllInputs[$key] = $value;
+        }
+
+        $newAllInputs[$model->primaryKey] = $authDetails[$model->primaryKey];
+
+        $data = $model->updateByPK($pk, $newAllInputs, $checks);
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ['successMessage' => 'Update success', 'statusCode' => 201, 'data' => $data['data']];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function updateById(Request $request, ResponseInterface $response, $model, array $inputs, $accountOptions = []): ResponseInterface
+    public function updateByPK(Request $request, ResponseInterface $response, $model, array $inputs = ["required" => [], "expected" => []], $accountOptions = [], $override = [], $checks = []): ResponseInterface
     {
         $json = new JSON();
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
-
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $authDetails = static::getTokenInputsFromRequest($request);
+        $routeParams = $this->getRouteParams($request, [$model->primaryKey]);
+        $pk = $routeParams[$model->primaryKey];
 
-        $allInputs = $this->valuesExistsOrError($data, $inputs);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        $allInputs = $this->valuesExistsOrError($data, isset($inputs["required"]) ? $inputs["required"] : $inputs);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
-
         $allInputs = $this->parseImage($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
         $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
-        $data = $model->updateById($allInputs);
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 406];
+        $allInputs[$model->primaryKey] = $pk;
+
+        $newAllInputs = [];
+        if (isset($inputs["expected"])) {
+            foreach ($inputs["expected"] as $key) {
+                $newAllInputs[$key] = $allInputs[$key] ?? null;
+            }
+        } else {
+            $newAllInputs = $allInputs;
+        }
+
+        foreach ($override as $key => $value) {
+            $newAllInputs[$key] = $value;
+        }
+
+        $data = $model->updateByPK($pk, $newAllInputs, $checks);
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ['successMessage' => 'Update success', 'statusCode' => 201, 'data' => $data['data']];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function updateManyById(Request $request, ResponseInterface $response, $model, array $inputs, $accountOptions = []): ResponseInterface
+    public function updateManySelfsByPK(Request $request, ResponseInterface $response, $model, array $inputs, $accountOptions = []): ResponseInterface
     {
         $json = new JSON();
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
 
         if ($error) {
             return $json->withJsonResponse($response, $error);
@@ -804,37 +841,37 @@ class BaseController
 
             $allInputs = $this->valuesExistsOrError($eachData, $inputs);
 
-            if ($allInputs['error']) {
-                $returnData[$key] = $allInputs['error'];
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
 
                 continue;
             }
 
             $allInputs = $this->parseImage($allInputs, $accountOptions);
-            if ($allInputs['error']) {
-                $returnData[$key] = $allInputs['error'];
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
 
                 continue;
             }
             $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
-            if ($allInputs['error']) {
-                $returnData[$key] = $allInputs['error'];
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
 
                 continue;
             }
 
-            $modelData = $model->updateById($allInputs);
-            if ($modelData['error']) {
-                $error = ['errorMessage' => $modelData['error'], 'errorStatus' => 1, 'statusCode' => 406];
+            $modelData = $model->updateByPK($allInputs);
+            if ($modelData["error"]) {
+                $error = ["errorMessage" => $modelData["error"], "errorStatus" => 1, "statusCode" => 406];
 
-                $returnData[$key] = $modelData['error'];
+                $returnData[$key] = $modelData["error"];
                 continue;
             }
 
             $returnData[$key] = $modelData["data"];
         }
 
-        $payload = ['successMessage' => 'Update success', 'statusCode' => 201, 'data' => $returnData];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $returnData];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -843,30 +880,34 @@ class BaseController
     {
         $json = new JSON();
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $allInputs = $this->valuesExistsOrError($data, $inputs["required"]);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        $allInputs = $this->valuesExistsOrError($data, isset($inputs["required"]) ? $inputs["required"] : $inputs);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         $allInputs = $this->parseImage($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
         $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         $newAllInputs = [];
-        foreach ($inputs["expected"] as $key) {
-            $newAllInputs[$key] = $allInputs[$key] ?? null;
+        if (isset($inputs["expected"])) {
+            foreach ($inputs["expected"] as $key) {
+                $newAllInputs[$key] = $allInputs[$key] ?? null;
+            }
+        } else {
+            $newAllInputs = $allInputs;
         }
 
         foreach ($override as $key => $value) {
@@ -874,22 +915,22 @@ class BaseController
         }
 
         $data = $model->updateByColumnNames($columnsNames, $newAllInputs, $checks, $queryOptions);
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 406];
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ['successMessage' => 'Update success', 'statusCode' => 201, 'data' => $data['data']];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function updateManyByColumnNames(Request $request, ResponseInterface $response, $model, array $inputs, $columnNames, $checks = [], $accountOptions = []): ResponseInterface
+    public function updateManySelfsByColumnNames(Request $request, ResponseInterface $response, $model, array $inputs, $columnNames, $checks = [], $accountOptions = []): ResponseInterface
     {
         $json = new JSON();
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
 
         if ($error) {
             return $json->withJsonResponse($response, $error);
@@ -902,20 +943,20 @@ class BaseController
         foreach ($data as $key => $eachData) {
 
             $allInputs = $this->valuesExistsOrError($eachData, $inputs);
-            if ($allInputs['error']) {
-                $returnData[$key] = $allInputs['error'];
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
                 continue;
             }
 
             $allInputs = $this->parseImage($allInputs, $accountOptions);
-            if ($allInputs['error']) {
-                $returnData[$key] = $allInputs['error'];
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
 
                 continue;
             }
             $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
-            if ($allInputs['error']) {
-                $returnData[$key] = $allInputs['error'];
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
 
                 continue;
             }
@@ -926,10 +967,10 @@ class BaseController
             }
 
             $modelData = $model->updateByColumnNames($columnNames, $newAllInputs, $checks);
-            if ($modelData['error']) {
-                $error = ['errorMessage' => $modelData['error'], 'errorStatus' => 1, 'statusCode' => 406];
+            if ($modelData["error"]) {
+                $error = ["errorMessage" => $modelData["error"], "errorStatus" => 1, "statusCode" => 406];
 
-                $returnData[$key] = $modelData['error'];
+                $returnData[$key] = $modelData["error"];
 
                 continue;
             }
@@ -937,62 +978,75 @@ class BaseController
             $returnData[$key] = $modelData["data"];
         }
 
-        $payload = ['successMessage' => 'Update success', 'statusCode' => 201, 'data' => $returnData];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $returnData];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function updateByConditions(Request $request, ResponseInterface $response, $model, array $inputs, $conditions, $checks = [], $override = [], $accountOptions = []): ResponseInterface
-    {
+    public function updateByConditions(
+        Request $request,
+        ResponseInterface $response,
+        $model,
+        array $inputs = ["required" => [], "expected" => []],
+        $conditions,
+        $checks = [],
+        $override = [],
+        $accountOptions = [],
+        $queryOptions = []
+    ): ResponseInterface {
         $json = new JSON();
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $allInputs = $this->valuesExistsOrError($data, $inputs);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        $allInputs = $this->valuesExistsOrError($data, isset($inputs["required"]) ? $inputs["required"] : $inputs);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         $allInputs = $this->parseImage($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
         $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         $newAllInputs = [];
-        foreach ($inputs as $key) {
-            $newAllInputs[$key] = $allInputs[$key];
+        if (isset($inputs["expected"])) {
+            foreach ($inputs["expected"] as $key) {
+                $newAllInputs[$key] = $allInputs[$key] ?? null;
+            }
+        } else {
+            $newAllInputs = $allInputs;
         }
 
         foreach ($override as $key => $value) {
             $newAllInputs[$key] = $value;
         }
 
-        $data = $model->updateByConditions($conditions, $newAllInputs, $checks);
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 406];
+        $data = $model->updateByConditions($conditions, $newAllInputs, $checks, $queryOptions);
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ['successMessage' => 'Update success', 'statusCode' => 201, 'data' => $data['data']];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function updateManyByConditions(Request $request, ResponseInterface $response, $model, array $inputs, $conditions, $checks = [], $accountOptions = []): ResponseInterface
+    public function updateManySelfsByConditions(Request $request, ResponseInterface $response, $model, array $inputs, $conditions, $checks = [], $accountOptions = []): ResponseInterface
     {
         $json = new JSON();
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
 
         if ($error) {
             return $json->withJsonResponse($response, $error);
@@ -1005,20 +1059,20 @@ class BaseController
         foreach ($data as $key => $eachData) {
 
             $allInputs = $this->valuesExistsOrError($eachData, $inputs);
-            if ($allInputs['error']) {
-                $returnData[$key] = $allInputs['error'];
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
                 continue;
             }
 
             $allInputs = $this->parseImage($allInputs, $accountOptions);
-            if ($allInputs['error']) {
-                $returnData[$key] = $allInputs['error'];
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
 
                 continue;
             }
             $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
-            if ($allInputs['error']) {
-                $returnData[$key] = $allInputs['error'];
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
 
                 continue;
             }
@@ -1030,101 +1084,96 @@ class BaseController
 
             $modelData = $model->updateByConditions($conditions, $newAllInputs, $checks);
 
-            if ($modelData['error']) {
-                $error = ['errorMessage' => $modelData['error'], 'errorStatus' => 1, 'statusCode' => 406];
+            if ($modelData["error"]) {
+                $error = ["errorMessage" => $modelData["error"], "errorStatus" => 1, "statusCode" => 406];
 
-                $returnData[$key] = $modelData['error'];
+                $returnData[$key] = $modelData["error"];
                 continue;
             }
 
             $returnData[$key] = $modelData["data"];
         }
 
-        $payload = ['successMessage' => 'Update success', 'statusCode' => 201, 'data' => $returnData];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $returnData];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function updatePassword(Request $request, ResponseInterface $response, $model, $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function updatePassword(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
-
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $allInputs = $this->valuesExistsOrError($data, ['newPassword', 'oldPassword']);
-
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        $allInputs = $this->valuesExistsOrError($data, ["new_password", "old_password"]);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
-        ['newPassword' => $newPassword, 'oldPassword' => $oldPasswod, 'error' => $error] = $allInputs;
+        ["new_password" => $new_password, "old_password" => $old_password, "error" => $error] = $allInputs;
 
         $kmg = new KeyManager();
 
-        $newPassword = $kmg->getDigest($newPassword);
-        $oldPasswod = $kmg->getDigest($oldPasswod);
+        $new_password = $kmg->getDigest($new_password);
+        $old_password = $kmg->getDigest($old_password);
 
-        $publicKey =  $authDetails['publicKey'];
-        $id = $authDetails[$idKey];
+        $pk = $authDetails[$model->primaryKey];
 
-        $data = $model->updatePassword($id, $newPassword, $oldPasswod);
-
-        if ($data['error']) {
+        $data = $model->updatePassword($pk, $new_password, $old_password);
+        if ($data["error"]) {
             $this->logoutSelf($request, $response, $model);
 
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400];
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ['successMessage' => 'Password update success', 'statusCode' => 201, 'data' => $data['data']];
+        $payload = ["successMessage" => "Password update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response,  $payload);
     }
 
-    public function resetPassword(Request $request, ResponseInterface $response, $model, $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function resetPassword(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
+
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
 
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
-        $allInputs = $this->valuesExistsOrError($data, [$idKey]);
+        $allInputs = $this->valuesExistsOrError($data, [$model->primaryKey]);
 
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
-        [$idKey => $id, 'error' => $error] = $allInputs;
-        $newPassword = Constants::DEFAULT_RESET_PASSWORD;
+        [$model->primaryKey => $pk, "error" => $error] = $allInputs;
+        $new_password = Constants::DEFAULT_RESET_PASSWORD;
 
         $kmg = new KeyManager();
-        $encryptedPassword = $kmg->getDigest($newPassword);
+        $encryptedPassword = $kmg->getDigest($new_password);
 
         $password = $encryptedPassword;
 
-        $data = $model->resetPassword($id, $password);
+        $data = $model->resetPassword($pk, $password);
 
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400];
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ['successMessage' => 'Password reset to default: ' . Constants::DEFAULT_RESET_PASSWORD, 'statusCode' => 201, 'data' => $data['data']];
+        $payload = ["successMessage" => "Password reset to default: " . Constants::DEFAULT_RESET_PASSWORD, "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response,  $payload);
     }
@@ -1133,7 +1182,7 @@ class BaseController
     {
         $json = new JSON();
 
-        ['data' => $email_verification_token, 'error' => $error] = $this->getRouteTokenOrError($request);
+        ["data" => $email_verification_token, "error" => $error] = $this->getRouteTokenOrError($request);
 
         if ($error) {
             return $json->withJsonResponse($response, $error);
@@ -1143,13 +1192,13 @@ class BaseController
 
         $data = $model->verifyEmail($email_verification_token, $status);
 
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 406, 'data' => null];
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ['successMessage' => 'Email verification success', 'statusCode' => 200, 'data' => $data['data']];
+        $payload = ["successMessage" => "Email verification success", "statusCode" => 200, "data" => $data["data"]];
 
         //TODO redirect to login
         return $json->withJsonResponse($response, $payload);
@@ -1160,14 +1209,14 @@ class BaseController
         $json = new JSON();
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $allInputs = $this->valuesExistsOrError($data, $inputs);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         foreach ($override as $key => $value) {
@@ -1184,13 +1233,13 @@ class BaseController
         $this->sendMail($allInputs, [["emailKey" => "email", "nameKey" => "name", "usertype" => $usertype, "mailtype" => $mailtype]]);
 
         $data = $model->forgotPassword($allInputs);
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 406, 'data' => null];
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ['successMessage' => 'Password reset link sent to your email', 'statusCode' => 200, 'data' => $data['data']];
+        $payload = ["successMessage" => "Password reset link sent to your email", "statusCode" => 200, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1199,15 +1248,15 @@ class BaseController
     {
         $json = new JSON();
 
-        ['data' => $forgotPasswordVerificationToken, 'error' => $error] = $this->getRouteTokenOrError($request);
+        ["data" => $forgotPasswordVerificationToken, "error" => $error] = $this->getRouteTokenOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
         $allInputs = ["forgotPasswordVerificationToken" => $forgotPasswordVerificationToken];
 
         $data = $model->verifyForgotPassword($allInputs);
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 406, 'data' => null];
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
         }
@@ -1220,19 +1269,19 @@ class BaseController
 
         unset($data["data"]["publicKey"]);
 
-        $payload = array('successMessage' => 'Login successful', 'statusCode' => 200, 'data' => $data['data'], 'token' => $token);
+        $payload = array("successMessage" => "Login successful", "statusCode" => 200, "data" => $data["data"], "token" => $token);
 
-        return $json->withJsonResponse($response, $payload)->withHeader('token', 'bearer ' . $token);
+        return $json->withJsonResponse($response, $payload)->withHeader("token", "bearer " . $token);
     }
 
-    public function updateForgotPassword(Request $request, ResponseInterface $response, $model, $queryOptions = ["passwordKey" => "password", "publicKeyKey" => "publicKey", "idKey" => "id"]): ResponseInterface
+    public function updateForgotPassword(Request $request, ResponseInterface $response, $model, $queryOptions = ["passwordKey" => "password", "publicKeyKey" => "publicKey"]): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
+
         $passwordKey = $queryOptions["passwordKey"];
         $publicKeyKey = $queryOptions["publicKeyKey"];
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
@@ -1240,8 +1289,8 @@ class BaseController
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $allInputs = $this->valuesExistsOrError($data, [$passwordKey]);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         [$passwordKey => $password,] = $allInputs;
@@ -1251,105 +1300,105 @@ class BaseController
         $password = $kmg->getDigest($password);
 
         $publicKey =  $authDetails[$publicKeyKey];
-        $id = $authDetails[$idKey];
+        $pk = $authDetails[$model->primaryKey];
 
-        $data = $model->updateForgotPassword($id, $password);
+        $data = $model->updateForgotPassword($pk, $password);
 
-        if ($data['error']) {
+        if ($data["error"]) {
             $this->logoutSelf($request, $response, $model);
 
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400];
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ['successMessage' => 'Password change success', 'statusCode' => 201, 'data' => $data['data']];
+        $payload = ["successMessage" => "Password change success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response,  $payload);
     }
 
-    public function verifyUser(Request $request, ResponseInterface $response, $model, $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function verifyUser(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $allInputs = $this->valuesExistsOrError($data, [$idKey]);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        $allInputs = $this->valuesExistsOrError($data, [$model->primaryKey]);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
-        [$idKey => $id] = $allInputs;
+        [$model->primaryKey => $pk] = $allInputs;
 
         $status = Constants::USER_VERIFIED;
 
-        $data = $model->verifyUser($id, $status);
+        $data = $model->verifyUser($pk, $status);
 
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 406, 'data' => null];
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ['successMessage' => 'User verification success', 'statusCode' => 200, 'data' => $data['data']];
+        $payload = ["successMessage" => "User verification success", "statusCode" => 200, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function deleteSelf(Request $request, ResponseInterface $response, $model, $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function deleteSelf(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
+
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        [$idKey => $id] = $authDetails;
+        [$model->primaryKey => $pk] = $authDetails;
 
-        $data = $model->deleteById($id);
+        $data = $model->deleteByPK($pk);
 
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400];
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array('successMessage' => 'Delete success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Delete success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function deleteById(Request $request, ResponseInterface $response, $model, $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function deleteByPK(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
 
-        $allInputs = $this->getRouteParams($request, ["id"]);
 
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        $allInputs = $this->getRouteParams($request, [$model->primaryKey]);
+
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
-        [$idKey => $id, 'error' => $error] = $allInputs;
+        [$model->primaryKey => $pk, "error" => $error] = $allInputs;
 
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->deleteById($id);
+        $data = $model->deleteByPK($pk);
 
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400];
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array('successMessage' => 'Delete success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Delete success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1359,60 +1408,72 @@ class BaseController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
-        $id = isset($authDetails["id"]) ? $authDetails["id"] : null;
-        if (!$id) {
-            $error = ['errorMessage' => "Invalid request", 'errorStatus' => 1, 'statusCode' => 400];
+        $pk = isset($authDetails[$model->primaryKey]) ? $authDetails[$model->primaryKey] : null;
+        if (!$pk) {
+            $error = ["errorMessage" => "Invalid request", "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $data = $model->logout($id);
-
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400];
+        $data = $model->logout($pk);
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array('successMessage' => 'Logout success', 'statusCode' => 200, 'data' => $data["data"]);
+        $payload = array("successMessage" => "Logout success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function logoutById(Request $request, ResponseInterface $response, $model, $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function logoutByPK(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
 
-        $allInputs = $this->getRouteParams($request, [$idKey]);
-
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        $routeParams = $this->getRouteParams($request, [$model->primaryKey]);
+        if ($routeParams["error"]) {
+            return $json->withJsonResponse($response, $routeParams["error"]);
         }
 
-        [$idKey => $id] = $allInputs;
+        [$model->primaryKey => $pk] = $routeParams;
 
-        $data = $model->logout($id);
-
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400];
+        $data = $model->logout($pk);
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array('successMessage' => 'Logout success', 'statusCode' => 200, 'data' => $data["data"]);
+        $payload = array("successMessage" => "Logout success", "statusCode" => 200, "data" => $data["data"]);
+
+        return $json->withJsonResponse($response, $payload);
+    }
+
+    public function logoutByCondition(Request $request, ResponseInterface $response, $model, $conditions = []): ResponseInterface
+    {
+        $json = new JSON();
+
+        $data = $model->logoutByCondition($conditions);
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
+
+            return $json->withJsonResponse($response,  $error);
+        }
+
+        $payload = array("successMessage" => "Logout success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
     /** Deprecation */
 
-    public function updateSelfColumns(Request $request, ResponseInterface $response, $model, array $columnNames, $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function updateSelfColumns(Request $request, ResponseInterface $response, $model, array $columnNames, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
@@ -1420,25 +1481,25 @@ class BaseController
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $allInputs = $this->valuesExistsOrError($data, $columnNames);
-        if ($allInputs['error']) {
-            return $json->withJsonResponse($response, $allInputs['error']);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         unset($allInputs["error"]);
 
-        $id = $allInputs[$idKey];
+        $pk = $allInputs[$model->primaryKey];
 
-        unset($allInputs["id"]);
+        unset($allInputs[$model->primaryKey]);
 
-        $data = $model->updateColumns($id, $allInputs);
+        $data = $model->updateColumns($pk, $allInputs);
 
-        if ($data['error']) {
-            $error = ['errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400];
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ['successMessage' => 'Update success', 'statusCode' => 201, 'data' => $data['data']];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response,  $payload);
     }
@@ -1447,7 +1508,7 @@ class BaseController
     {
         $json = new JSON();
 
-        ['from' => $from, 'to' => $to, 'error' => $error] = $this->getRouteParams($request, ["from", "to"]);
+        ["from" => $from, "to" => $to, "error" => $error] = $this->getRouteParams($request, ["from", "to"]);
 
         if ($error) {
             return $json->withJsonResponse($response, $error);
@@ -1455,13 +1516,13 @@ class BaseController
 
         $data = $model->getByDateWithRelationship($from, $to, $relationships, $return);
 
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => '1', 'statusCode' => 400);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array('successMessage' => 'Request success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1470,7 +1531,7 @@ class BaseController
     {
         $json = new JSON();
 
-        ['from' => $from, 'to' => $to, 'error' => $error] = $this->getRouteParams($request, ["from", "to"]);
+        ["from" => $from, "to" => $to, "error" => $error] = $this->getRouteParams($request, ["from", "to"]);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
@@ -1480,44 +1541,44 @@ class BaseController
 
         $data = $model->getByDateWithConditions($from, $to, $conditions, $return, $queryOptions);
 
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => '1', 'statusCode' => 400);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array('successMessage' => 'Request success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByIdWithRelationships(Request $request, ResponseInterface $response, $model, $relationships, $return = null, $queryOptions = ["idKey" => "id"]): ResponseInterface
+    public function getByPKWithRelationships(Request $request, ResponseInterface $response, $model, $relationships, $return = null, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $idKey = $queryOptions["idKey"];
 
-        [$idKey => $id, 'error' => $error] = $this->getRouteParams($request, ["id"]);
+
+        [$model->primaryKey => $pk, "error" => $error] = $this->getRouteParams($request, [$model->primaryKey]);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->getWithRelationships($id, $relationships, $return);
-        if ($data['error']) {
-            $payload = array('errorMessage' => $data['error'], 'errorStatus' => 1, 'statusCode' => 400);
+        $data = $model->getWithRelationships($pk, $relationships, $return);
+        if ($data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array('successMessage' => 'Requst success', 'statusCode' => 200, 'data' => $data['data']);
+        $payload = array("successMessage" => "Requst success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function updateManySelf(Request $request, ResponseInterface $response, $model, array $inputs): ResponseInterface
+    public function updateManySelfsSelf(Request $request, ResponseInterface $response, $model, array $inputs): ResponseInterface
     {
         $json = new JSON();
 
-        ['data' => $data, 'error' => $error] = $this->getValidJsonOrError($request);
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
@@ -1530,23 +1591,23 @@ class BaseController
             $eachData = $this->parseImage($eachData);
 
             $allInputs = $this->valuesExistsOrError($eachData, $inputs);
-            if ($allInputs['error']) {
-                $returnData[$key] = $allInputs['error'];
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
                 continue;
             }
 
-            $allInputs["id"] = $authDetails["id"];
+            $allInputs[$model->primaryKey] = $authDetails[$model->primaryKey];
 
             $modelData = $model->updateSelf($allInputs);
-            if ($modelData['error']) {
-                $returnData[$key] = $modelData['error'];
+            if ($modelData["error"]) {
+                $returnData[$key] = $modelData["error"];
                 continue;
             }
 
-            $returnData[$key] = $modelData['data'];
+            $returnData[$key] = $modelData["data"];
         }
 
-        $payload = ['successMessage' => 'Update success', 'statusCode' => 201, 'data' => $returnData];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $returnData];
 
         return $json->withJsonResponse($response, $payload);
     }

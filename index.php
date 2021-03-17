@@ -65,9 +65,9 @@ $app->get($basePath . "/v1/test", function (Request $request, Response $response
         ->withHeader("Access-Control-Allow-Origin", "*")
         ->withHeader("Access-Control-Allow-Headers", array("Content-Type", "X-Requested-With", "Authorization", "PI"))
         ->withHeader("Access-Control-Allow-Methods", array("GET", "POST", "PUT", "DELETE", "OPTIONS"))
-        ->withStatus(200)
-     ->getBody()->write("Hello World");
-    //  ->withJson($data);
+        ->withStatus(200);
+    // ->getBody()->write("Hello World");
+    // ->withJson($data);
 });
 
 

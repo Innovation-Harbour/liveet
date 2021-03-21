@@ -16,7 +16,10 @@ use Liveet\Middlewares\LogMiddleware;
 use Liveet\Middlewares\ToJsonMiddleware;
 use Slim\Exception\HttpNotFoundException;
 
-// error_reporting(0);
+if (!isset($_ENV["ENVIRONMENT"]) || $_ENV["ENVIRONMENT"] != Constants::ENVIRONMENT_DEVELOPMENT) {
+    error_reporting(0);
+}
+// ini_set('memory_limit', '64M');
 
 $app = AppFactory::create();
 

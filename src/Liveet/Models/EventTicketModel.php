@@ -12,6 +12,7 @@ class EventTicketModel extends BaseModel
     protected $dateFormat = "U";
     public $primaryKey = "event_ticket_id";
     protected $guarded = [];
+    protected $hidden = ["deleted_at"];
 
     public function event()
     {

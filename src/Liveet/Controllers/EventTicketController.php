@@ -4,18 +4,19 @@ namespace Liveet\Controllers;
 
 use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
-use Liveet\Models\EventModel;
+use Liveet\Models\EventTicketModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
+use Liveet\Models\EventModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class EventController extends BaseController
+class EventTicketController extends BaseController
 {
 
     /** Admin User */
 
-    public function createEvent(Request $request, ResponseInterface $response): ResponseInterface
+    public function createEventTicket(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
 
@@ -31,34 +32,21 @@ class EventController extends BaseController
         return (new BaseController)->createSelf(
             $request,
             $response,
-            new EventModel(),
+            new EventTicketModel(),
             [
                 "required" => [
-                    "organiser_id",
-                    "event_name", "event_desc", "event_type", "event_venue", "event_date_time", "event_payment_type",
-                    "tickets",
-                    "event_can_invite", "event_sale_stop_time", "event_can_transfer_ticket", "event_can_recall"
+                    "event_id", "ticket_name", "ticket_desc", "ticket_cost", "ticket_population"
                 ],
 
                 "expected" => [
-                    "event_name", "event_desc", "event_multimedia", "event_type", "event_venue", "event_date_time", "event_payment_type", "organiser_id",
-                    "tickets"
-                    // => [
-                    //     "ticket_name", "ticket_desc", "ticket_cost", "ticket_population", "ticket_discount",
-                    // ]
-                    ,
-                    "event_can_invite", "event_sale_stop_time", "event_can_transfer_ticket", "event_can_recall",
+                    "event_id", "ticket_name", "ticket_desc", "ticket_cost", "ticket_population", "ticket_discount",
+
                 ],
-            ],
-            [
-                "imageOptions" => [
-                    ["imageKey" => "event_multimedia"]
-                ]
-            ],
+            ]
         );
     }
 
-    public function getEvents(Request $request, ResponseInterface $response): ResponseInterface
+    public function getEventTickets(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
 
@@ -71,7 +59,7 @@ class EventController extends BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $expectedRouteParams = ["event_id", "event_code", "event_type", "payment_type", "organiser_id"];
+        $expectedRouteParams = ["event_id"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];
 
@@ -81,10 +69,10 @@ class EventController extends BaseController
             }
         }
 
-        return (new BaseController)->getByPage($request, $response, new EventModel(), null, $conditions, ["eventTickets", "eventControl"]);
+        return (new BaseController)->getByPage($request, $response, new EventTicketModel(), null, $conditions);
     }
 
-    public function getEventByPK(Request $request, ResponseInterface $response): ResponseInterface
+    public function getEventTicketByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
 
@@ -97,10 +85,10 @@ class EventController extends BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        return (new BaseController)->getByPK($request, $response, new EventModel(), null, ["eventTickets", "eventControl"]);
+        return (new BaseController)->getByPK($request, $response, new EventTicketModel(), null);
     }
 
-    public function updateEventByPK(Request $request, ResponseInterface $response): ResponseInterface
+    public function updateEventTicketByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -114,28 +102,20 @@ class EventController extends BaseController
         return (new BaseController)->updateByPK(
             $request,
             $response,
-            new EventModel(),
+            new EventTicketModel(),
             [
                 "required" => [
-                    "event_name", "event_desc", "event_type", "event_venue", "event_date_time", "event_payment_type",
-                    "tickets",
-                    "event_can_invite", "event_sale_stop_time", "event_can_transfer_ticket", "event_can_recall"
+                    "ticket_name", "ticket_desc", "ticket_cost", "ticket_population"
                 ],
 
                 "expected" => [
-                    "event_name", "event_desc", "event_multimedia", "event_type", "event_venue", "event_date_time", "event_payment_type", "organiser_id",
-                    "tickets"
-                    // => [
-                    //     "ticket_name", "ticket_desc", "ticket_cost", "ticket_population", "ticket_discount",
-                    // ]
-                    ,
-                    "event_can_invite", "event_sale_stop_time", "event_can_transfer_ticket", "event_can_recall",
+                    "event_ticket_id", "ticket_name", "ticket_desc", "ticket_cost", "ticket_population", "ticket_discount"
                 ]
             ]
         );
     }
 
-    public function deleteEventByPK(Request $request, ResponseInterface $response): ResponseInterface
+    public function deleteEventTicketByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -146,12 +126,12 @@ class EventController extends BaseController
             return (new JSON())->withJsonResponse($response, $error);
         }
 
-        return (new BaseController)->deleteByPK($request, $response, (new EventModel()));
+        return (new BaseController)->deleteByPK($request, $response, (new EventTicketModel()));
     }
 
     /** Organiser Staff */
 
-    public function getOrganiserEvents(Request $request, ResponseInterface $response): ResponseInterface
+    public function getOrganiserEventTickets(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
 
@@ -165,16 +145,28 @@ class EventController extends BaseController
             return $json->withJsonResponse($response, $error);
         }
         $organiser_id = $authDetails["organiser_id"];
-        $expectedRouteParams = ["event_id", "event_code", "event_type", "payment_type"];
-        $routeParams = $this->getRouteParams($request);
-        $conditions = ["organiser_id" => $organiser_id];
 
-        foreach ($routeParams as $key => $value) {
-            if (in_array($key, $expectedRouteParams) && $value != "-") {
-                $conditions[$key] = $value;
-            }
+        $event_ids = (new EventModel())->select("event_id")->where("organiser_id", $organiser_id)->without("eventControl", "eventTickets")->get();
+
+        $whereInEventIds = [];
+        $i = 0;
+        foreach ($event_ids as $event_id_value) {
+            $whereInEventIds[$i] = $event_id_value["event_id"];
+            $i++;
         }
 
-        return (new BaseController)->getByPage($request, $response, new EventModel(), null, $conditions, ["eventTickets", "eventControl"]);
+        return (new BaseController)->getByPage(
+            $request,
+            $response,
+            (new EventTicketModel()),
+            null,
+            null,
+            null,
+            [
+                "whereIn" => [
+                    ["event_id" => $whereInEventIds],
+                ]
+            ]
+        );
     }
 }

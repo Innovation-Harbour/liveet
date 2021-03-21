@@ -100,9 +100,13 @@ class BaseController
         return ["fromDate" => $fromDate, "toDate" => $toDate, "error" => ""];
     }
 
-    protected function getRouteParams($request, $details)
+    protected function getRouteParams($request, $details = null)
     {
         $data = $request->getAttributes();
+
+        if (!$details) {
+            return $data;
+        }
 
         $existData = ["error" => null];
 
@@ -111,8 +115,7 @@ class BaseController
 
                 $error = array("errorMessage" => "Invalid request: " . $detail . " not set", "errorStatus" => 1, "statusCode" => 400);
 
-                $existData = array_merge($existData, ["error" => $error]);
-                return $existData;
+                return array_merge($existData, ["error" => $error]);
             }
 
             $existData = array_merge($existData, [$detail => $data[$detail]]);
@@ -1377,21 +1380,17 @@ class BaseController
     {
         $json = new JSON();
 
-
         $allInputs = $this->getRouteParams($request, [$model->primaryKey]);
-
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         [$model->primaryKey => $pk, "error" => $error] = $allInputs;
-
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
 
         $data = $model->deleteByPK($pk);
-
         if ($data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 

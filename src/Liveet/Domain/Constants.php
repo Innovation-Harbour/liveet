@@ -4,10 +4,12 @@ namespace Liveet\Domain;
 
 class Constants
 {
-  const PRODUCTION_HOST = "";
+  const PRODUCTION_HOST = "liveet.rollcallservice.com";
   const DEVELOPMENT_HOST = "localhost";
   const DEVELOPMENT_BASE_PATH = "/liveet/liveet-apis";
-  const PRODUCTION_BASE_PATH = "";
+  const PRODUCTION_BASE_PATH = "/liveet-apis";
+
+  const ENVIRONMENT_DEVELOPMENT = "development";
 
   const USERTYPE_ADMIN = "ADMIN";
   const USERTYPE_ORGANISER_ADMIN = "ORGANIZER_ADMIN";

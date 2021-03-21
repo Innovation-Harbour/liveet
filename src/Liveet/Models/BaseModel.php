@@ -216,14 +216,11 @@ class BaseModel extends Model
     public function getByPage($page, $limit, $return = null, $conditions = null, $relationships = [], $queryOptions = null)
     {
         $minID = $this->min($this->primaryKey);
-
         $start = $minID + (($page - 1) * $limit) - 1;
 
         if (!$this->isExist(static::select($this->primaryKey)->where($this->primaryKey, ">", $start))) {
             return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
         }
-
-        // $allmodels = $this->getStruct()->where($this->primaryKey, ">", "0")->offset($start)->limit($limit)->get();
 
         $query = $return ?
             $this->select($return)->where($this->primaryKey, ">", $start) :
@@ -231,6 +228,14 @@ class BaseModel extends Model
 
         if ($conditions) {
             $query = $query->where($conditions);
+        }
+
+        if (isset($queryOptions["whereIn"])) {
+            foreach ($queryOptions["whereIn"] as $whereIn) {
+                foreach ($whereIn as $whereInKey => $whereInValue) {
+                    $query = $query->whereIn($whereInKey, $whereInValue);
+                }
+            }
         }
 
         if ($queryOptions && isset($queryOptions["distinct"]) && $queryOptions["distinct"]) {
@@ -244,7 +249,7 @@ class BaseModel extends Model
         }
 
         $allmodels = $query->get();
-        $total = $query->count();
+        $total = count($allmodels);
 
         return ["data" => ["total" => $total, "all" => $allmodels], "error" => ""];
     }
@@ -271,13 +276,12 @@ class BaseModel extends Model
             $query = $query->where($conditions);
         }
 
-        $total = $query->count();
-
         if ($relationships) {
             $query = $query->with($relationships);
         }
 
         $allmodels = $query->get();
+        $total = count($allmodels);
 
         return ["data" => ["total" => $total, "all" => $allmodels], "error" => ""];
     }
@@ -531,13 +535,12 @@ class BaseModel extends Model
         return ["data" => $model["data"], "error" => $model["error"]];
     }
 
-
     public function deleteByPK($pk)
     {
         $model = static::find($pk);
 
         if (!$model) {
-            return ["error" => "User does not exist", "data" => null];
+            return ["error" => Constants::ERROR_NOT_FOUND, "data" => null];
         }
 
         $model->runSoftDelete();
@@ -550,7 +553,7 @@ class BaseModel extends Model
         $model = static::find($pk);
 
         if (!$model) {
-            return ["error" => "Invalid request. User does not exist", "data" => []];
+            return ["error" => "Invalid request. " . Constants::ERROR_NOT_FOUND, "data" => []];
         }
 
         $model->public_key = null;
@@ -564,7 +567,7 @@ class BaseModel extends Model
         $query = $this->where($conditions);
 
         if (!$query->exists()) {
-            return ["error" => "Invalid request. User does not exist", "data" => []];
+            return ["error" => "Invalid request. " . Constants::ERROR_NOT_FOUND, "data" => []];
         }
 
         $query->update(["public_key" => null]);

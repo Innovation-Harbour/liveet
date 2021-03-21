@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class EventControlModel extends BaseModel
 {
     use SoftDeletes;
-    
+
     protected $table = "event_control";
     protected $dateFormat = "U";
     public $primaryKey = "event_control_id";
+    protected $guarded = [];
+    protected $hidden = ["deleted_at"];
 
     public function event()
     {

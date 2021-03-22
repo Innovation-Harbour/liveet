@@ -15,7 +15,7 @@ isset($mobileGroup) && $mobileGroup->group(
             AuthController::class . ":Register"
         );
 
-        $adminGroup->post(
+        $authGroup->post(
             "/login",
             AuthController::class . ":Login"
         );

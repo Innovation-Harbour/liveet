@@ -13,5 +13,7 @@ $vGroup->group(
         require "src/Liveet/Routes/v1/OrganiserStaffRoutes.php";
 
         require "src/Liveet/Routes/v1/TestRoutes.php";
+
+        require "src/Liveet/Routes/v1/mobile/index.php";
     }
 );

@@ -18,11 +18,15 @@ class AuthController extends BaseController {
 
     $data = $request->getParsedBody();
 
-    //die(var_dump($data));
-
     $phone = $data["phone"];
 
-    $payload = ["statusCode" => 200, "data" => $phone];
+    $country_code = substr($phone, 0, 4);
+
+    $rest_of_phone_number = substr($phone, 4);
+
+    $data_to_view = ["country_code" => $country_code, "Phone Number" => $rest_of_phone_number];
+
+    $payload = ["statusCode" => 200, "data" => $data_to_view];
 
     return $json->withJsonResponse($response, $payload);
   }

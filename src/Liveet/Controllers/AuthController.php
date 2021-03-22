@@ -16,7 +16,7 @@ class AuthController extends BaseController {
   {
     $json = new JSON();
 
-    $data = static::getTokenInputsFromRequest($request);
+    $data = $request->getParsedBody();
 
     $phone = $data["phone"];
 

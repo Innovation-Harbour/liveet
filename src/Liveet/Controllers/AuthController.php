@@ -24,7 +24,7 @@ class AuthController extends BaseController {
 
     $rest_of_phone_number = substr($phone, 4);
 
-    $phone_count = count($rest_of_phone_number);
+    $phone_count = strlen($rest_of_phone_number);
 
     $data_to_view = ["country_code" => $country_code, "Phone Number" => $rest_of_phone_number, "Count" => $phone_count];
 

@@ -25,12 +25,22 @@ class AuthController extends BaseController {
     $rest_of_phone_number = substr($phone, 4);
 
     $phone_count = strlen($rest_of_phone_number);
+    
+    if(($phone_count == 11 && $rest_of_phone_number[0] == "0") || $phone_count == 10)
+    {
+      $data_to_view = ["country_code" => $country_code, "Phone Number" => $rest_of_phone_number, "Count" => $phone_count];
 
-    $data_to_view = ["country_code" => $country_code, "Phone Number" => $rest_of_phone_number, "Count" => $phone_count];
+      $payload = ["statusCode" => 200, "data" => $data_to_view];
 
-    $payload = ["statusCode" => 200, "data" => $data_to_view];
+      return $json->withJsonResponse($response, $payload);
+    }
+    else{
+      $error = ["errorMessage" => "Phone Number Does Not Match The Number Format for Selected Country", "statusCode" => 400];
 
-    return $json->withJsonResponse($response, $payload);
+      return $json->withJsonResponse($response, $error);
+    }
+
+
   }
 
 }

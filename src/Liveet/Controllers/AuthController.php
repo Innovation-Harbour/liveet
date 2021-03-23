@@ -28,7 +28,7 @@ class AuthController extends BaseController {
 
     if ($country_code !=="+234")
     {
-      $error = ["errorMessage" => "Selected Country not supported at the moment", "statusCode" => 400];
+      $error = ["errorMessage" => "Selected Country not supported at the moment for now", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
     }

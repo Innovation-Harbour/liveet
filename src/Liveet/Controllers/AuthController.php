@@ -25,7 +25,14 @@ class AuthController extends BaseController {
     $rest_of_phone_number = substr($phone, 4);
 
     $phone_count = strlen($rest_of_phone_number);
-    
+
+    if ($country_code !=="+234")
+    {
+      $error = ["errorMessage" => "Selected Country not supported at the moment", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
     if(($phone_count == 11 && $rest_of_phone_number[0] == "0") || $phone_count == 10)
     {
       $data_to_view = ["country_code" => $country_code, "Phone Number" => $rest_of_phone_number, "Count" => $phone_count];

@@ -16,5 +16,3 @@ class TempModel extends BaseModel
 
     public $timestamps = false;
 }
-
- ?>

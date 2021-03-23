@@ -1,6 +1,6 @@
 <?php
 
-namespace Liveet\Controllers;
+namespace Liveet\Controllers\Mobile;
 
 use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;

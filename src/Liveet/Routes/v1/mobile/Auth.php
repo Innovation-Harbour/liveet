@@ -2,7 +2,7 @@
 
 use Slim\Routing\RouteCollectorProxy;
 
-use Liveet\Controllers\AuthController;
+use Liveet\Controllers\Mobile\AuthController;
 use Liveet\Middlewares\AuthenticationMiddleware;
 
 

@@ -44,6 +44,7 @@ class AuthController extends BaseController {
       $phone_clean = substr($phone, 1);
 
       $user_count = $user_db->where('user_phone', $phone_clean)->count();
+      $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
 
       if($user_count > 0)
       {
@@ -52,7 +53,12 @@ class AuthController extends BaseController {
         return $json->withJsonResponse($response, $error);
       }
       else{
-        $temp_db->create(["temp_phone" => $phone_clean]);
+        if($temp_count < 1)
+        {
+          $temp_db->create(["temp_phone" => $phone_clean]);
+        }
+
+        // Here we would be implementing the Termii Registration when available
       }
 
       $data_to_view = ["country_code" => $country_code, "Phone Number" => $rest_of_phone_number, "Count" => $phone_count];

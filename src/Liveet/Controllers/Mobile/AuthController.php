@@ -87,7 +87,7 @@ class AuthController extends BaseController {
     //test.. will be replaced with live correction from Termii
     $accepted_otp = "1234";
 
-    $is_accepted = ($accepted_otp === $opt) ? true : false;
+    $is_accepted = ($accepted_otp === $otp) ? true : false;
 
     if($is_accepted)
     {

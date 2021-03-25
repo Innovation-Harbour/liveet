@@ -107,7 +107,7 @@ class MailHandler
             case self::TEMPLATE_CONFIRM_EMAIL:
                 $subject = "Confirm your account";
 
-                $link = "https://" . Constants::PRODUCTION_HOST . Constants::PRODUCTION_BASE_PATH . "/" . $this->usertype . "/update/verify/email/" . $this->params["email_verification_token"];
+                $link = "https://" . Constants::PRODUCTION_HOST . $_ENV["BASE_PATH"] . "/" . $this->usertype . "/update/verify/email/" . $this->params["email_verification_token"];
 
                 $body = $this->createConfirmEmailBody($link);
                 break;
@@ -115,7 +115,7 @@ class MailHandler
             case self::TEMPLATE_FORGOT_PASSWORD:
                 $subject = "Reset your password";
 
-                $link = "https://" . Constants::PRODUCTION_HOST . Constants::PRODUCTION_BASE_PATH . "/" . $this->usertype . "/forgot/password/" . $this->params["forgotPasswordToken"];
+                $link = "https://" . Constants::PRODUCTION_HOST . $_ENV["BASE_PATH"] . "/" . $this->usertype . "/forgot/password/" . $this->params["forgotPasswordToken"];
 
                 $body = $this->createForgotPasswordBody($link);
                 break;
@@ -167,7 +167,7 @@ class MailHandler
         }
 
         error_reporting($errLevel);  // restore old error levels
-        return ["success" => null, "error" => $e->getMessage()];
+        return ["success" => null, "error" => "Error sending mail"];
 
         // return $this->constructMail()->sendMail();
     }

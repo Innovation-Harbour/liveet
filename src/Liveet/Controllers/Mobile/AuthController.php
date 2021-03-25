@@ -72,8 +72,36 @@ class AuthController extends BaseController {
 
       return $json->withJsonResponse($response, $error);
     }
+  }
 
+  public function VerifyOTP (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $json = new JSON();
 
+    $data = $request->getParsedBody();
+
+    $phone = $data["phone"];
+    $otp = $data["otp"];
+
+    //test.. will be replaced with live correction from Termii
+    $accepted_otp = "1234";
+
+    $is_accepted = ($accepted_otp === $opt) ? true : false;
+
+    if($is_accepted)
+    {
+      $data_to_view = ["sent_otp" => $otp, "Phone Number" => $phone];
+
+      $payload = ["statusCode" => 200, "data" => $data_to_view];
+
+      return $json->withJsonResponse($response, $payload);
+    }
+    else{
+      $error = ["errorMessage" => "Provided OTP Not Correct.", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
   }
 
 }

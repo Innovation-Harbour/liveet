@@ -16,6 +16,11 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $authGroup->post(
+            "/verifyotp",
+            AuthController::class . ":VerifyOTP"
+        );
+
+        $authGroup->post(
             "/login",
             AuthController::class . ":Login"
         );

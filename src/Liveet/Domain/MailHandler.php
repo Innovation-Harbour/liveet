@@ -145,6 +145,30 @@ class MailHandler
 
     public function sendMail()
     {
-        return $this->constructMail()->sendMail();
+        ["subject" => $subject, "body" => $body] = $this->getTemplate();
+
+        // To send HTML mail, the Content-type header must be set
+        $headers[] = 'MIME-Version: 1.0';
+        $headers[] = 'Content-type: text/html; charset=iso-8859-1';
+
+        // Additional headers
+        $headers[] = 'To: ' . $this->params["username"] . ' <' . $this->to . '>';
+        $headers[] = 'From: ' . $this->fromName . ' <' . $this->from . '>';
+
+        // $htmlBody = $body["html"];
+        // $textBody = $body["text"];
+
+        $errLevel = error_reporting(E_ALL ^ E_NOTICE);  // suppress NOTICEs
+
+        if (@mail($this->to, $subject, $body["html"], implode("\r\n", $headers))) {
+
+            error_reporting($errLevel);  // restore old error levels
+            return ["success" => "Mail sent", "error" => null];
+        }
+
+        error_reporting($errLevel);  // restore old error levels
+        return ["success" => null, "error" => $e->getMessage()];
+
+        // return $this->constructMail()->sendMail();
     }
 }

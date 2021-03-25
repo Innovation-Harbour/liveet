@@ -6,8 +6,8 @@ class Constants
 {
   const PRODUCTION_HOST = "liveet.rollcallservice.com";
   const DEVELOPMENT_HOST = "localhost";
-  const DEVELOPMENT_BASE_PATH = "/liveet/liveet-apis";
-  const PRODUCTION_BASE_PATH = "/liveet-apis";
+  // const DEVELOPMENT_BASE_PATH = "/liveet/liveet-apis";
+  // const PRODUCTION_BASE_PATH = "/liveet";
 
   const ENVIRONMENT_DEVELOPMENT = "development";
 

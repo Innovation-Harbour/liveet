@@ -38,6 +38,16 @@ isset($v1Group) && $v1Group->group(
          */
         require "src/Liveet/Routes/v1/EventTicketRoutes.php";
 
+        /**
+         * Event Access Routes
+         */
+        require "src/Liveet/Routes/v1/EventAccessRoutes.php";
+
+        /**
+         * Event Timeline Routes
+         */
+        // require "src/Liveet/Routes/v1/EventTimelineRoutes.php";
+
 
         /** */
 

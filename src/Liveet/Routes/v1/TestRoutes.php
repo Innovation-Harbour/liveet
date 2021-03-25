@@ -15,7 +15,7 @@ isset($v1Group) && $v1Group->group(
     }
 )
     // ->addMiddleware(new AuthenticationMiddleware((new TestModel())))
-    ;
+;
 
 /**
  * No auth
@@ -24,5 +24,9 @@ isset($v1Group) && $v1Group->group(
 isset($v1Group) && $v1Group->group(
     "/tests",
     function (RouteCollectorProxy $testGroup) {
+        $testGroup->get("", function ($req, $res, $args) {
+            var_dump("testing");
+            return $res;
+        });
     }
 );

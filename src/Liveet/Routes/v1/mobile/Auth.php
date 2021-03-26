@@ -21,6 +21,11 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $authGroup->post(
+            "/completeprofile",
+            AuthController::class . ":CompleteProfile"
+        );
+
+        $authGroup->post(
             "/login",
             AuthController::class . ":Login"
         );

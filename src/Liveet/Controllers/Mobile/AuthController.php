@@ -104,4 +104,59 @@ class AuthController extends BaseController {
     }
   }
 
+  public function CompleteProfile (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $json = new JSON();
+    $user_db = new UserModel();
+    $temp_db = new TempModel();
+
+    $data = $request->getParsedBody();
+
+    $phone = $data["phone"];
+    $name = $data["name"];
+    $email = $data["email"];
+    $password = $data["password"];
+    $repeat_password = $data["repeat_password"];
+
+    $phone_clean = substr($phone, 1);
+
+
+    //checks
+
+    $user_count = $user_db->where('user_email', $email)->count();
+    $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
+
+    if ($user_count > 0)
+    {
+      $error = ["errorMessage" => "Email already Registered. Please use another email address", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
+    if ($temp_count < 1)
+    {
+      $error = ["errorMessage" => "Error Occured While Registering. Please try Registering again", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
+    if ($password !== $repeat_password)
+    {
+      $error = ["errorMessage" => "Password & Repeat Password Do not match. Please Try Again", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
+    //after checks passed, update temp table
+
+    $crypt_password = hash('sha256', $password);
+
+    $temp_db->where('temp_phone', $phone_clean)->update(["temp_name" => $name, "temp_email" => $email, "temp_password" => $crypt_password]);
+
+    $payload = ["statusCode" => 200, "successMessage" => "Temp Details Added"];
+
+    return $json->withJsonResponse($response, $payload);
+  }
+
 }

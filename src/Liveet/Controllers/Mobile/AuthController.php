@@ -189,6 +189,39 @@ class AuthController extends BaseController {
     }
   }
 
+  public function ResendOTP (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $json = new JSON();
+
+    $data = $request->getParsedBody();
+
+    $phone = $data["phone"];
+
+    $phone_clean = substr($phone, 1);
+
+    // here we send sms
+    $sms_response = json_decode($this->sendSMS($phone_clean),true);
+
+    $sms_status = $sms_response['smsStatus'];
+
+    if($sms_status !== "Message Sent")
+    {
+      $error = ["errorMessage" => "Error sending SMS. Please Register Again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    $sms_pin = $sms_response['pinId'];
+
+
+    $data_to_view = ["country_code" => $country_code, "Phone_Number" => $phone, "sms_pin" => $sms_pin];
+
+    $payload = ["statusCode" => 200, "data" => $data_to_view];
+
+    return $json->withJsonResponse($response, $payload);
+
+  }
+
   public function CompleteProfile (Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects

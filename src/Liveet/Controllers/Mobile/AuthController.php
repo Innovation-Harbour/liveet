@@ -226,7 +226,7 @@ class AuthController extends BaseController {
     $key = 'user-'.$code.'-image.png';
 
     try{
-      $result = $s3->putObject([
+      $s3_result = $s3->putObject([
           'Bucket' => 'liveet-users',
           'Key'    => $key,
           'Body'   => $byte_image,
@@ -241,16 +241,19 @@ class AuthController extends BaseController {
 
     $picture_url = "https://liveet-users.s3-us-west-2.amazonaws.com/".$key;
 
-    var_dump($result);
-    die();
-
     //check if image is good and usable
     $result = $recognition->detectFaces([ // REQUIRED
 		    'Attributes' => ['ALL'],
 		    'Image' => [ // REQUIRED
-		        'Bytes' => $image
+          'S3Object' => [
+          'Bucket' => 'liveet-users',
+          'Name' => $key,
+          ],
 		    ]
 		]);
+
+    var_dump($result);
+    die();
 
 
 

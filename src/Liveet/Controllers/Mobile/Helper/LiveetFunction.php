@@ -10,7 +10,7 @@ trait LiveetFunction
 
     $curl = curl_init();
     $data = array(
-       "api_key" => $_ENV["TERMII_KEY"];,
+       "api_key" => $_ENV["TERMII_KEY"],
        "message_type" => "NUMERIC",
        "to" => $phone,
        "from" => "N-Alert",

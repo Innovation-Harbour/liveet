@@ -295,7 +295,9 @@ class AuthController extends BaseController {
         ]);
       }
       catch (\Exception $e){
-        $error = ["errorMessage" => "Error adding User to database. Please try again", "statusCode" => 400];
+        var_dump($e);
+        die();
+        $error = ["errorMessage" => $e->message(), "statusCode" => 400];
         return $json->withJsonResponse($response, $error);
       }
 

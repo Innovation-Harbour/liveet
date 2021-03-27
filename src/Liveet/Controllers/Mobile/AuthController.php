@@ -244,23 +244,37 @@ class AuthController extends BaseController {
     */
 
     //check if image is good and usable
-    $result = $recognition->detectFaces([ // REQUIRED
-		    'Attributes' => ['ALL'],
-		    'Image' => [ // REQUIRED
-          'S3Object' => [
-          'Bucket' => 'liveet-users',
-          'Name' => "user-69060324-image.png",
-          ],
-		    ]
-		]);
+    try{
+      $result = $recognition->detectFaces([ // REQUIRED
+  		    'Attributes' => ['ALL'],
+  		    'Image' => [ // REQUIRED
+            'S3Object' => [
+            'Bucket' => 'liveet-users',
+            'Name' => "user-69060324-image.png",
+            ],
+  		    ]
+  		]);
+    }
+    catch(\Exception $e){
+      $error = ["errorMessage" => "Error getting face recognition. Please try Registering again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
 
     $confidence = $result["FaceDetails"][0]["Gender"]["Confidence"];
-    var_dump($confidence);
+    if($confidence > 50)
+    {
+      var_dump("yes");
+    }
+    else{
+      var_dump("wrong");
+    }
+
     die();
 
 
 
-    if($result["FaceDetails"][0]["Gender"]["Confidence"] > 50)
+    if($confidence > 50)
     {
       //get temp data and delete temp data from db
       $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();

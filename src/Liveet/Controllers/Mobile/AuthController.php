@@ -192,9 +192,6 @@ class AuthController extends BaseController {
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
 
-    var_dump($aws_key,$aws_secret);
-    die();
-
     try{
       $recognition = new RekognitionClient([
   		    'region'  => 'us-west-2',
@@ -209,6 +206,9 @@ class AuthController extends BaseController {
       $error = ["errorMessage" => "Error connecting to image server. Please try Registering again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
+
+    var_dump($recognition);
+    die();
 
     try{
       $s3 = new S3Client([

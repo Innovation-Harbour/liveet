@@ -66,24 +66,28 @@ class AuthController extends BaseController {
 
         return $json->withJsonResponse($response, $error);
       }
-      else{
-        if($temp_count < 1)
-        {
-          $temp_db->create(["temp_phone" => $phone_clean]);
-        }
 
-        // here we send sms
-        $sms_response = json_decode($this->sendSMS($phone_clean),true);
-        $sms_status = $sms_response['smsStatus'];
+      // here we send sms
+      $sms_response = json_decode($this->sendSMS($phone_clean),true);
+      var_dump($sms_response);
+      die();
+      
+      $sms_status = $sms_response['smsStatus'];
 
-        if($sms_status !== "Message Sent")
-        {
-          $error = ["errorMessage" => "Error sending SMS. Please Register Again", "statusCode" => 400];
-          return $json->withJsonResponse($response, $error);
-        }
+      if($sms_status !== "Message Sent")
+      {
+        $error = ["errorMessage" => "Error sending SMS. Please Register Again", "statusCode" => 400];
+        return $json->withJsonResponse($response, $error);
       }
 
-      $data_to_view = ["country_code" => $country_code, "Phone_Number" => $phone_full, "Phone_Number_Clean" => $phone_clean];
+      $sms_pin = $sms_response['pinId'];
+
+      if($temp_count < 1)
+      {
+        $temp_db->create(["temp_phone" => $phone_clean]);
+      }
+
+      $data_to_view = ["country_code" => $country_code, "Phone_Number" => $phone_full, "sms_pin" => $sms_pin];
 
       $payload = ["statusCode" => 200, "data" => $data_to_view];
 
@@ -162,13 +166,14 @@ class AuthController extends BaseController {
     $data = $request->getParsedBody();
 
     $phone = $data["phone"];
+    $sms_pin = $data["sms_pin"];
     $otp = $data["otp"];
 
     //verify OTP with Termii
-    $sms_response = json_decode($this->verifySMS($otp),true);
+    $sms_response = json_decode($this->verifySMS($otp,$sms_pin),true);
     var_dump($sms_response);
     die();
-    
+
     $otp_status = $sms_response['verified'];
 
     $is_accepted = ($otp_status === "True") ? true : false;

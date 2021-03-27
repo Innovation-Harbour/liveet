@@ -46,11 +46,11 @@ trait LiveetFunction
      return $response;
   }
 
-  public function verifySMS($otp){
+  public function verifySMS($otp,$sms_pin){
     $curl = curl_init();
     $data = array (
        "api_key" => $_ENV["TERMII_KEY"],
-       "pin_id" => "NUMERIC",
+       "pin_id" => $sms_pin,
        "pin" => $otp,
     );
 

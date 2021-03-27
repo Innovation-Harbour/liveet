@@ -222,8 +222,7 @@ class AuthController extends BaseController {
       return $json->withJsonResponse($response, $error);
     }
 
-    var_dump($s3);
-    die();
+
 
     //check if image is good and usable
     $result = $recognition->detectFaces([ // REQUIRED
@@ -232,6 +231,9 @@ class AuthController extends BaseController {
 		        'Bytes' => $image
 		    ]
 		]);
+
+    var_dump($result);
+    die();
 
     if(isset($result["FaceDetails"][0]["Gender"]))
     {

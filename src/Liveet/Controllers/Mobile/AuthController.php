@@ -248,7 +248,7 @@ class AuthController extends BaseController {
   		    'Image' => [ // REQUIRED
             'S3Object' => [
             'Bucket' => 'liveet-users',
-            'Name' => $key,
+            'Name' => "user-61960272-image.png",
             ],
   		    ]
   		]);

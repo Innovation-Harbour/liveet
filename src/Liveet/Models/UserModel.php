@@ -12,7 +12,7 @@ class UserModel extends BaseModel
 
     protected $table = "user";
     protected $dateFormat = "U";
-    protected $fillable = ['user_fullname','user_phone','user_email','user_password','user_picture'];
+    protected $fillable = ['user_fullname','user_phone','user_email','user_password','user_picture','image_key'];
 
     public function eventTickets()
     {

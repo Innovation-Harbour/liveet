@@ -252,32 +252,13 @@ class AuthController extends BaseController {
 		    ]
 		]);
 
-    var_dump($result);
-    die();
+    //var_dump($result);
+    //die();
 
 
 
     if(isset($result["FaceDetails"][0]["Gender"]))
     {
-      //push image to s3
-      $key = 'user-'.$code.'-image.png';
-
-      try{
-        $result = $s3->putObject([
-    		    'Bucket' => 'liveet-users',
-    		    'Key'    => $key,
-    		    'Body'   => $byte_image,
-    		    'ACL'    => 'public-read',
-    		    'ContentType'    => 'image/png'
-    		]);
-      }
-      catch (\Exception $e){
-        $error = ["errorMessage" => "Error posting image to S3. Please try Registering again", "statusCode" => 400];
-        return $json->withJsonResponse($response, $error);
-      }
-
-      $picture_url = "https://liveet-users.s3-us-west-2.amazonaws.com/".$key;
-
       //get temp data and delete temp data from db
       $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
 

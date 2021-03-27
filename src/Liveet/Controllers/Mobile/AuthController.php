@@ -5,6 +5,7 @@ namespace Liveet\Controllers\Mobile;
 use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
 use Liveet\Models\Mobile\TempModel;
+use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\UserModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
@@ -15,6 +16,7 @@ use Rashtell\Domain\KeyManager;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AuthController extends BaseController {
+  use LiveetFunction;
 
   public function Register (Request $request, ResponseInterface $response): ResponseInterface
   {
@@ -70,7 +72,12 @@ class AuthController extends BaseController {
           $temp_db->create(["temp_phone" => $phone_clean]);
         }
 
-        // Here we would be implementing the Termii Registration when available
+        // here we send sms
+
+        $sms_response = $this->sendSMS($phone_clean);
+
+        var_dump($sms_response);
+        die();
       }
 
       $data_to_view = ["country_code" => $country_code, "Phone_Number" => $phone_full, "Phone_Number_Clean" => $phone_clean];

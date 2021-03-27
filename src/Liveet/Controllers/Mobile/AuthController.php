@@ -267,12 +267,14 @@ class AuthController extends BaseController {
       //get temp data and delete temp data from db
       $temp_data = $temp_db->where('temp_phone', $phone_clean)->get();
 
+      var_dump($temp_data);
+      die();
+
       $fullname = $temp_data->temp_name;
       $email = $temp_data->temp_email;
       $password = $temp_data->temp_password;
 
-      var_dump($fullname,$email,$password);
-      die();
+
 
       //create user auth token
 

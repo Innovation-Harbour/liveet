@@ -295,7 +295,7 @@ class AuthController extends BaseController {
         ]);
       }
       catch (\Exception $e){
-        var_dump($e);
+        var_dump($e->getMessage());
         die();
         $error = ["errorMessage" => $e->message(), "statusCode" => 400];
         return $json->withJsonResponse($response, $error);

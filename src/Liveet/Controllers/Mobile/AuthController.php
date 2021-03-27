@@ -265,7 +265,7 @@ class AuthController extends BaseController {
     if($confidence > 50)
     {
       //get temp data and delete temp data from db
-      $temp_data = $temp_db->where('temp_phone', $phone_clean)->get();
+      $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
 
       var_dump($temp_data);
       die();

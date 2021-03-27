@@ -222,7 +222,27 @@ class AuthController extends BaseController {
       return $json->withJsonResponse($response, $error);
     }
 
+    //push image to s3
+    $key = 'user-'.$code.'-image.png';
 
+    try{
+      $result = $s3->putObject([
+          'Bucket' => 'liveet-users',
+          'Key'    => $key,
+          'Body'   => $byte_image,
+          'ACL'    => 'public-read',
+          'ContentType'    => 'image/png'
+      ]);
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error posting image to S3. Please try Registering again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    $picture_url = "https://liveet-users.s3-us-west-2.amazonaws.com/".$key;
+
+    var_dump($result);
+    die();
 
     //check if image is good and usable
     $result = $recognition->detectFaces([ // REQUIRED
@@ -232,8 +252,7 @@ class AuthController extends BaseController {
 		    ]
 		]);
 
-    var_dump($result);
-    die();
+
 
     if(isset($result["FaceDetails"][0]["Gender"]))
     {

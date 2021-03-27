@@ -21,6 +21,11 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $authGroup->post(
+            "/resendotp",
+            AuthController::class . ":ResendOTP"
+        );
+
+        $authGroup->post(
             "/completeprofile",
             AuthController::class . ":CompleteProfile"
         );

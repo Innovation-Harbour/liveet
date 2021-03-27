@@ -69,9 +69,7 @@ class AuthController extends BaseController {
 
       // here we send sms
       $sms_response = json_decode($this->sendSMS($phone_clean),true);
-      var_dump($sms_response);
-      die();
-      
+
       $sms_status = $sms_response['smsStatus'];
 
       if($sms_status !== "Message Sent")
@@ -171,12 +169,10 @@ class AuthController extends BaseController {
 
     //verify OTP with Termii
     $sms_response = json_decode($this->verifySMS($otp,$sms_pin),true);
-    var_dump($sms_response);
-    die();
 
     $otp_status = $sms_response['verified'];
 
-    $is_accepted = ($otp_status === "True") ? true : false;
+    $is_accepted = ($otp_status) ? true : false;
 
     if($is_accepted)
     {

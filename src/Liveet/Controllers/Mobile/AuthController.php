@@ -207,9 +207,6 @@ class AuthController extends BaseController {
       return $json->withJsonResponse($response, $error);
     }
 
-    var_dump($recognition);
-    die();
-
     try{
       $s3 = new S3Client([
   		    'region'  => 'us-west-2',
@@ -224,6 +221,9 @@ class AuthController extends BaseController {
       $error = ["errorMessage" => "Error connecting to AWS s3. Please try Registering again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
+
+    var_dump($s3);
+    die();
 
     //check if image is good and usable
     $result = $recognition->detectFaces([ // REQUIRED

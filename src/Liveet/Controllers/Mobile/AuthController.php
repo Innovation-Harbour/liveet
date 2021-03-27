@@ -166,6 +166,9 @@ class AuthController extends BaseController {
 
     //verify OTP with Termii
     $sms_response = json_decode($this->verifySMS($otp),true);
+    var_dump($sms_response);
+    die();
+    
     $otp_status = $sms_response['verified'];
 
     $is_accepted = ($otp_status === "True") ? true : false;

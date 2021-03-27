@@ -184,6 +184,9 @@ class AuthController extends BaseController {
     $phone = $data["phone"];
     $image = $data["image"];
 
+    var_dump($image);
+    die();
+
     $byte_image = base64_decode($image);
   	$code = rand(00000000, 99999999);
 

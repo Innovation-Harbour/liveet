@@ -9,7 +9,9 @@
     "firebase/php-jwt": "^5.2",
     "phpmailer/phpmailer": "^6.1",
     "psr/log": "^1.1",
-    "vlucas/phpdotenv": "^5.3"
+    "vlucas/phpdotenv": "^5.3",
+    "aws/aws-sdk-php": "^3.176",
+    "guzzlehttp/guzzle": "^7.0"
   },
   "authors": [
     {

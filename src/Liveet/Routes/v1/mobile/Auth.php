@@ -26,6 +26,11 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $authGroup->post(
+            "/completeregistration",
+            AuthController::class . ":CompleteRegistration"
+        );
+
+        $authGroup->post(
             "/login",
             AuthController::class . ":Login"
         );

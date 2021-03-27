@@ -79,7 +79,7 @@ class AuthController extends BaseController {
         $sms_test2 = json_decode($sms_response,true);
         //$sms_test3 = $sms_response->smsStatus;
 
-        var_dump($sms_test1,$sms_test2);
+        var_dump($sms_test1,$sms_test2["smsStatus"]);
         die();
       }
 

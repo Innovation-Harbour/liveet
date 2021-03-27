@@ -264,14 +264,15 @@ class AuthController extends BaseController {
 
     if($confidence > 50)
     {
-      var_dump("i am inside here");
-      die();
       //get temp data and delete temp data from db
       $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
 
       $fullname = $temp_data->temp_name;
       $email = $temp_data->temp_email;
       $password = $temp_data->temp_password;
+
+      var_dump($fullname,$email,$password);
+      die();
 
       //create user auth token
 

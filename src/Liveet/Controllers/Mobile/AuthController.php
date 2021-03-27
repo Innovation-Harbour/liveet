@@ -9,6 +9,9 @@ use Liveet\Models\UserModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
+use Aws\Rekognition\RekognitionClient;
+use Aws\S3\S3Client;
+use Rashtell\Domain\KeyManager;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AuthController extends BaseController {
@@ -166,6 +169,138 @@ class AuthController extends BaseController {
     $payload = ["statusCode" => 200, "successMessage" => "Temp Details Added"];
 
     return $json->withJsonResponse($response, $payload);
+  }
+
+  public function CompleteRegistration (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $json = new JSON();
+    $keymanager = new KeyManager();
+    $user_db = new UserModel();
+    $temp_db = new TempModel();
+
+    $data = $request->getParsedBody();
+
+    $phone = $data["phone"];
+    $image = $data["image"];
+
+    $byte_image = base64_decode($image);
+  	$code = rand(00000000, 99999999);
+
+    $phone_clean = substr($phone, 1);
+
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+
+    try{
+      $recognition = new RekognitionClient([
+  		    'region'  => 'us-west-2',
+  		    'version' => 'latest',
+  		    'credentials' => [
+  		        'key'    => $aws_key,
+  		        'secret' => $aws_secret,
+  		    ]
+  		]);
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error connecting to image server. Please try Registering again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    try{
+      $s3 = new S3Client([
+  		    'region'  => 'us-west-2',
+  		    'version' => 'latest',
+  		    'credentials' => [
+  		        'key'    => $aws_key,
+  		        'secret' => $aws_secret,
+  		    ]
+  		]);
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error connecting to AWS s3. Please try Registering again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    //check if image is good and usable
+    $result = $recognition->detectFaces([ // REQUIRED
+		    'Attributes' => ['ALL'],
+		    'Image' => [ // REQUIRED
+		        'Bytes' => $image
+		    ]
+		]);
+
+    if(isset($result["FaceDetails"][0]["Gender"]))
+    {
+      //push image to s3
+      $key = 'user-'.$code.'-image.png';
+
+      try{
+        $result = $s3->putObject([
+    		    'Bucket' => 'liveet-users',
+    		    'Key'    => $key,
+    		    'Body'   => $byte_image,
+    		    'ACL'    => 'public-read',
+    		    'ContentType'    => 'image/png'
+    		]);
+      }
+      catch (\Exception $e){
+        $error = ["errorMessage" => "Error posting image to S3. Please try Registering again", "statusCode" => 400];
+        return $json->withJsonResponse($response, $error);
+      }
+
+      $picture_url = "https://liveet-users.s3-us-west-2.amazonaws.com/".$key;
+
+      //get temp data and delete temp data from db
+      $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
+
+      $fullname = $temp_data->temp_name;
+      $email = $temp_data->temp_email;
+      $password = $temp_data->temp_password;
+
+      //create user auth token
+
+      $user_data_token[] = [
+        "email" => $email
+      ];
+
+      $token = $keymanager->createClaims($user_data_token);
+
+      //add data to user table
+      try{
+        $user_db->create([
+            "user_fullname" => $fullname,
+            "user_phone" => $phone_clean,
+            "user_email" => $email,
+            "user_password" => $password,
+            "user_picture" => $picture_url
+        ]);
+      }
+      catch (\Exception $e){
+        $error = ["errorMessage" => "Error adding User to database. Please try again", "statusCode" => 400];
+        return $json->withJsonResponse($response, $error);
+      }
+
+      $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
+
+      $user_id = $user_data->user_id;
+
+
+      //remove record from temp db
+      $temp_db->where('temp_phone', $phone_clean)->delete();
+
+      $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname,"user_id" => $user_id];
+
+      $payload = ["statusCode" => 200, "data" => $data_to_view];
+
+      return $json->withJsonResponse($response, $payload);
+
+
+    }
+    else{
+      $error = ["errorMessage" => "Image Not Accepted. Please take a selfie of your face alone", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
   }
 
 }

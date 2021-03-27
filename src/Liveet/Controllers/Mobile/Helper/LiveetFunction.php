@@ -13,7 +13,7 @@ trait LiveetFunction
        "api_key" => $_ENV["TERMII_KEY"],
        "message_type" => "NUMERIC",
        "to" => $phone,
-       "from" => "Liveet",
+       "from" => "N-Alert",
        "channel" => "dnd",
        "pin_attempts" => 10,
        "pin_time_to_live" =>  5,

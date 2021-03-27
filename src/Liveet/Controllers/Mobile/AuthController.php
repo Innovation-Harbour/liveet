@@ -248,7 +248,7 @@ class AuthController extends BaseController {
   		    'Image' => [ // REQUIRED
             'S3Object' => [
             'Bucket' => 'liveet-users',
-            'Name' => "user-69060324-image.png",
+            'Name' => $key,
             ],
   		    ]
   		]);
@@ -259,11 +259,7 @@ class AuthController extends BaseController {
     }
 
     $confidence = 0;
-
-    if(array_key_exists('Gender', $result["FaceDetails"][0]))
-    {
-      $confidence = $result["FaceDetails"][0]["Gender"]["Confidence"];
-    }
+    $confidence = $result["FaceDetails"][0]["Gender"]["Confidence"];
 
 
     if($confidence > 50)

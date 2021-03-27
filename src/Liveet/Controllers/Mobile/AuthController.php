@@ -260,7 +260,7 @@ class AuthController extends BaseController {
 
     $confidence = 0;
 
-    if(array_key_exists('Gender', $result["FaceDetails"]))
+    if(array_key_exists('Gender', $result["FaceDetails"][0]))
     {
       $confidence = $result["FaceDetails"][0]["Gender"]["Confidence"];
     }

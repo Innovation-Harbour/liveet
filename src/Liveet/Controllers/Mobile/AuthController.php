@@ -86,6 +86,64 @@ class AuthController extends BaseController {
     }
   }
 
+  public function Login (Request $request, ResponseInterface $response): ResponseInterface
+  {
+
+    //declare needed class objects
+    $json = new JSON();
+    $user_db = new UserModel();
+    $temp_db = new TempModel();
+    $keymanager = new KeyManager();
+
+    $data = $request->getParsedBody();
+
+    $email = $data["email"];
+    $password = $data["password"];
+
+    $hashed_password = hash('sha256',$password);
+
+
+    $user_count = $user_db->where('user_email', $email)->count();
+
+    if($user_count < 1)
+    {
+      $error = ["errorMessage" => "Email Not Registered. Please Try Again", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
+    $user_data = $user_db->where('user_email', $email)->take(1)->get();
+    $user_data_clean = $user_data[0];
+
+    $db_password = $user_data_clean->user_password;
+
+    if($hashed_password !== $db_password)
+    {
+      $error = ["errorMessage" => "Password Not Correct. Please Try Again", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
+    //create user auth token
+
+    $user_data_token[] = [
+      "email" => $email
+    ];
+
+    $token = $keymanager->createClaims($user_data_token);
+
+    //get user data
+    $fullname = $user_data_clean->user_fullname;
+    $user_id = $user_data_clean->user_id;
+
+    $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname,"user_id" => $user_id];
+
+    $payload = ["statusCode" => 200, "data" => $data_to_view];
+
+    return $json->withJsonResponse($response, $payload);
+
+  }
+
   public function VerifyOTP (Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects

@@ -265,14 +265,14 @@ class AuthController extends BaseController {
     if($confidence > 50)
     {
       //get temp data and delete temp data from db
-      $temp_data = $temp_db->where('temp_phone', $phone_clean)->find(1);
+      $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
+      $temp_data_clean = $temp_data[0];
+      //var_dump($temp_data[0]->temp_phone);
+      //die();
 
-      var_dump($temp_data->temp_phone);
-      die();
-
-      $fullname = $temp_data->temp_name;
-      $email = $temp_data->temp_email;
-      $password = $temp_data->temp_password;
+      $fullname = $temp_data_clean->temp_name;
+      $email = $temp_data_clean->temp_email;
+      $password = $temp_data_clean->temp_password;
 
 
 
@@ -300,8 +300,9 @@ class AuthController extends BaseController {
       }
 
       $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
+      $user_data_clean = $user_data[0];
 
-      $user_id = $user_data->user_id;
+      $user_id = $user_data_clean->user_id;
 
 
       //remove record from temp db

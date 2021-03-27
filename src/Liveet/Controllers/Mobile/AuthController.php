@@ -225,7 +225,6 @@ class AuthController extends BaseController {
     //push image to s3
     $key = 'user-'.$code.'-image.png';
 
-    /*
     try{
       $s3_result = $s3->putObject([
           'Bucket' => 'liveet-users',
@@ -241,7 +240,6 @@ class AuthController extends BaseController {
     }
 
     $picture_url = "https://liveet-users.s3-us-west-2.amazonaws.com/".$key;
-    */
 
     //check if image is good and usable
     try{
@@ -250,7 +248,7 @@ class AuthController extends BaseController {
   		    'Image' => [ // REQUIRED
             'S3Object' => [
             'Bucket' => 'liveet-users',
-            'Name' => "user-69060324-image.png",
+            'Name' => $key,
             ],
   		    ]
   		]);
@@ -260,18 +258,12 @@ class AuthController extends BaseController {
       return $json->withJsonResponse($response, $error);
     }
 
+    $confidence = 0;
 
-    $confidence = $result["FaceDetails"][0]["Gender"]["Confidence"];
-    if($confidence > 50)
+    if(isset($result["FaceDetails"][0]["Gender"]["Confidence"]))
     {
-      var_dump("yes");
+      $confidence = $result["FaceDetails"][0]["Gender"]["Confidence"];
     }
-    else{
-      var_dump("wrong");
-    }
-
-    die();
-
 
 
     if($confidence > 50)

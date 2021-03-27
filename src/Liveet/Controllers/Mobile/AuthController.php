@@ -254,8 +254,8 @@ class AuthController extends BaseController {
 		    ]
 		]);
 
-    var_dump($result);
-    die();
+    //var_dump($result);
+    //die();
 
 
 

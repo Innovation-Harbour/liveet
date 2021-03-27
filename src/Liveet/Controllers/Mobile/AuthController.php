@@ -30,6 +30,11 @@ class AuthController extends BaseController {
 
     $rest_of_phone_number = substr($phone, 4);
 
+    if(strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0")
+    {
+      $rest_of_phone_number = substr($rest_of_phone_number, 1);
+    }
+
     $phone_count = strlen($rest_of_phone_number);
 
     if ($country_code !=="+234")
@@ -41,7 +46,11 @@ class AuthController extends BaseController {
 
     if($phone_count == 10 && in_array($rest_of_phone_number[0], $eligible_phone_starting))
     {
-      $phone_clean = substr($phone, 1);
+      $country_code_clean = substr($country_code, 1);
+
+      $phone_clean = $country_code_clean.$rest_of_phone_number;
+
+      $phone_full = $country_code.$rest_of_phone_number;
 
       $user_count = $user_db->where('user_phone', $phone_clean)->count();
       $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
@@ -61,7 +70,7 @@ class AuthController extends BaseController {
         // Here we would be implementing the Termii Registration when available
       }
 
-      $data_to_view = ["country_code" => $country_code, "Phone Number" => $rest_of_phone_number, "Count" => $phone_count];
+      $data_to_view = ["country_code" => $country_code, "Phone_Number" => $phone_full, "Phone_Number_Clean" => $phone_clean];
 
       $payload = ["statusCode" => 200, "data" => $data_to_view];
 

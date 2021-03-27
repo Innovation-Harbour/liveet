@@ -184,9 +184,6 @@ class AuthController extends BaseController {
     $phone = $data["phone"];
     $image = $data["image"];
 
-    var_dump($image);
-    die();
-
     $byte_image = base64_decode($image);
   	$code = rand(00000000, 99999999);
 
@@ -194,6 +191,9 @@ class AuthController extends BaseController {
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
+
+    var_dump($aws_key,$aws_secret);
+    die();
 
     try{
       $recognition = new RekognitionClient([

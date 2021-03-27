@@ -73,10 +73,9 @@ class AuthController extends BaseController {
         }
 
         // here we send sms
-
         $sms_response = $this->sendSMS($phone_clean);
 
-        var_dump($sms_response);
+        var_dump($sms_response["smsStatus"]);
         die();
       }
 

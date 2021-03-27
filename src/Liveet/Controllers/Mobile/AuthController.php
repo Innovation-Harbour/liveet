@@ -76,8 +76,11 @@ class AuthController extends BaseController {
         $sms_response = json_decode($this->sendSMS($phone_clean),true);
         $sms_status = $sms_response['smsStatus'];
 
-        var_dump($sms_status);
-        die();
+        if($sms_status !== "Message Sent")
+        {
+          $error = ["errorMessage" => "Error sending SMS. Please Register Again", "statusCode" => 400];
+          return $json->withJsonResponse($response, $error);
+        }
       }
 
       $data_to_view = ["country_code" => $country_code, "Phone_Number" => $phone_full, "Phone_Number_Clean" => $phone_clean];
@@ -161,10 +164,11 @@ class AuthController extends BaseController {
     $phone = $data["phone"];
     $otp = $data["otp"];
 
-    //test.. will be replaced with live correction from Termii
-    $accepted_otp = "1234";
+    //verify OTP with Termii
+    $sms_response = json_decode($this->verifySMS($otp),true);
+    $otp_status = $sms_response['verified'];
 
-    $is_accepted = ($accepted_otp === $otp) ? true : false;
+    $is_accepted = ($otp_status === "True") ? true : false;
 
     if($is_accepted)
     {

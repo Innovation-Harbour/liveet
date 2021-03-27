@@ -261,12 +261,11 @@ class AuthController extends BaseController {
     $confidence = 0;
     $confidence = $result["FaceDetails"][0]["Gender"]["Confidence"];
 
-    var_dump($confidence);
-    die();
-
 
     if($confidence > 50)
     {
+      var_dump("i am inside here");
+      die();
       //get temp data and delete temp data from db
       $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
 

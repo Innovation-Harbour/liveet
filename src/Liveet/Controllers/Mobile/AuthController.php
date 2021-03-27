@@ -261,6 +261,9 @@ class AuthController extends BaseController {
     $confidence = 0;
     $confidence = $result["FaceDetails"][0]["Gender"]["Confidence"];
 
+    var_dump($confidence);
+    die();
+
 
     if($confidence > 50)
     {

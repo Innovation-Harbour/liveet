@@ -35,11 +35,11 @@ class EventAccessController extends BaseController
             new EventAccessModel(),
             [
                 "required" => [
-                    "event_id", "event_ticket_id", "event_access_population"
+                    "event_ticket_id", "event_access_population"
                 ],
 
                 "expected" => [
-                    "event_id", "event_ticket_id", "event_access_population"
+                    "event_ticket_id", "event_access_population"
 
                 ],
             ]

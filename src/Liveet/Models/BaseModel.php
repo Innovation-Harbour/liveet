@@ -81,14 +81,18 @@ class BaseModel extends Model
      * @param Model $model
      * @return array[$error=>String]|null 
      */
-    public function checkExistsError($details, $uniqueColumns, $model = null)
+    public function checkExistsError(array $details, array $uniqueColumns, Model $model = null)
     {
         $model = $model ?? $this;
         $existExceptions =  ["password"];
         $isCreate = true;
         $pk = null;
 
-        $pk = (isset($uniqueColumns[$this->primaryKey]) && gettype($uniqueColumns[$this->primaryKey])) === "string" ? $uniqueColumns[$this->primaryKey] : $pk;
+        $pk = ((in_array($model->primaryKey, $uniqueColumns)
+            && (gettype($uniqueColumns[array_search($model->primaryKey, $uniqueColumns)])) === "string"))
+            ? $uniqueColumns[array_search($model->primaryKey, $uniqueColumns)]
+            : $pk;
+
         foreach ($uniqueColumns as $uniqueColumn) {
             if (gettype($uniqueColumn) === "array" && isset($uniqueColumn["primaryKey"])) {
                 $pk =  $uniqueColumn["columnName"];
@@ -97,7 +101,7 @@ class BaseModel extends Model
         }
 
         if (isset($details[$pk])) {
-            $modelExists = $this->find($details[$pk]);
+            $modelExists = $model->find($details[$pk]);
             if (!$modelExists) {
                 return ["error" => Constants::ERROR_NOT_FOUND];
             }

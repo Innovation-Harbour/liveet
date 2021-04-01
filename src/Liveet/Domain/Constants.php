@@ -38,4 +38,8 @@ class Constants
 
   const IMAGE_PATH = "assets/images/";
   const IMAGE_TYPES_ACCEPTED = ["jpg", "jpeg", "png", "svg"];
+
+  const EVENT_ACCESS_ASSIGNED = "ASSIGNED";
+  const EVENT_ACCESS_UNASSIGNED = "UNASSIGNED";
+  const EVENT_ACCESS_USED = "USED";
 }

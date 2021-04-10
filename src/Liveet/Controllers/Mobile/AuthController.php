@@ -447,30 +447,7 @@ class AuthController extends BaseController {
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
 
-    $event_code = "TestEventID1234";
-
-    $json = new JSON();
-    $aws_key = $_ENV["AWS_KEY"];
-    $aws_secret = $_ENV["AWS_SECRET"];
-
-    try{
-      $recognition = new RekognitionClient([
-  		    'region'  => 'us-west-2',
-  		    'version' => 'latest',
-  		    'credentials' => [
-  		        'key'    => $aws_key,
-  		        'secret' => $aws_secret,
-  		    ]
-  		]);
-    }
-    catch (\Exception $e){
-      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
-      return $json->withJsonResponse($response, $error);
-    }
-
-		$result = $recognition->createCollection([
-		    'CollectionId' => $event_code, // REQUIRED
-		]);
+    $result = $this->doAwsEvent();
 
     var_dump($result);
     die;

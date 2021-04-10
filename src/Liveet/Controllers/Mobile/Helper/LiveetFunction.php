@@ -80,10 +80,10 @@ trait LiveetFunction
     return $response;
   }
 
-  public function awsAddEvent($event_code){
+  public function doAwsEvent(){
 
-    return $event_code;
-    /*
+    $event_code = "TestEventNow1234";
+
     $json = new JSON();
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
@@ -108,6 +108,5 @@ trait LiveetFunction
 		]);
 
     return $result;
-    */
   }
 }

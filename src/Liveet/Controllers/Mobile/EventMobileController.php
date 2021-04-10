@@ -21,8 +21,9 @@ class EventMobileController extends BaseController {
     $json = new JSON();
     $db = new InvitationModel();
 
-    var_dump($args);
-    die;
+    $user_id = $args["user_id"];
+    $offset = $args["offset"];
+    $limit = $args["limit"];
 
     $data_to_view = ["data" => $user_id, "offset" => $offset, "limit" => $limit];
 

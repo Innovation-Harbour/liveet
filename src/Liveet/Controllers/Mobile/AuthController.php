@@ -158,6 +158,13 @@ class AuthController extends BaseController {
 
   public function VerifyOTP (Request $request, ResponseInterface $response): ResponseInterface
   {
+    $event_code = "TestEventID1234";
+
+    $result = $this->awsAddEvent($event_code);
+
+    var_dump($result);
+    die;
+    /*
     //declare needed class objects
     $json = new JSON();
 
@@ -187,6 +194,7 @@ class AuthController extends BaseController {
 
       return $json->withJsonResponse($response, $error);
     }
+    */
   }
 
   public function ResendOTP (Request $request, ResponseInterface $response): ResponseInterface

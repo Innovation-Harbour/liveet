@@ -438,7 +438,7 @@ class AuthController extends BaseController {
 
     $result = $keymanager->validateClaim($token);
 
-    var_dump(json_decode($result));
+    var_dump(json_encode($result));
     die;
   }
 

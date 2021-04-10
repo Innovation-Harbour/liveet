@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class EventMobileController extends BaseController {
   use LiveetFunction;
 
-  public function GetEvents (Request $request, ResponseInterface $response, $user_id, $offset, $limit): ResponseInterface
+  public function GetEvents ($user_id, $offset, $limit, Request $request, ResponseInterface $response): ResponseInterface
   {
 
     //declare needed class objects

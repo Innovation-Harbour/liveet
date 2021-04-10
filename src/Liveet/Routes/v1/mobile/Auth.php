@@ -42,7 +42,7 @@ isset($mobileGroup) && $mobileGroup->group(
 
         $authGroup->get(
             "/testaws",
-            AuthController::class . ":testAWSAddEvent"
+            AuthController::class . ":AWSAddEvent"
         );
     }
 );

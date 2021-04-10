@@ -431,7 +431,7 @@ class AuthController extends BaseController {
     }
   }
 
-  public function (Request $request, ResponseInterface $response): ResponseInterface
+  public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
 
     $event_code = "TestEventID1234";

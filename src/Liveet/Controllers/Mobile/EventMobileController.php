@@ -14,14 +14,17 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class EventMobileController extends BaseController {
   use LiveetFunction;
 
-  public function GetEvents ($user_id, $offset, $limit, Request $request, ResponseInterface $response): ResponseInterface
+  public function GetEvents (Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
 
     //declare needed class objects
     $json = new JSON();
     $db = new InvitationModel();
 
-    $data_to_view = ["user_id" => $user_id, "offset" => $offset, "limit" => $limit];
+    var_dump($args);
+    die;
+
+    $data_to_view = ["data" => $user_id, "offset" => $offset, "limit" => $limit];
 
     $payload = ["statusCode" => 200, "data" => $data_to_view];
 

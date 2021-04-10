@@ -31,7 +31,7 @@ class EventMobileController extends BaseController {
 
     var_dump($results);
     die;
-
+    /*
     foreach($results as $result)
     {
       //$datetime = $result["event_date_time"];
@@ -52,7 +52,7 @@ class EventMobileController extends BaseController {
     $payload = ["statusCode" => 200, "data" => $response_data];
 
     return $json->withJsonResponse($response, $payload);
-    /*
+
     $data = $request->getParsedBody();
 
     $phone = $data["phone"];

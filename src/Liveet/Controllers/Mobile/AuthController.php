@@ -162,8 +162,7 @@ class AuthController extends BaseController {
 
     $result = $this->awsAddEvent($event_code);
 
-    var_dump($result);
-    die;
+    
 
 
 

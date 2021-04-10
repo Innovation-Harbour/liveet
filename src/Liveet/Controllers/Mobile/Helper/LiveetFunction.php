@@ -81,6 +81,9 @@ trait LiveetFunction
   }
 
   public function awsAddEvent($event_code){
+    var_dump("i am here");
+    die;
+
     return "i am here";
     /*
     $json = new JSON();

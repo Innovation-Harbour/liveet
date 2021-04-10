@@ -446,8 +446,9 @@ class AuthController extends BaseController {
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
+    $event_code = "TestEventAgain1234";
 
-    $result = $this->doAwsEvent();
+    $result = $this->createAwsEvent($event_code);
 
     var_dump($result);
     die;

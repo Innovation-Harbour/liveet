@@ -80,9 +80,7 @@ trait LiveetFunction
     return $response;
   }
 
-  public function doAwsEvent(){
-
-    $event_code = "TestEventNow1234";
+  public function createAwsEvent($event){
 
     $json = new JSON();
     $aws_key = $_ENV["AWS_KEY"];
@@ -104,7 +102,7 @@ trait LiveetFunction
     }
 
 		$result = $recognition->createCollection([
-		    'CollectionId' => $event_code, // REQUIRED
+		    'CollectionId' => $event, // REQUIRED
 		]);
 
     return $result;

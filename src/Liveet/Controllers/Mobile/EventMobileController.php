@@ -28,8 +28,11 @@ class EventMobileController extends BaseController {
     $limit = $args["limit"];
 
     $results = $db->getMobileEvents($user_id, $offset, $limit);
+    $datetime = $result->event_date_time;
+    $date = date('d',$datetime);
+    $month = date('M',$datetime);
 
-    var_dump($results[0]->event_id);
+    var_dump($date,$month);
     die;
     /*
     foreach($results as $result)

@@ -21,17 +21,38 @@ class EventMobileController extends BaseController {
     $json = new JSON();
     $db = new InvitationModel();
 
+    $response_data = [];
+
     $user_id = $args["user_id"];
     $offset = $args["offset"];
     $limit = $args["limit"];
 
     $data_to_view = ["data" => $user_id, "offset" => $offset, "limit" => $limit];
 
-    $result = $db->getMobileEvents($user_id, $offset, $limit);
-    var_dump($result);
-    die;
+    $results = $db->getMobileEvents($user_id, $offset, $limit);
 
-    $payload = ["statusCode" => 200, "data" => $data_to_view];
+    foreach($results as $result)
+    {
+      $datetime = $result["event_date_time"];
+      $date = date('d',$datetime);
+      $month = date('M',$datetime);
+
+      $can_invite = ($result["event_can_invite"] === "CAN_INVITE") ? true : false;
+
+      $tmp = [
+        "event_id" => $result["event_id"],
+        "event_image" => $result["event_multimedia"],
+        "event_title" => $result["event_name"],
+        "event_date" => $date,
+        "event_month" => $month,
+        "can_invite" => $can_invite,
+
+      ];
+
+      array_push($response_data,$tmp);
+    }
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
 
     return $json->withJsonResponse($response, $payload);
     /*

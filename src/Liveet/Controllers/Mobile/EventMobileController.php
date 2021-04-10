@@ -27,26 +27,20 @@ class EventMobileController extends BaseController {
     $offset = $args["offset"];
     $limit = $args["limit"];
 
-    $data_to_view = ["data" => $user_id, "offset" => $offset, "limit" => $limit];
-
     $results = $db->getMobileEvents($user_id, $offset, $limit);
 
     foreach($results as $result)
     {
-      $datetime = $result["event_date_time"];
-      $date = date('d',$datetime);
-      $month = date('M',$datetime);
+      //$datetime = $result["event_date_time"];
+      //$date = date('d',$datetime);
+      //$month = date('M',$datetime);
 
-      $can_invite = ($result["event_can_invite"] === "CAN_INVITE") ? true : false;
+      //$can_invite = ($result["event_can_invite"] === "CAN_INVITE") ? true : false;
 
       $tmp = [
         "event_id" => $result["event_id"],
         "event_image" => $result["event_multimedia"],
-        "event_title" => $result["event_name"],
-        "event_date" => $date,
-        "event_month" => $month,
-        "can_invite" => $can_invite,
-
+        "event_title" => $result["event_name"]
       ];
 
       array_push($response_data,$tmp);

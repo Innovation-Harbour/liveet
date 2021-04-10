@@ -27,6 +27,10 @@ class EventMobileController extends BaseController {
 
     $data_to_view = ["data" => $user_id, "offset" => $offset, "limit" => $limit];
 
+    $result = $db->getMobileEvents($user_id, $offset, $limit);
+    var_dump($result);
+    die;
+
     $payload = ["statusCode" => 200, "data" => $data_to_view];
 
     return $json->withJsonResponse($response, $payload);

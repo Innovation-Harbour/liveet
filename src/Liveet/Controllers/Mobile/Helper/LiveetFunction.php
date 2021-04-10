@@ -2,6 +2,7 @@
 namespace Liveet\Controllers\Mobile\Helper;
 
 use Aws\Rekognition\RekognitionClient;
+use Rashtell\Domain\JSON;
 
 /**
  * helper functions for Liveet Mobile
@@ -80,6 +81,8 @@ trait LiveetFunction
   }
 
   public function awsAddEvent($event_code){
+    return("i am here");
+    $json = new JSON();
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
 

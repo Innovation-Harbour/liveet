@@ -160,10 +160,11 @@ class AuthController extends BaseController {
   {
     $event_code = "TestEventID1234";
 
-    var_dump($event_code);
+    $result = $this->awsAddEvent($event_code);
+
+    var_dump($result);
     die;
 
-    $result = $this->awsAddEvent($event_code);
 
 
     /*

@@ -431,7 +431,8 @@ class AuthController extends BaseController {
     }
   }
 
-  public function testAWSAddEvent(){
+  public function (Request $request, ResponseInterface $response): ResponseInterface
+  {
 
     $event_code = "TestEventID1234";
 
@@ -439,5 +440,6 @@ class AuthController extends BaseController {
 
     var_dump($response);
     die;
+  }
 
 }

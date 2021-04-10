@@ -11,7 +11,7 @@ isset($mobileGroup) && $mobileGroup->group(
     function (RouteCollectorProxy $mobileEventGroup) {
 
         $mobileEventGroup->get(
-            "/getevent",
+            "/getevent/{user_id}/{offset}/{limit}",
             EventMobileController::class . ":GetEvents"
         );
     }

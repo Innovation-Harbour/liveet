@@ -7,10 +7,10 @@ use Liveet\Middlewares\AuthenticationMiddleware;
 
 
 isset($mobileGroup) && $mobileGroup->group(
-    "/event",
-    function (RouteCollectorProxy $eventGroup) {
+    "",
+    function (RouteCollectorProxy $mobileEventGroup) {
 
-        $eventGroup->get(
+        $mobileEventGroup->get(
             "/getevent/{user_id}/{offset}/{limit}",
             EventMobileController::class . ":GetEvents"
         );

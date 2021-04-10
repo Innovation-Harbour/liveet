@@ -29,7 +29,7 @@ class EventMobileController extends BaseController {
 
     $results = $db->getMobileEvents($user_id, $offset, $limit);
 
-    var_dump($results[0]);
+    var_dump($results[0]->event_id);
     die;
     /*
     foreach($results as $result)

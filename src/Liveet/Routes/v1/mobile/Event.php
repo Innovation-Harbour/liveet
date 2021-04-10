@@ -4,6 +4,7 @@ use Slim\Routing\RouteCollectorProxy;
 
 use Liveet\Controllers\Mobile\EventMobileController;
 use Liveet\Middlewares\AuthenticationMiddleware;
+use Liveet\Models\UserModel;
 
 
 isset($mobileGroup) && $mobileGroup->group(
@@ -15,4 +16,4 @@ isset($mobileGroup) && $mobileGroup->group(
             EventMobileController::class . ":GetEvents"
         );
     }
-);
+)->addMiddleware(new AuthenticationMiddleware((new UserModel())));

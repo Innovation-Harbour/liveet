@@ -33,11 +33,9 @@ class UserModel extends BaseModel
             return ["isAuthenticated" => false, "error" => "Invalid token"];
         }
 
-        $public_key = $authDetails["public_key"];
+        $email = $authDetails["email"];
 
-        $user =  self::where("public_key", $public_key)
-            // ->where("token", "=", $token)
-            ->first();
+        $user =  self::where("user_email", $$email)->first();
 
         return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
 

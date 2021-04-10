@@ -23,7 +23,7 @@ class InvitationModel extends BaseModel
               RIGHT JOIN event ON e.event_id = event.event_id
               INNER JOIN event_control ON event.event_id = event_control.event_id
               WHERE user.user_id = ".$user_id."
-              OR event.event_type = 'PUBLIC' ORDER BY user.user_id DESC LIMIT ".$offset.", ".$limit."
+              OR event.event_type = 'PUBLIC' ORDER BY user.user_id DESC, event.event_id LIMIT ".$offset.", ".$limit."
               ";
       $result = $this->getConnection()->select($sql);
       return $result;

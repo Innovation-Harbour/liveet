@@ -159,8 +159,6 @@ class AuthController extends BaseController {
   public function VerifyOTP (Request $request, ResponseInterface $response): ResponseInterface
   {
     $event_code = "TestEventID1234";
-    var_dump("i am here");
-    die;
 
     $result = $this->awsAddEvent($event_code);
 

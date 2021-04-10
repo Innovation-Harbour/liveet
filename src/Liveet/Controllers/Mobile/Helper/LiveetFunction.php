@@ -81,8 +81,8 @@ trait LiveetFunction
   }
 
   public function awsAddEvent($event_code){
-    
-    return "i am here";
+
+    return $event_code;
     /*
     $json = new JSON();
     $aws_key = $_ENV["AWS_KEY"];

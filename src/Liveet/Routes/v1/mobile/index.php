@@ -7,5 +7,6 @@ isset($v1Group) && $v1Group->group(
     function (RouteCollectorProxy $mobileGroup) {
 
         require "src/Liveet/Routes/v1/mobile/Auth.php";
+        require "src/Liveet/Routes/v1/mobile/Event.php";
     }
 );

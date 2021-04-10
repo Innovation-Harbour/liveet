@@ -35,7 +35,7 @@ class UserModel extends BaseModel
 
         $email = $authDetails["email"];
 
-        $user =  self::where("user_email", $$email)->first();
+        $user =  self::where("user_email", $email)->first();
 
         return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
 

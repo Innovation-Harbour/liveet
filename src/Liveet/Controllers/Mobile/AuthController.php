@@ -433,9 +433,10 @@ class AuthController extends BaseController {
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
-    $event_code = "TestEventAgain1234";
+    $keymanager = new KeyManager();
+    $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyIwIjp7ImVtYWlsIjoia29sYXBvQGdtYWlsLmNvbSJ9LCJpc3MiOiJwYXlyb2xsbW5nciIsImF1ZCI6InBheXJvbGxtbmdyIiwiaWF0IjoxNjE4MDk3MzE2LCJuYmYiOjE2MTgwOTczMTZ9.6nZeds2LDx_OlYyaQJVPUKtKi3lwXOjnxpo6hhf04W0";
 
-    $result = $this->createAwsEvent($event_code);
+    $result = $keymanager->validateClaim($token);
 
     var_dump($result);
     die;

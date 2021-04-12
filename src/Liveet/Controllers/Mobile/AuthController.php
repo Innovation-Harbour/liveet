@@ -384,7 +384,7 @@ class AuthController extends BaseController {
 
       //create user auth token
 
-      $user_data_token[] = [
+      $user_data_token = [
         "email" => $email
       ];
 

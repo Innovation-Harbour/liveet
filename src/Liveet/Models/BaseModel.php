@@ -187,7 +187,7 @@ class BaseModel extends Model
 
     protected static function search($searchTerm)
     {
-        return static::select();
+        return $this->select();
     }
 
     //TODO create a query contructor to append conditions, relationships and other query options
@@ -222,7 +222,7 @@ class BaseModel extends Model
         $minID = $this->min($this->primaryKey);
         $start = $minID + (($page - 1) * $limit) - 1;
 
-        if (!$this->isExist(static::select($this->primaryKey)->where($this->primaryKey, ">", $start))) {
+        if (!$this->isExist($this->select($this->primaryKey)->where($this->primaryKey, ">", $start))) {
             return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
         }
 
@@ -255,7 +255,7 @@ class BaseModel extends Model
         $allmodels = $query->get();
         $total = count($allmodels);
 
-        return ["data" => ["total" => $total, "all" => $allmodels], "error" => ""];
+        return ["data" => ["total" => $total, "all" => $allmodels,], "error" => ""];
     }
 
     public function getByDate($from, $to, $return = null, $conditions = [],  $relationships = null, $queryOptions = [])
@@ -486,7 +486,7 @@ class BaseModel extends Model
 
         $pk = $this->select($this->primaryKey)->where("email_verification_token", $email_verification_token)->first()[$this->primaryKey];
 
-        $model = static::find($pk);
+        $model = $this->find($pk);
 
         if ($model->verified > 0) {
             return ["error" => "This email has already been verified, please login.", "data" => []];
@@ -541,7 +541,7 @@ class BaseModel extends Model
 
     public function deleteByPK($pk)
     {
-        $model = static::find($pk);
+        $model = $this->find($pk);
 
         if (!$model) {
             return ["error" => Constants::ERROR_NOT_FOUND, "data" => null];
@@ -554,7 +554,7 @@ class BaseModel extends Model
 
     public function logout($pk)
     {
-        $model = static::find($pk);
+        $model = $this->find($pk);
 
         if (!$model) {
             return ["error" => "Invalid request. " . Constants::ERROR_NOT_FOUND, "data" => []];
@@ -603,7 +603,7 @@ class BaseModel extends Model
 
     public function getByDateWithRelationship($from, $to, $relationships, $return = null)
     {
-        if (!$this->isExist(static::select($this->primaryKey)->where("dateCreated", ">=", $from)->where("dateCreated", "<=", $to))) {
+        if (!$this->isExist($this->select($this->primaryKey)->where("dateCreated", ">=", $from)->where("dateCreated", "<=", $to))) {
             return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
         }
 
@@ -640,7 +640,7 @@ class BaseModel extends Model
 
     public function getWithRelationships($pk, $relationships, $return = null)
     {
-        if (!static::find($pk)) {
+        if (!$this->find($pk)) {
             return ["data" => null, "error" => Constants::ERROR_NOT_FOUND];
         }
 

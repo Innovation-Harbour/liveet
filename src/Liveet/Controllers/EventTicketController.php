@@ -145,15 +145,32 @@ class EventTicketController extends BaseController
             return $json->withJsonResponse($response, $error);
         }
         $organiser_id = $authDetails["organiser_id"];
-
         $event_ids = (new EventModel())->select("event_id")->where("organiser_id", $organiser_id)->without("eventControl", "eventTickets")->get();
-
         $whereInEventIds = [];
-        $i = 0;
         foreach ($event_ids as $event_id_value) {
-            $whereInEventIds[$i] = $event_id_value["event_id"];
-            $i++;
+            $whereInEventIds[] = $event_id_value["event_id"];
         }
+
+        $routeParams = $this->getRouteParams($request);
+        if (isset($routeParams["event_id"]) && $routeParams["event_id"] != "-") {
+            $conditions["event_id"] = $routeParams["event_id"];
+
+            if (in_array($routeParams["event_id"], $whereInEventIds)) {
+                return (new BaseController)->getByPage(
+                    $request,
+                    $response,
+                    (new EventTicketModel()),
+                    null,
+                    $conditions
+                );
+            }
+
+            $payload = array("errorMessage" => "No tickets for this event yet", "errorStatus" => "1", "statusCode" => 400);
+
+            return $json->withJsonResponse($response, $payload);
+        }
+
+
 
         return (new BaseController)->getByPage(
             $request,

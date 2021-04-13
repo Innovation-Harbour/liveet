@@ -18,8 +18,8 @@ isset($adminGroup) && $adminGroup->group(
         );
 
         $eventGroup->get(
-            "/get/accesss[/{event_id}[/{page}[/{limit}]]]",
-            EventAccessController::class . ":getEventAccesss"
+            "/get/accesses[/{event_ticket_id}[/{page}[/{limit}]]]",
+            EventAccessController::class . ":getEventAccesses"
         );
 
         $eventGroup->get(
@@ -28,8 +28,8 @@ isset($adminGroup) && $adminGroup->group(
         );
 
         $eventGroup->put(
-            "/update/access/{event_access_id}",
-            EventAccessController::class . ":updateEventAccessByPK"
+            "/assign/access/{event_access_id}",
+            EventAccessController::class . ":applyEventAccessByPK"
         );
 
         $eventGroup->delete(
@@ -37,9 +37,9 @@ isset($adminGroup) && $adminGroup->group(
             EventAccessController::class . ":deleteEventAccessByPK"
         );
 
-        $eventGroup->put(
-            "/enable/access/{event_id}",
-            EventAccessController::class . ":enableEventAccessByPk"
+        $eventGroup->delete(
+            "/delete/accesses",
+            EventAccessController::class . ":deleteEventAccessByPKs"
         );
     }
 );
@@ -52,8 +52,8 @@ isset($organiserStaffGroup) && $organiserStaffGroup->group(
     function (RouteCollectorProxy $eventGroup) {
 
         $eventGroup->get(
-            "/get/accesss[/{event_id}[/{event_code}[/{event_type}[/{payment_type}[/{page}[/{limit}]]]]]]",
-            EventAccessController::class . ":getOrganiserEventAccesss"
+            "/get/accesses[/{event_ticket_id}[/{page}[/{limit}]]]",
+            EventAccessController::class . ":getOrganiserEventAccesses"
         );
     }
 );

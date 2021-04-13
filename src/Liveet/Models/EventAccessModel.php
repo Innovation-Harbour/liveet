@@ -94,4 +94,39 @@ class EventAccessModel extends BaseModel
     {
         return self::select("event_access_id", "event_access_code", "event_ticket_id", "user_id", "event_access_used_status", "created_at", "updated_at");
     }
+
+    public function updateByPK($pk, $allInputs, $checks = [])
+    {
+        $inputError = $this->checkInputError($allInputs, $checks, (new UserModel()));
+        if (null != $inputError) {
+            return $inputError;
+        }
+
+        unset($allInputs[$this->primaryKey]);
+
+        $user_phone = $allInputs["user_phone"];
+        $userQuery = (new UserModel())->select("user_id")->where("user_phone", $user_phone);
+        if (!$userQuery->exists()) {
+            return ["error" => "User not found", "data" => null];
+        }
+        $user_id = $userQuery->first()["user_id"];
+
+        $query = $this->find($pk);
+        if (!$query) {
+            return ["error" => "Access code not found", "data" => null];
+        }
+
+        $query->update(["user_id" => $user_id, "event_access_used_status" => Constants::EVENT_ACCESS_ASSIGNED]);
+
+        $model = $this->getByPK($pk);
+
+        return ["data" => $model["data"], "error" => $model["error"]];
+    }
+
+    public function deleteManyByPK($pks)
+    {
+        $deleteReturn = $this->whereIn($this->primaryKey, $pks)->delete();
+
+        return ["data" => ["deleted" => true, "successCount" => $deleteReturn], "error" => ""];
+    }
 }

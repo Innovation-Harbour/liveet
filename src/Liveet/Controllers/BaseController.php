@@ -1324,7 +1324,6 @@ class BaseController
     {
         $json = new JSON();
 
-
         ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
@@ -1391,6 +1390,36 @@ class BaseController
         }
 
         $data = $model->deleteByPK($pk);
+        if ($data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
+
+            return $json->withJsonResponse($response,  $error);
+        }
+
+        $payload = array("successMessage" => "Delete success", "statusCode" => 200, "data" => $data["data"]);
+
+        return $json->withJsonResponse($response, $payload);
+    }
+
+    public function deleteManyByPK(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
+    {
+        $json = new JSON();
+
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $allInputs = $this->valuesExistsOrError($data, [$model->primaryKey]);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
+        }
+
+        [$model->primaryKey => $pks] = $allInputs;
+
+        $data = $model->deleteManyByPK($pks);
         if ($data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 

@@ -8,6 +8,7 @@ use Liveet\Models\EventAccessModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
 use Liveet\Models\EventModel;
+use Liveet\Models\EventTicketModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -46,7 +47,7 @@ class EventAccessController extends BaseController
         );
     }
 
-    public function getEventAccesss(Request $request, ResponseInterface $response): ResponseInterface
+    public function getEventAccesses(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
 
@@ -59,7 +60,7 @@ class EventAccessController extends BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $expectedRouteParams = ["event_id"];
+        $expectedRouteParams = ["event_ticket_id"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];
 
@@ -69,7 +70,7 @@ class EventAccessController extends BaseController
             }
         }
 
-        return (new BaseController)->getByPage($request, $response, new EventAccessModel(), null, $conditions);
+        return (new BaseController)->getByPage($request, $response, new EventAccessModel(), null, $conditions, ["user"]);
     }
 
     public function getEventAccessByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -88,7 +89,7 @@ class EventAccessController extends BaseController
         return (new BaseController)->getByPK($request, $response, new EventAccessModel(), null);
     }
 
-    public function updateEventAccessByPK(Request $request, ResponseInterface $response): ResponseInterface
+    public function applyEventAccessByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -105,11 +106,11 @@ class EventAccessController extends BaseController
             new EventAccessModel(),
             [
                 "required" => [
-                    "access_name", "access_desc", "access_cost", "access_population"
+                    "user_phone"
                 ],
 
                 "expected" => [
-                    "event_access_id", "access_name", "access_desc", "access_cost", "access_population", "access_discount"
+                    "user_phone"
                 ]
             ]
         );
@@ -129,9 +130,23 @@ class EventAccessController extends BaseController
         return (new BaseController)->deleteByPK($request, $response, (new EventAccessModel()));
     }
 
+    public function deleteEventAccessByPKs(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
+        if (!in_array(Constants::PRIVILEDGE_ADMIN_EVENT, $ownerPriviledges)) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return (new JSON())->withJsonResponse($response, $error);
+        }
+
+        return (new BaseController)->deleteManyByPK($request, $response, (new EventAccessModel()));
+    }
+
     /** Organiser Staff */
 
-    public function getOrganiserEventAccesss(Request $request, ResponseInterface $response): ResponseInterface
+    public function getOrganiserEventAccesses(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
 
@@ -144,16 +159,44 @@ class EventAccessController extends BaseController
 
             return $json->withJsonResponse($response, $error);
         }
+
         $organiser_id = $authDetails["organiser_id"];
 
-        $event_ids = (new EventModel())->select("event_id")->where("organiser_id", $organiser_id)->without("eventControl", "eventAccesss")->get();
+        $event_id_s = (new EventModel())->select("event_id")->where("organiser_id", $organiser_id)->without("eventControl", "eventTickets")->get();
 
-        $whereInEventIds = [];
-        $i = 0;
-        foreach ($event_ids as $event_id_value) {
-            $whereInEventIds[$i] = $event_id_value["event_id"];
-            $i++;
+        $event_ids = [];
+        foreach ($event_id_s as $event_id_value) {
+            $event_ids[] = $event_id_value["event_id"];
         }
+
+        $event_ticket_id_s = (new EventTicketModel())->select("event_ticket_id")->whereIn("event_id", $event_ids)->get();
+
+        $whereInEventTicketIds = [];
+        foreach ($event_ticket_id_s as $event_ticket_id_value) {
+            $whereInEventTicketIds[] = $event_ticket_id_value["event_ticket_id"];
+        }
+
+        $routeParams = $this->getRouteParams($request);
+        if (isset($routeParams["event_ticket_id"]) && $routeParams["event_ticket_id"] != "-") {
+            $conditions["event_ticket_id"] = $routeParams["event_ticket_id"];
+            if (in_array($routeParams["event_ticket_id"], $whereInEventTicketIds)) {
+
+                var_dump($model->toArray());
+                return (new BaseController)->getByPage(
+                    $request,
+                    $response,
+                    (new EventAccessModel()),
+                    null,
+                    $conditions
+                );
+            }
+
+            $payload = array("errorMessage" => "No access codes for this ticket yet", "errorStatus" => "1", "statusCode" => 400);
+
+            return $json->withJsonResponse($response, $payload);
+        }
+
+
 
         return (new BaseController)->getByPage(
             $request,
@@ -164,7 +207,7 @@ class EventAccessController extends BaseController
             null,
             [
                 "whereIn" => [
-                    ["event_id" => $whereInEventIds],
+                    ["event_ticket_id" => $whereInEventTicketIds],
                 ]
             ]
         );

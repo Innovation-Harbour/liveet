@@ -4,98 +4,54 @@ namespace Liveet\Controllers\Mobile;
 
 use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
-use Liveet\Models\Mobile\TempModel;
 use Liveet\Controllers\Mobile\Helper\LiveetFunction;
-use Liveet\Models\UserModel;
-use Liveet\Domain\MailHandler;
+use Liveet\Models\InvitationModel;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
-use Aws\Rekognition\RekognitionClient;
-use Aws\S3\S3Client;
 use Rashtell\Domain\KeyManager;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class AuthController extends BaseController {
+class EventMobileController extends BaseController {
   use LiveetFunction;
 
-  public function Register (Request $request, ResponseInterface $response): ResponseInterface
+  public function GetEvents (Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
-    $eligible_phone_starting = array("6","7","8","9");
 
     //declare needed class objects
     $json = new JSON();
-    $user_db = new UserModel();
-    $temp_db = new TempModel();
+    $db = new InvitationModel();
 
-    $data = $request->getParsedBody();
+    $response_data = [];
 
-    $phone = $data["phone"];
+    $user_id = $args["user_id"];
+    $offset = $args["offset"];
+    $limit = $args["limit"];
 
-    $country_code = substr($phone, 0, 4);
+    $results = $db->getMobileEvents($user_id, $offset, $limit);
 
-    $rest_of_phone_number = substr($phone, 4);
-
-    if(strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0")
+    foreach($results as $result)
     {
-      $rest_of_phone_number = substr($rest_of_phone_number, 1);
+      $datetime = $result->event_date_time;
+      $date = date('d',$datetime);
+      $month = date('M',$datetime);
+
+      $can_invite = ($result->event_can_invite === "CAN_INVITE") ? true : false;
+
+      $tmp = [
+        "event_id" => $result->event_id,
+        "event_image" => $result->event_multimedia,
+        "event_title" => $result->event_name,
+        "event_date" => $date,
+        "event_month" => $month,
+        "can_invite" => $can_invite,
+      ];
+
+      array_push($response_data,$tmp);
     }
 
-    $phone_count = strlen($rest_of_phone_number);
+    $payload = ["statusCode" => 200, "data" => $response_data];
 
-    if ($country_code !=="+234")
-    {
-      $error = ["errorMessage" => "Selected Country not supported at the moment for now", "statusCode" => 400];
-
-      return $json->withJsonResponse($response, $error);
-    }
-
-    if($phone_count == 10 && in_array($rest_of_phone_number[0], $eligible_phone_starting))
-    {
-      $country_code_clean = substr($country_code, 1);
-
-      $phone_clean = $country_code_clean.$rest_of_phone_number;
-
-      $phone_full = $country_code.$rest_of_phone_number;
-
-      $user_count = $user_db->where('user_phone', $phone_clean)->count();
-      $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
-
-      if($user_count > 0)
-      {
-        $error = ["errorMessage" => "Phone Number Already Registered", "statusCode" => 400];
-
-        return $json->withJsonResponse($response, $error);
-      }
-
-      // here we send sms
-      $sms_response = json_decode($this->sendSMS($phone_clean),true);
-
-      $sms_status = $sms_response['smsStatus'];
-
-      if($sms_status !== "Message Sent")
-      {
-        $error = ["errorMessage" => "Error sending SMS. Please Register Again", "statusCode" => 400];
-        return $json->withJsonResponse($response, $error);
-      }
-
-      $sms_pin = $sms_response['pinId'];
-
-      if($temp_count < 1)
-      {
-        $temp_db->create(["temp_phone" => $phone_clean]);
-      }
-
-      $data_to_view = ["country_code" => $country_code, "Phone_Number" => $phone_full, "sms_pin" => $sms_pin];
-
-      $payload = ["statusCode" => 200, "data" => $data_to_view];
-
-      return $json->withJsonResponse($response, $payload);
-    }
-    else{
-      $error = ["errorMessage" => "Phone Number Does Not Match The Number Format for Selected Country", "statusCode" => 400];
-
-      return $json->withJsonResponse($response, $error);
-    }
+    return $json->withJsonResponse($response, $payload);
   }
 
   public function Login (Request $request, ResponseInterface $response): ResponseInterface
@@ -138,7 +94,7 @@ class AuthController extends BaseController {
 
     //create user auth token
 
-    $user_data_token = [
+    $user_data_token[] = [
       "email" => $email
     ];
 
@@ -384,7 +340,7 @@ class AuthController extends BaseController {
 
       //create user auth token
 
-      $user_data_token = [
+      $user_data_token[] = [
         "email" => $email
       ];
 
@@ -433,11 +389,11 @@ class AuthController extends BaseController {
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
-    $keymanager = new KeyManager();
-    $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6ImtvbGFwb0BnbWFpbC5jb20iLCJpc3MiOiJwYXlyb2xsbW5nciIsImF1ZCI6InBheXJvbGxtbmdyIiwiaWF0IjoxNjE4MDk5MTA1LCJuYmYiOjE2MTgwOTkxMDV9.RP2ijYb-GzTVMhTw3SyoybHsANoT3cAUDFp2uvsE_rs";
-    $result = $keymanager->validateClaim($token);
+    $event_code = "TestEventAgain1234";
 
-    var_dump(json_encode($result));
+    $result = $this->createAwsEvent($event_code);
+
+    var_dump($result);
     die;
   }
 

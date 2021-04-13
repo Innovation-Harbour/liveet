@@ -1,6 +1,9 @@
 <?php
 namespace Liveet\Controllers\Mobile\Helper;
 
+use Aws\Rekognition\RekognitionClient;
+use Rashtell\Domain\JSON;
+
 /**
  * helper functions for Liveet Mobile
  */
@@ -75,5 +78,33 @@ trait LiveetFunction
 
     curl_close($curl);
     return $response;
+  }
+
+  public function createAwsEvent($event){
+
+    $json = new JSON();
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+
+    try{
+      $recognition = new RekognitionClient([
+  		    'region'  => 'us-west-2',
+  		    'version' => 'latest',
+  		    'credentials' => [
+  		        'key'    => $aws_key,
+  		        'secret' => $aws_secret,
+  		    ]
+  		]);
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+		$result = $recognition->createCollection([
+		    'CollectionId' => $event, // REQUIRED
+		]);
+
+    return $result;
   }
 }

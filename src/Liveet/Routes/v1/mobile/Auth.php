@@ -39,5 +39,10 @@ isset($mobileGroup) && $mobileGroup->group(
             "/login",
             AuthController::class . ":Login"
         );
+
+        $authGroup->get(
+            "/testaws",
+            AuthController::class . ":AWSAddEvent"
+        );
     }
 );

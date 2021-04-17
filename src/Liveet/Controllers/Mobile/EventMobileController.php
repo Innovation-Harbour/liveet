@@ -36,6 +36,7 @@ class EventMobileController extends BaseController {
       $month = date('M',$datetime);
 
       $can_invite = ($result->event_can_invite === "CAN_INVITE") ? true : false;
+      $isFavourite = ($result->event_favourite_id !== null) ? true : false;
 
       $tmp = [
         "event_id" => intval($result->event_id),
@@ -44,6 +45,7 @@ class EventMobileController extends BaseController {
         "event_date" => intval($date),
         "event_month" => $month,
         "can_invite" => $can_invite,
+        "is_favourite" => $isFavourite,
       ];
 
       array_push($response_data,$tmp);

@@ -38,10 +38,10 @@ class EventMobileController extends BaseController {
       $can_invite = ($result->event_can_invite === "CAN_INVITE") ? true : false;
 
       $tmp = [
-        "event_id" => $result->event_id,
+        "event_id" => intval($result->event_id),
         "event_image" => $result->event_multimedia,
         "event_title" => $result->event_name,
-        "event_date" => $date,
+        "event_date" => intval($date),
         "event_month" => $month,
         "can_invite" => $can_invite,
       ];

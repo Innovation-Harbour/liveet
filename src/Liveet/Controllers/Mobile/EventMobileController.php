@@ -89,7 +89,7 @@ class EventMobileController extends BaseController {
       //remove record from db
       if($favourite_count == 1)
       {
-        $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->delete();
+        $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->forceDelete();
       }
       $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Deleted"];
     }

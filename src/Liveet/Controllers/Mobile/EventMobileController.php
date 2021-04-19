@@ -94,7 +94,7 @@ class EventMobileController extends BaseController {
       $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Deleted"];
     }
 
-    return $json->withJsonResponse($response, $payload);
+    return $this->json->withJsonResponse($response, $payload);
   }
 
 

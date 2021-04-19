@@ -16,7 +16,7 @@ isset($mobileGroup) && $mobileGroup->group(
             EventMobileController::class . ":GetEvents"
         );
 
-        $mobileEventGroup->get(
+        $mobileEventGroup->post(
             "/dofavourite",
             EventMobileController::class . ":DoEventFavourite"
         );

@@ -71,9 +71,6 @@ class EventMobileController extends BaseController {
     $event_id = $data["event_id"];
     $favourite = $data["favourite"];
 
-    var_dump($user_id,$event_id,$favourite);
-    die;
-
     $doFavourite = ($favourite === "true") ? true : false;
 
     if($doFavourite){

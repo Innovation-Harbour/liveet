@@ -11,6 +11,7 @@ class InvitationModel extends BaseModel
     protected $table = "event_invitation";
     public $primaryKey = "event_invitation_id";
     protected $guarded = [];
+    protected $fillable = ['event_id','invitation_name','event_inviter','event_invitee_number','event_invitation_status'];
 
     //public $timestamps = false;
 

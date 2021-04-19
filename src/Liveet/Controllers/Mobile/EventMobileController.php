@@ -71,13 +71,16 @@ class EventMobileController extends BaseController {
     $event_id = $data["event_id"];
     $favourite = $data["favourite"];
 
+    var_dump($user_id,$event_id,$favourite);
+    die;
+
     $doFavourite = ($favourite === "true") ? true : false;
 
     if($doFavourite){
-      $favourite_count = $favourite_db->where(['event_id' => $event_id,'user_id' => $user_id])->count();
+      $favourite_count = $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->count();
     }
     else{
-      $favourite_count = $favourite_db->where(['event_id' => $event_id,'user_id' => $user_id])->count();
+      $favourite_count = $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->count();
     }
 
     var_dump($favourite_count);

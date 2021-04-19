@@ -73,15 +73,28 @@ class EventMobileController extends BaseController {
 
     $doFavourite = ($favourite === "true") ? true : false;
 
+    $favourite_count = $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->count();
+
     if($doFavourite){
-      $favourite_count = $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->count();
+      if($favourite_count == 0)
+      {
+        $favourite_db->create([
+            "event_id" => $event_id,
+            "user_id" => $user_id
+        ]);
+      }
+      $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Added"];
     }
     else{
-      $favourite_count = $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->count();
+      //remove record from db
+      if($favourite_count == 1)
+      {
+        $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->delete();
+      }
+      $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Deleted"];
     }
 
-    var_dump($favourite_count);
-    die;
+    return $json->withJsonResponse($response, $payload);
   }
 
 

@@ -71,6 +71,9 @@ class EventMobileController extends BaseController {
     $event_id = $data["event_id"];
     $favourite = $data["favourite"];
 
+    var_dump($user_id,$event_id,$favourite);
+    die;
+
     $doFavourite = ($favourite === "true") ? true : false;
 
     $favourite_count = $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->count();

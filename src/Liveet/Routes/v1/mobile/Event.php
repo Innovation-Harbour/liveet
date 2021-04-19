@@ -15,5 +15,10 @@ isset($mobileGroup) && $mobileGroup->group(
             "/getevent/{user_id}/{offset}/{limit}",
             EventMobileController::class . ":GetEvents"
         );
+
+        $mobileEventGroup->get(
+            "/dofavourite",
+            EventMobileController::class . ":DoEventFavourite"
+        );
     }
 )->addMiddleware(new AuthenticationMiddleware((new UserModel())));

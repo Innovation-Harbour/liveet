@@ -18,6 +18,11 @@ isset($adminGroup) && $adminGroup->group(
         );
 
         $eventGroup->get(
+            "/get/accesses/group/{event_id}[/{page}[/{limit}]]",
+            EventAccessController::class . ":getEventAccessGroup"
+        );
+
+        $eventGroup->get(
             "/get/accesses[/{event_ticket_id}[/{page}[/{limit}]]]",
             EventAccessController::class . ":getEventAccesses"
         );
@@ -29,7 +34,7 @@ isset($adminGroup) && $adminGroup->group(
 
         $eventGroup->put(
             "/assign/access/{event_access_id}",
-            EventAccessController::class . ":applyEventAccessByPK"
+            EventAccessController::class . ":assignEventAccessByPK"
         );
 
         $eventGroup->delete(
@@ -45,7 +50,7 @@ isset($adminGroup) && $adminGroup->group(
 );
 
 /**
- * Admin User Priviledged
+ * Organiser Priviledged
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
@@ -54,6 +59,11 @@ isset($organiserStaffGroup) && $organiserStaffGroup->group(
         $eventGroup->get(
             "/get/accesses[/{event_ticket_id}[/{page}[/{limit}]]]",
             EventAccessController::class . ":getOrganiserEventAccesses"
+        );
+
+        $eventGroup->put(
+            "/assign/access/{event_access_id}",
+            EventAccessController::class . ":assignOrganiserEventAccessByPK"
         );
     }
 );

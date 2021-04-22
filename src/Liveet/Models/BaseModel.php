@@ -248,6 +248,10 @@ class BaseModel extends Model
 
         $query = $query->limit($limit);
 
+        if (!$query->exists()) {
+            return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
+        }
+
         if ($relationships) {
             $query = $query->with($relationships);
         }

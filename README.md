@@ -2,21 +2,28 @@
 
 ## Production
 
+### Pre-Deploy TODO
+
+## Development
+
 ## TODO
 
 - deleting a ticket type should delete all its access codes
 - check event time and event controls before doing anything with its ticket type, ticket and access codes
 
-## PONDERS
+## PROBLEMS
+
+### PONDERS
 
 - should assigned access codes be deletable
 - should assigned tickets be deletable
+- should an organiser be able to unassign an access code
 - should a ticket type that has some assigned tickets be modifiable
-- how do we manage an access code batch
 
-## LAST THINKING
+### SOLUTIONS
 
-- does get access codes, tickets or event by an organiser, gets theirs or general
+- how do we modify and delete an access code batch
+  - by event_ticket_id
 
 ## TO-CHECK
 

@@ -10,6 +10,9 @@ class TimelineMediaModel extends BaseModel
 
     protected $table = "timeline_media";
     protected $dateFormat = "U";
+    protected $guarded = [];
+    public $primaryKey = "timeline_media_id";
+    protected $hidden = ["deleted_at"];
 
     public function eventTimeline()
     {
@@ -18,7 +21,6 @@ class TimelineMediaModel extends BaseModel
 
     public function getStruct()
     {
-        $pkKey = $this->primaryKey;
-        return self::select($pkKey, "timeline_media_id", "timeline_id", "timeline_media", "media_type", "created_at", "updated_at");
+        return self::select("timeline_media_id", "timeline_id", "timeline_media", "media_type", "media_datetime", "created_at", "updated_at");
     }
 }

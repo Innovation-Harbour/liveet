@@ -45,7 +45,7 @@ isset($adminGroup) && $adminGroup->group(
 );
 
 /**
- * Admin User Priviledged
+ * Organiser Priviledged
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",

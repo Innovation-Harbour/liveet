@@ -10,7 +10,7 @@ use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class EventController extends BaseController
+class EventController extends HelperController
 {
 
     /** Admin User */
@@ -21,14 +21,9 @@ class EventController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_EVENT, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminEventPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->createSelf(
+        return $this->createSelf(
             $request,
             $response,
             new EventModel(),
@@ -64,12 +59,7 @@ class EventController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_EVENT, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
-
-            return $json->withJsonResponse($response, $error);
-        }
+        $this->checkAdminEventPermission($request, $response);
 
         $expectedRouteParams = ["event_id", "event_code", "event_type", "payment_type", "organiser_id"];
         $routeParams = $this->getRouteParams($request);
@@ -81,7 +71,7 @@ class EventController extends BaseController
             }
         }
 
-        return (new BaseController)->getByPage($request, $response, new EventModel(), null, $conditions, ["eventTickets", "eventControl"]);
+        return $this->getByPage($request, $response, new EventModel(), null, $conditions, ["eventTickets", "eventControl"]);
     }
 
     public function getEventByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -90,28 +80,18 @@ class EventController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_EVENT, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminEventPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->getByPK($request, $response, new EventModel(), null, ["eventTickets", "eventControl"]);
+        return $this->getByPK($request, $response, new EventModel(), null, ["eventTickets", "eventControl"]);
     }
 
     public function updateEventByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_EVENT, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminEventPermission($request, $response);
 
-            return (new JSON())->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->updateByPK(
+        return $this->updateByPK(
             $request,
             $response,
             new EventModel(),
@@ -139,14 +119,9 @@ class EventController extends BaseController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_EVENT, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminEventPermission($request, $response);
 
-            return (new JSON())->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->deleteByPK($request, $response, (new EventModel()));
+        return $this->deleteByPK($request, $response, (new EventModel()));
     }
 
     /** Organiser Staff */
@@ -157,13 +132,7 @@ class EventController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["organiser_priviledges"]) ? json_decode($authDetails["organiser_priviledges"]) : [];
-        $usertype = $authDetails["usertype"];
-        if (!in_array(Constants::PRIVILEDGE_ORGANISER_EVENT, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
-
-            return $json->withJsonResponse($response, $error);
-        }
+        $this->checkOrganiserEventPermission($request, $response);
         $organiser_id = $authDetails["organiser_id"];
         $expectedRouteParams = ["event_id", "event_code", "event_type", "payment_type"];
         $routeParams = $this->getRouteParams($request);
@@ -175,6 +144,6 @@ class EventController extends BaseController
             }
         }
 
-        return (new BaseController)->getByPage($request, $response, new EventModel(), null, $conditions, ["eventTickets", "eventControl"]);
+        return $this->getByPage($request, $response, new EventModel(), null, $conditions, ["eventTickets", "eventControl"]);
     }
 }

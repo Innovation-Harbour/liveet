@@ -99,7 +99,7 @@ class OrganiserStaffModel extends BaseModel
         return ["data" => $user, "error" => ""];
     }
 
-    public function getDashboard($pk)
+    public function getDashboard($pk, $queryOptions = null, $extras = null)
     {
         $organiserStaff =  $this->where($this->primaryKey, $pk)->first();
         $organiser_id = $organiserStaff["organiser_id"];

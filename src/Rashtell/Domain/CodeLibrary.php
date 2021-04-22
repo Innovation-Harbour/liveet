@@ -105,7 +105,7 @@ class CodeLibrary
 				$image = "imagejpeg";
 				$quality = $quality;
 				break;
-			CoroClub:
+				CoroClub:
 				return false;
 				break;
 		}
@@ -131,85 +131,6 @@ class CodeLibrary
 
 	function dataTohtml($data)
 	{
-	}
-
-	function emailSlave($opts)
-	{
-		try {
-			$mail = new PHPMailer(true);
-			$mail->IsSMTP();
-			$mail->SMTPAuth = true;
-			$mail->SMTPDebug = 2;
-			$mail->Host = gethostbyname("mail.sisibox.com");
-			$mail->Username = $opts->username; //"postmaster@healthtouch.me";
-			$mail->Password = $opts->password; //"sanwoadmin001--"; 
-			$mail->setFrom("no-reply@sisibox.com", "sisibox service");
-			for ($o = 0; $o < count($opts->email); $o++) {
-				$mail->addAddress(trim($opts->email[$o]));
-			}
-			//$mail->addAddress("elias@touchandpay.me");
-			$mail->addReplyTo("no-reply@sisibox.com", "sisibox service");
-			$mail->isHTML(true);
-			$mail->Port = 25;
-			$message = $opts->message;
-			$mail->Subject = $opts->subject;
-			$mail->Body = $message;
-			if (isset($opts->attachments)) {
-				for ($u = 0; $u < count($opts->attachments); $u++) {
-					$mail->AddAttachment(dirname(__FILE__) . "../../../" . $opts->attachments[$u]);
-				}
-			}
-			if (!$mail->send()) {
-				return "Mailer Error: " . $mail->ErrorInfo;
-				//return false;
-			} else {
-				return true;
-			}
-		} catch (Exception $e) {
-			echo "Mailer Error: " . $mail->ErrorInfo;
-			return false;
-			//echo $e->getMessage();
-		}
-	}
-
-	function emailSlaveV2($opts)
-	{
-		try {
-			$to = $opts->email[0];
-			$subject = $opts->subject;
-
-			$message = $opts->message;
-
-
-			$sender = isset($opts->sender) ? $opts->sender : "no-reply";
-			$headers .= "Reply-To: Customer-Care <no-reply@dcptap.website>\r\n";
-			$headers .= "Return-Path: " . $sender . " <no-reply@dcptap.website>\r\n";
-			$headers .= "From: " . $sender . " <no-reply@dcptap.website>\r\n";
-			$headers .= "Organization: Sisibox LTD. Lagos.\r\n";
-			$headers .= "MIME-Version: 1.0\r\n";
-			$headers .= "Content-type: text/html;charset=UTF-8\r\n";
-			$headers .= "X-Priority: 3\r\n";
-			$headers .= "X-Mailer: PHP" . phpversion() . "\r\n";
-
-			// Always set content-type when sending HTML email
-			/*$headers = "MIME-Version: 1.0" . "\r\n";
-			$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-
-			// More headers
-			$sender = isset($opts->sender)? $opts->sender : "no-reply";
-			$headers .= "From: ".$sender." <no-reply@sisibox.com>" . "\r\n";*/
-			//$headers .= "Cc: elias.akin@yahoo.com" . "\r\n";
-			if (!mail($to, $subject, $message, $headers)) {
-				//echo "Mailer Error: " . $mail->ErrorInfo;
-				return false;
-			} else {
-				return true;
-			}
-		} catch (Exception $e) {
-			//echo "Mailer Error: " . $mail->ErrorInfo;
-			return false;
-			//echo $e->getMessage();
-		}
 	}
 
 	function num2word($num = false)

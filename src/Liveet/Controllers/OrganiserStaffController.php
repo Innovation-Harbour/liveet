@@ -9,14 +9,14 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\JSON;
 use Liveet\Models\OrganiserStaffModel;
 
-class OrganiserStaffController extends BaseController
+class OrganiserStaffController extends HelperController
 {
 
     /** Organiser Admin or Staff */
 
     public function loginOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->login(
+        return $this->login(
             $request,
             $response,
             new OrganiserStaffModel(),
@@ -34,12 +34,12 @@ class OrganiserStaffController extends BaseController
 
     public function getOrganiserAdminOrStaffDashboard(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->getSelfDashboard($request, $response, new OrganiserStaffModel());
+        return $this->getSelfDashboard($request, $response, new OrganiserStaffModel());
     }
 
     public function getOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->getSelf($request, $response, new OrganiserStaffModel());
+        return $this->getSelf($request, $response, new OrganiserStaffModel());
     }
 
     public function updateOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
@@ -52,7 +52,7 @@ class OrganiserStaffController extends BaseController
             return $this->updateOrganiserAdmin($request, $response);
         }
 
-        return (new BaseController)->updateSelf(
+        return $this->updateSelf(
             $request,
             $response,
             new OrganiserStaffModel(),
@@ -90,16 +90,11 @@ class OrganiserStaffController extends BaseController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $usertype = $authDetails["usertype"];
-        if ($usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
-
-            return (new JSON())->withJsonResponse($response, $error);
-        }
+                $this->checkOrganiserAdminPermission($request, $response);
         $organiser_id = $authDetails["organiser_id"];
         $organiser_staff_id = $authDetails["organiser_staff_id"];
 
-        return (new BaseController)->updateByConditions(
+        return $this->updateByConditions(
             $request,
             $response,
             new OrganiserStaffModel(),
@@ -140,12 +135,12 @@ class OrganiserStaffController extends BaseController
 
     public function updateOrganiserAdminOrStaffPassword(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->updatePassword($request, $response, new OrganiserStaffModel());
+        return $this->updatePassword($request, $response, new OrganiserStaffModel());
     }
 
     public function logoutOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->logoutSelf($request, $response, new OrganiserStaffModel());
+        return $this->logoutSelf($request, $response, new OrganiserStaffModel());
     }
 
     /** Organiser Admin */
@@ -156,16 +151,11 @@ class OrganiserStaffController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["organiser_staff_priviledges"]) && gettype($authDetails["organiser_staff_priviledges"]) == "array" ? json_decode($authDetails["organiser_staff_priviledges"]) : [];
-        $usertype = $authDetails["usertype"];
-        if (!in_array(Constants::PRIVILEDGE_ORGANISER_ORGANISER, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkOrganiserOrganiserPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
         $organiser_id = $authDetails["organiser_id"];
 
-        return (new BaseController)->createSelf(
+        return $this->createSelf(
             $request,
             $response,
             new OrganiserStaffModel(),
@@ -214,50 +204,34 @@ class OrganiserStaffController extends BaseController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["organiser_staff_priviledges"]) && gettype($authDetails["organiser_staff_priviledges"]) == "array" ? json_decode($authDetails["organiser_staff_priviledges"]) : [];
-        $usertype = $authDetails["usertype"];
-        if (!in_array(Constants::PRIVILEDGE_ORGANISER_ORGANISER, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
-
-            return (new JSON())->withJsonResponse($response, $error);
-        }
+        $this->checkOrganiserOrganiserPermission($request, $response);
         $organiser_id = $authDetails["organiser_id"];
 
-        return (new BaseController)->getByConditions($request, $response, new OrganiserStaffModel(), ["organiser_id" => $organiser_id]);
+        return $this->getByConditions($request, $response, new OrganiserStaffModel(), ["organiser_id" => $organiser_id]);
     }
 
     public function getOrganiserSelfStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["organiser_staff_priviledges"]) && gettype($authDetails["organiser_staff_priviledges"]) == "array" ? json_decode($authDetails["organiser_staff_priviledges"]) : [];
-        $usertype = $authDetails["usertype"];
-        if (!in_array(Constants::PRIVILEDGE_ORGANISER_ORGANISER, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkOrganiserOrganiserPermission($request, $response);
 
-            return (new JSON())->withJsonResponse($response, $error);
-        }
         $organiser_id = $authDetails["organiser_id"];
         ["organiser_staff_id" => $organiser_staff_id] = $this->getRouteParams($request, ["organiser_staff_id"]);
 
-        return (new BaseController)->getByConditions($request, $response, new OrganiserStaffModel(), ["organiser_staff_id" => $organiser_staff_id, "organiser_id" => $organiser_id]);
+        return $this->getByConditions($request, $response, new OrganiserStaffModel(), ["organiser_staff_id" => $organiser_staff_id, "organiser_id" => $organiser_id]);
     }
 
     public function updateOrganiserSelfStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["organiser_staff_priviledges"]) && gettype($authDetails["organiser_staff_priviledges"]) == "array" ? json_decode($authDetails["organiser_staff_priviledges"]) : [];
-        $usertype = $authDetails["usertype"];
-        if (!in_array(Constants::PRIVILEDGE_ORGANISER_ORGANISER, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkOrganiserOrganiserPermission($request, $response);
 
-            return (new JSON())->withJsonResponse($response, $error);
-        }
         $organiser_id = $authDetails["organiser_id"];
         ["organiser_staff_id" => $organiser_staff_id] = $this->getRouteParams($request, ["organiser_staff_id"]);
 
-        return (new BaseController)->updateByConditions(
+        return $this->updateByConditions(
             $request,
             $response,
             (new OrganiserStaffModel()),
@@ -298,17 +272,12 @@ class OrganiserStaffController extends BaseController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["organiser_staff_priviledges"]) && gettype($authDetails["organiser_staff_priviledges"]) == "array" ? json_decode($authDetails["organiser_staff_priviledges"]) : [];
-        $usertype = $authDetails["usertype"];
-        if (!in_array(Constants::PRIVILEDGE_ORGANISER_ORGANISER, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkOrganiserOrganiserPermission($request, $response);
 
-            return (new JSON())->withJsonResponse($response, $error);
-        }
         $organiser_id = $authDetails["organiser_id"];
         ["organiser_staff_id" => $organiser_staff_id] = $this->getRouteParams($request, ["organiser_staff_id"]);
 
-        return (new BaseController)->logoutByCondition($request, $response, new OrganiserStaffModel(), ["organiser_staff_id" => $organiser_staff_id, "organiser_id" => $organiser_id]);
+        return $this->logoutByCondition($request, $response, new OrganiserStaffModel(), ["organiser_staff_id" => $organiser_staff_id, "organiser_id" => $organiser_id]);
     }
 
     /** Admin User */
@@ -319,14 +288,9 @@ class OrganiserStaffController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ORGANISER, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminOrganiserPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->getByPage($request, $response, new OrganiserStaffModel());
+        return $this->getByPage($request, $response, new OrganiserStaffModel());
     }
 
     public function getOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -335,14 +299,9 @@ class OrganiserStaffController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ORGANISER, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminOrganiserPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->getByPK($request, $response, new OrganiserStaffModel());
+        return $this->getByPK($request, $response, new OrganiserStaffModel());
     }
 
     public function logoutOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -351,14 +310,9 @@ class OrganiserStaffController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ORGANISER, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminOrganiserPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->logoutByPK($request, $response, new OrganiserStaffModel());
+        return $this->logoutByPK($request, $response, new OrganiserStaffModel());
     }
 
     /**
@@ -366,7 +320,7 @@ class OrganiserStaffController extends BaseController
 
     public function deleteOrganiserStaff(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->deleteSelf($request, $response, new OrganiserStaffModel());
+        return $this->deleteSelf($request, $response, new OrganiserStaffModel());
     }
 
     public function deleteOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -383,7 +337,7 @@ class OrganiserStaffController extends BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        return (new BaseController)->deleteByPK($request, $response, new OrganiserStaffModel());
+        return $this->deleteByPK($request, $response, new OrganiserStaffModel());
     }
 
      **/
@@ -394,12 +348,7 @@ class OrganiserStaffController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ORGANISER, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
-
-            return $json->withJsonResponse($response, $error);
-        }
+        $this->checkAdminOrganiserPermission($request, $response);
 
         return (new OrganiserController())->createOrganiser($request, $response);
     }
@@ -410,14 +359,9 @@ class OrganiserStaffController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ORGANISER, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminOrganiserPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->updateByPK(
+        return $this->updateByPK(
             $request,
             $response,
             (new OrganiserStaffModel()),

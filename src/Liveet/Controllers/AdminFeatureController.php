@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\JSON;
 use Liveet\Models\AdminFeatureModel;
 
-class AdminFeatureController extends BaseController
+class AdminFeatureController extends HelperController
 {
 
     /** admin User */
@@ -20,14 +20,9 @@ class AdminFeatureController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminAdminPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->createSelf(
+        return $this->createSelf(
             $request,
             $response,
             new AdminFeatureModel(),
@@ -57,14 +52,9 @@ class AdminFeatureController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminAdminPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->getByPage($request, $response, new AdminFeatureModel());
+        return $this->getByPage($request, $response, new AdminFeatureModel());
     }
 
     public function getAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -73,30 +63,20 @@ class AdminFeatureController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminAdminPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->getByPK($request, $response, new AdminFeatureModel());
+        return $this->getByPK($request, $response, new AdminFeatureModel());
     }
 
     public function updateAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
-
-            return (new JSON())->withJsonResponse($response, $error);
-        }
+        $this->checkAdminAdminPermission($request, $response);
 
         ["admin_feature_id" => $admin_feature_id] = $this->getRouteParams($request, ["admin_feature_id"]);
 
-        return (new BaseController)->updateByPK(
+        return $this->updateByPK(
             $request,
             $response,
             new AdminFeatureModel(),

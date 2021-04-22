@@ -192,56 +192,94 @@ class BaseController
         return isset($tokenArr[1]) ? $tokenArr[1] : null;
     }
 
+    /**
+     * Parses base64 images to url
+     * 
+     * $accountOptions["imageOptions"=>[
+     *  ["imageKey"=>"", "imagePrefix"=>"", multiple=>false]
+     * ]
+     *
+     * @param array $data
+     * @param array $accountOptions
+     * @return array
+     */
     public function parseImage($data, $accountOptions = [])
     {
         if (isset($accountOptions["imageOptions"])) {
             foreach ($accountOptions["imageOptions"] as $imageOption) {
 
                 $imageKey = $imageOption["imageKey"];
-                $imagePath = Constants::IMAGE_PATH;
 
                 if (!isset($data[$imageKey])) {
 
-                    // $imageExtError = ["errorMessage" => $imageKey . " not set", "errorStatus" => 1, "statusCode" => 400];
+                    $imageExtError = ["errorMessage" => $imageKey . " not set", "errorStatus" => 1, "statusCode" => 400];
 
                     // $data["error"] = $imageExtError;
                     // break;
+
                     continue;
                 }
 
-                if (strrpos($data[$imageKey], "data:image/") !== 0) {
-                    continue;
-                }
+                $return = [];
 
-                $imagePrefix = isset($imageOption["imagePrefix"]) ? $imageOption["imagePrefix"] . " - " : "";
-                $imageName = $imagePrefix . (new DateTime())->getTimeStamp();
-
-                $imageExtType = $this->getFileTypeOfBase64($data[$imageKey]);
-                if (!in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
-                    $imageExtError = "Unsupport image type. Supported formats are ";
-
-                    foreach (Constants::IMAGE_TYPES_ACCEPTED as $acceptedImageType) {
-                        $appender = array_search($acceptedImageType, Constants::IMAGE_TYPES_ACCEPTED) === sizeof(Constants::IMAGE_TYPES_ACCEPTED) - 1 ? "." : ", ";
-                        $imageExtError .= $acceptedImageType . $appender;
+                if (
+                    ($imageOption["multiple"] && gettype($data[$imageKey]) == "array")
+                    || gettype($data[$imageKey]) == "array"
+                ) {
+                    foreach ($data[$imageKey] as $imageKe) {
+                        $return[] = $this->handleParseImage($imageOption, $imageKe);
                     }
 
-                    $imageExtError = array("errorMessage" => $imageExtError, "errorStatus" => 1, "statusCode" => 400);
+                    $data[$imageKey] = $return;
+                } else {
+                    $return = $this->handleParseImage($imageOption, $data[$imageKey]);
 
-                    $data["error"] = $imageExtError;
-
-                    continue;
+                    $data[$imageKey] = $return["path"] ?? $return["url"] ?? "";
+                    $data[$imageKey . "Type"] = $return["type"] ?? "";
                 }
-
-                $newImagePath = "$imagePath$imageName.$imageExtType";
-
-                file_put_contents($newImagePath, file_get_contents($data[$imageKey]));
-
-                $imageTypeKey = $imageKey . "Type";
-
-                $data[$imageTypeKey] = $imageExtType;
-                $data[$imageKey] = $newImagePath;
             }
         }
+
+        return $data;
+    }
+
+    public function handleParseImage($imageOption, $image)
+    {
+        $imageKey = $imageOption["imageKey"];
+        $imagePath = Constants::IMAGE_PATH;
+
+        if (strrpos($image, "data:image/") !== 0) {
+            // continue;
+            $data["url"] = $image;
+            return $data;
+        }
+
+        $imagePrefix = isset($imageOption["imagePrefix"]) ? $imageOption["imagePrefix"] . " - " : "";
+        $imageName = $imagePrefix . (new DateTime())->getTimeStamp();
+
+        $imageExtType = $this->getFileTypeOfBase64($image);
+        if (!in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
+            $imageExtError = "Unsupport image type. Supported formats are ";
+
+            foreach (Constants::IMAGE_TYPES_ACCEPTED as $acceptedImageType) {
+                $appender = array_search($acceptedImageType, Constants::IMAGE_TYPES_ACCEPTED) === sizeof(Constants::IMAGE_TYPES_ACCEPTED) - 1 ? "." : ", ";
+                $imageExtError .= $acceptedImageType . $appender;
+            }
+
+            // $imageExtError = array("errorMessage" => $imageExtError, "errorStatus" => 1, "statusCode" => 400);
+
+            $data["error"] = [$imageExtError];
+            return $data;
+        }
+
+        $newImagePath = "$imagePath$imageName.$imageExtType";
+
+        file_put_contents($newImagePath, file_get_contents($image));
+
+        $imageTypeKey = $imageKey . "_type";
+
+        $data["type"] = $imageExtType;
+        $data["path"] = $newImagePath;
 
         return $data;
     }
@@ -383,6 +421,24 @@ class BaseController
         return $allInputs;
     }
 
+    public function checkOrGetPostBody($request, $response, $inputs)
+    {
+        $json = new JSON();
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $allInputs = $this->valuesExistsOrError($data, isset($inputs["required"]) ? $inputs["required"] : $inputs);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
+        }
+
+        unset($allInputs["error"]);
+
+        return $allInputs;
+    }
+
     /**
      * @param Request $request
      * @param ResponseInterface $response
@@ -439,7 +495,7 @@ class BaseController
         }
 
         $data = $model->createSelf($newAllInputs, $checks);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
@@ -543,7 +599,7 @@ class BaseController
         }
 
         $data = $model->login($allInputs);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 401, "data" => null);
 
             return $json->withJsonResponse($response, $payload);
@@ -562,16 +618,17 @@ class BaseController
         return $json->withJsonResponse($response, $payload)->withHeader("token", "bearer " . $token);
     }
 
-    public function getSelfDashboard(Request $request, ResponseInterface $response, $model): ResponseInterface
+    public function getSelfDashboard(Request $request, ResponseInterface $response, $model, $queryOptions = [], $extras = ["hasKey" => true]): ResponseInterface
     {
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        [$model->primaryKey => $pk] = $authDetails;
 
-        $data = $model->getDashboard($pk);
-        if ($data["error"]) {
+        $pk = isset($extras["hasKey"]) && $extras["hasKey"] ? $authDetails[$model->primaryKey] : null;
+
+        $data = $model->getDashboard($pk, $queryOptions, $extras);
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
@@ -582,7 +639,7 @@ class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getDashboardByPK(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
+    public function getDashboardByPK(Request $request, ResponseInterface $response, $model, $queryOptions = [], $extras = []): ResponseInterface
     {
         $json = new JSON();
 
@@ -592,9 +649,9 @@ class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->getDashboard($pk);
+        $data = $model->getDashboard($pk, $queryOptions, $extras);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
@@ -616,7 +673,7 @@ class BaseController
         }
 
         $data = $model->getByPage($page, $limit, $return, $conditions, $relationships, $queryOptions);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
@@ -650,7 +707,7 @@ class BaseController
         }
 
         $data = $model->getByDate($from, $to, $return, $conditions, $relationships, $queryOptions);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
@@ -672,7 +729,7 @@ class BaseController
 
         $data = $model->getByPK($pk, $return, $relationships, $queryOptions);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
@@ -693,7 +750,7 @@ class BaseController
         }
 
         $data = $model->getByPK($pk, $return, $relationships, $queryOptions);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
@@ -710,7 +767,7 @@ class BaseController
 
         $data = $model->getByConditions($conditions, $return, $relationships);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
@@ -763,7 +820,7 @@ class BaseController
         $newAllInputs[$model->primaryKey] = $authDetails[$model->primaryKey];
 
         $data = $model->updateByPK($pk, $newAllInputs, $checks);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
@@ -816,7 +873,7 @@ class BaseController
         }
 
         $data = $model->updateByPK($pk, $newAllInputs, $checks);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
@@ -918,7 +975,7 @@ class BaseController
         }
 
         $data = $model->updateByColumnNames($columnsNames, $newAllInputs, $checks, $queryOptions);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
@@ -1034,7 +1091,7 @@ class BaseController
         }
 
         $data = $model->updateByConditions($conditions, $newAllInputs, $checks, $queryOptions);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
@@ -1128,7 +1185,7 @@ class BaseController
         $pk = $authDetails[$model->primaryKey];
 
         $data = $model->updatePassword($pk, $new_password, $old_password);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $this->logoutSelf($request, $response, $model);
 
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
@@ -1170,7 +1227,7 @@ class BaseController
 
         $data = $model->resetPassword($pk, $password);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
@@ -1195,7 +1252,7 @@ class BaseController
 
         $data = $model->verifyEmail($email_verification_token, $status);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
@@ -1236,7 +1293,7 @@ class BaseController
         $this->sendMail($allInputs, [["emailKey" => "email", "nameKey" => "name", "usertype" => $usertype, "mailtype" => $mailtype]]);
 
         $data = $model->forgotPassword($allInputs);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
@@ -1258,7 +1315,7 @@ class BaseController
         $allInputs = ["forgotPasswordVerificationToken" => $forgotPasswordVerificationToken];
 
         $data = $model->verifyForgotPassword($allInputs);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
@@ -1307,7 +1364,7 @@ class BaseController
 
         $data = $model->updateForgotPassword($pk, $password);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $this->logoutSelf($request, $response, $model);
 
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
@@ -1323,13 +1380,12 @@ class BaseController
     public function verifyUser(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
 
         ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
-
-        $authDetails = static::getTokenInputsFromRequest($request);
 
         $allInputs = $this->valuesExistsOrError($data, [$model->primaryKey]);
         if ($allInputs["error"]) {
@@ -1342,7 +1398,7 @@ class BaseController
 
         $data = $model->verifyUser($pk, $status);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
@@ -1364,7 +1420,7 @@ class BaseController
 
         $data = $model->deleteByPK($pk);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
@@ -1390,7 +1446,7 @@ class BaseController
         }
 
         $data = $model->deleteByPK($pk);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
@@ -1420,7 +1476,7 @@ class BaseController
         [$model->primaryKey => $pks] = $allInputs;
 
         $data = $model->deleteManyByPK($pks);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
@@ -1444,7 +1500,7 @@ class BaseController
         }
 
         $data = $model->logout($pk);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
@@ -1467,7 +1523,7 @@ class BaseController
         [$model->primaryKey => $pk] = $routeParams;
 
         $data = $model->logout($pk);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
@@ -1483,7 +1539,7 @@ class BaseController
         $json = new JSON();
 
         $data = $model->logoutByCondition($conditions);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
@@ -1521,7 +1577,7 @@ class BaseController
 
         $data = $model->updateColumns($pk, $allInputs);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
@@ -1544,7 +1600,7 @@ class BaseController
 
         $data = $model->getByDateWithRelationship($from, $to, $relationships, $return);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
@@ -1569,7 +1625,7 @@ class BaseController
 
         $data = $model->getByDateWithConditions($from, $to, $conditions, $return, $queryOptions);
 
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
@@ -1591,7 +1647,7 @@ class BaseController
         }
 
         $data = $model->getWithRelationships($pk, $relationships, $return);
-        if ($data["error"]) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);

@@ -55,9 +55,14 @@ isset($v1Group) && $v1Group->group(
         require "src/Liveet/Routes/v1/EventAccessRoutes.php";
 
         /**
+         * Event Ticket-User Routes
+         */
+        require "src/Liveet/Routes/v1/EventTicketUserRoutes.php";
+
+        /**
          * Event Timeline Routes
          */
-        // require "src/Liveet/Routes/v1/EventTimelineRoutes.php";
+        require "src/Liveet/Routes/v1/EventTimelineRoutes.php";
 
 
         /** Organiser Admin and Staff */

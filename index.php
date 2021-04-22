@@ -19,6 +19,9 @@ use Slim\Exception\HttpNotFoundException;
 if (!isset($_ENV["ENVIRONMENT"]) || $_ENV["ENVIRONMENT"] != Constants::ENVIRONMENT_DEVELOPMENT) {
     error_reporting(0);
 }
+
+set_time_limit(0);
+
 // ini_set('memory_limit', '64M');
 
 $app = AppFactory::create();

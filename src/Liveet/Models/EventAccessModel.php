@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Event;
 use Liveet\Domain\Constants;
 use Rashtell\Domain\CodeLibrary;
 
-class EventAccessModel extends BaseModel
+class EventAccessModel extends HelperModel
 {
     use SoftDeletes;
 
@@ -49,6 +49,10 @@ class EventAccessModel extends BaseModel
 
         $event_ticket_id = $details["event_ticket_id"];
         $event_access_population = $details["event_access_population"];
+
+        if ($this->isEventTicketSaleExpired($event_ticket_id)) {
+            return ["error" => "Ticket sales closed"];
+        }
 
         $totalTicketCount = (new EventTicketModel())->find($event_ticket_id)->count();
         $usedTicketCount = (new EventTicketUserModel())->where("event_ticket_id", $event_ticket_id)->count();
@@ -95,6 +99,27 @@ class EventAccessModel extends BaseModel
         return self::select("event_access_id", "event_access_code", "event_ticket_id", "user_id", "event_access_used_status", "created_at", "updated_at");
     }
 
+    public function getDashboard($pk, $queryOptions = null, $extras = null)
+    {
+        $event_id = $extras["event_id"];
+
+        $eventTickets = (new EventTicketModel())->where("event_id", $event_id)->get();
+
+        $eventAccesses = [];
+        foreach ($eventTickets as $ticket) {
+            $eventAccess["name"] = $ticket["ticket_name"];
+            $eventAccess["access_count"] = count($this->where("event_ticket_id", $ticket["event_ticket_id"])->get());
+
+            $eventAccesses[] = $eventAccess;
+        }
+
+        if (empty($eventAccesses)) {
+            return ["data" => null, "error" => "No access codes found"];
+        }
+
+        return ["data" => $eventAccesses, "error" => null];
+    }
+
     public function updateByPK($pk, $allInputs, $checks = [])
     {
         $inputError = $this->checkInputError($allInputs, $checks, (new UserModel()));
@@ -111,14 +136,19 @@ class EventAccessModel extends BaseModel
         }
         $user_id = $userQuery->first()["user_id"];
 
-        $query = $this->find($pk);
-        if (!$query) {
+        $eventAccess = $this->find($pk);
+        if (!$eventAccess) {
             return ["error" => "Access code not found", "data" => null];
         }
 
-        $query->update(["user_id" => $user_id, "event_access_used_status" => Constants::EVENT_ACCESS_ASSIGNED]);
+        $event_ticket_id = $eventAccess["event_ticket_id"];
+        if ($this->isEventTicketSaleExpired($event_ticket_id)) {
+            return ["error" => "Ticket sales closed"];
+        }
 
-        $model = $this->getByPK($pk);
+        $eventAccess->update(["user_id" => $user_id, "event_access_used_status" => Constants::EVENT_ACCESS_ASSIGNED]);
+
+        $model = $this->getByPK($pk, null, ["user"]);
 
         return ["data" => $model["data"], "error" => $model["error"]];
     }

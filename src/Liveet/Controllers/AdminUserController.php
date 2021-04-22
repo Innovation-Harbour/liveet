@@ -9,12 +9,12 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\JSON;
 use Liveet\Models\AdminUserModel;
 
-class AdminUserController extends BaseController
+class AdminUserController extends HelperController
 {
 
     public function loginAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->login($request, $response, new AdminUserModel(), ["admin_username", "admin_password"], ["publicKeyKey" => "public_key", "passwordKey" => "admin_password"], [
+        return $this->login($request, $response, new AdminUserModel(), ["admin_username", "admin_password"], ["publicKeyKey" => "public_key", "passwordKey" => "admin_password"], [
             "dataOptions" => [
                 "overrideKeys" => [
                     // "username" => "admin_username", "password" => "admin_password"
@@ -29,14 +29,9 @@ class AdminUserController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminAdminPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->createSelf(
+        return $this->createSelf(
             $request,
             $response,
             new AdminUserModel(),
@@ -79,14 +74,9 @@ class AdminUserController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminAdminPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->getByPage($request, $response, new AdminUserModel());
+        return $this->getByPage($request, $response, new AdminUserModel());
     }
 
     public function getAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -95,14 +85,9 @@ class AdminUserController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminAdminPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->getByPK($request, $response, new AdminUserModel());
+        return $this->getByPK($request, $response, new AdminUserModel());
     }
 
     public function updateAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -111,14 +96,9 @@ class AdminUserController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminAdminPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->updateByPK(
+        return $this->updateByPK(
             $request,
             $response,
             (new AdminUserModel()),
@@ -164,29 +144,24 @@ class AdminUserController extends BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+        $this->checkAdminAdminPermission($request, $response);
 
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return (new BaseController)->logoutByPK($request, $response, new AdminUserModel());
+        return $this->logoutByPK($request, $response, new AdminUserModel());
     }
 
     public function getAdminUserDashboard(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->getSelfDashboard($request, $response, new AdminUserModel());
+        return $this->getSelfDashboard($request, $response, new AdminUserModel());
     }
 
     public function getAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->getSelf($request, $response, new AdminUserModel());
+        return $this->getSelf($request, $response, new AdminUserModel());
     }
 
     public function updateAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->updateSelf(
+        return $this->updateSelf(
             $request,
             $response,
             new AdminUserModel(),
@@ -222,12 +197,12 @@ class AdminUserController extends BaseController
 
     public function updateAdminUserPassword(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->updatePassword($request, $response, new AdminUserModel());
+        return $this->updatePassword($request, $response, new AdminUserModel());
     }
 
     public function logoutAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->logoutSelf($request, $response, new AdminUserModel());
+        return $this->logoutSelf($request, $response, new AdminUserModel());
     }
 
     /**
@@ -247,12 +222,12 @@ class AdminUserController extends BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        return (new BaseController)->resetPassword($request, $response, new AdminUserModel());
+        return $this->resetPassword($request, $response, new AdminUserModel());
     }
 
     public function deleteAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return (new BaseController)->deleteSelf($request, $response, new AdminUserModel());
+        return $this->deleteSelf($request, $response, new AdminUserModel());
     }
 
     //super admin exclusive
@@ -270,7 +245,7 @@ class AdminUserController extends BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        return (new BaseController)->deleteByPK($request, $response, new AdminUserModel());
+        return $this->deleteByPK($request, $response, new AdminUserModel());
     }
 
      **/

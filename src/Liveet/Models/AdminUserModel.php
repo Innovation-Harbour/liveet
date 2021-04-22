@@ -52,7 +52,7 @@ class AdminUserModel extends BaseModel
         return ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
-    public function getDashboard($pk)
+    public function getDashboard($pk, $queryOptions = null, $extras = null)
     {
         $adminsCount = self::count();
 

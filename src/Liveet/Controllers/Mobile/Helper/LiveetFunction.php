@@ -109,8 +109,6 @@ trait LiveetFunction
   }
 
   public function getCoordinates($address){
-    //$address = '1b Omorinre Johnson Close, Lekki, Lagos Nigeria'; // Address
-    //$prepAddr = str_replace(' ','+',$address);
     $apiKey = $_ENV["MAP_KEY"]; // Google maps now requires an API key.
     // Get JSON results from this request
     $geo = file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?address='.urlencode($address).'&sensor=false&key='.$apiKey);

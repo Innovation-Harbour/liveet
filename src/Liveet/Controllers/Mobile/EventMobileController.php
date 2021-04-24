@@ -102,6 +102,11 @@ class EventMobileController extends BaseController {
 
   public function GetEventTickets (Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
+    $address = '136 ewusi street Makun, Sagamu, Ogun Nigeria';
+    $coordinates = $this->getCoordinates($address);
+
+    var_dump($coordinates);
+    die;
     //declare needed class objects
     $db = new EventTicketModel();
 

@@ -110,21 +110,24 @@ trait LiveetFunction
   }
 
   public function getCoordinates($address){
-    $apiKey = $_ENV["MAP_KEY"]; // Google maps now requires an API key.
-    // Get JSON results from this request
-    $geo = file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?address='.urlencode($address).'&sensor=false&key='.$apiKey);
-    $geo = json_decode($geo, true); // Convert the JSON to an array
+    $address_found = false;
+    $apiKey = $_ENV["MAP_KEY"];
+    try{
+      $geo = file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?address='.urlencode($address).'&sensor=false&key='.$apiKey);
+      $geo = json_decode($geo, true); // Convert the JSON to an array
 
-    $latitude = 0;
-    $longitude = 0;
-
-    if (isset($geo['status']) && ($geo['status'] == 'OK')) {
-      $latitude = $geo['results'][0]['geometry']['location']['lat']; // Latitude
-      $longitude = $geo['results'][0]['geometry']['location']['lng']; // Longitude
+      if (isset($geo['status']) && ($geo['status'] == 'OK')) {
+        $latitude = $geo['results'][0]['geometry']['location']['lat']; // Latitude
+        $longitude = $geo['results'][0]['geometry']['location']['lng']; // Longitude
+        $address_found = true;
+      }
     }
-
-    $address_found = ($latitude == 0 || $longitude == 0) ? false : true;
-
+    catch(\Exception $e)
+    {
+      $address_found = false;
+      $longitude = 0;
+      $latitude = 0;
+    }
     return[$address_found,$longitude,$latitude];
   }
 }

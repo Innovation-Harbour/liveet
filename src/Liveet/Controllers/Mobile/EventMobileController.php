@@ -113,13 +113,14 @@ class EventMobileController extends BaseController {
     // Get JSON results from this request
     $geo = file_get_contents('https://maps.googleapis.com/maps/api/geocode/json?address='.urlencode($address).'&sensor=false&key='.$apiKey);
     $geo = json_decode($geo, true); // Convert the JSON to an array
-    var_dump($geo);
-    die;
 
     if (isset($geo['status']) && ($geo['status'] == 'OK')) {
       $latitude = $geo['results'][0]['geometry']['location']['lat']; // Latitude
       $longitude = $geo['results'][0]['geometry']['location']['lng']; // Longitude
     }
+
+    var_dump($longitude,$latitude);
+    die;
 
     $response_data = [];
 

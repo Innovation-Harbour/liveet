@@ -100,6 +100,8 @@ trait LiveetFunction
       $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
+    var_dump($recognition);
+    die;
 
 		$result = $recognition->createCollection([
 		    'CollectionId' => $event, // REQUIRED

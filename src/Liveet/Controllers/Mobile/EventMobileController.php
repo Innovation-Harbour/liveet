@@ -22,12 +22,6 @@ class EventMobileController extends BaseController {
 
   public function GetEvents (Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
-    $address = '1b Omorinre Johnson Close, Lekki, Lagos Nigeria';
-    $coordinates = $this->getCoordinates($address);
-
-    var_dump($coordinates);
-    die;
-
     //declare needed class objects
     $db = new InvitationModel();
 
@@ -108,7 +102,11 @@ class EventMobileController extends BaseController {
 
   public function GetEventTickets (Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
+    $address = '1b Omorinre Johnson Close, Lekki, Lagos Nigeria';
+    $coordinates = $this->getCoordinates($address);
 
+    var_dump($coordinates);
+    die;
     //declare needed class objects
     $db = new EventTicketModel();
 

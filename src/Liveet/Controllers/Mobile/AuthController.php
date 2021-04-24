@@ -433,12 +433,7 @@ class AuthController extends BaseController {
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
-    $keymanager = new KeyManager();
-    $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6ImtvbGFwb0BnbWFpbC5jb20iLCJpc3MiOiJwYXlyb2xsbW5nciIsImF1ZCI6InBheXJvbGxtbmdyIiwiaWF0IjoxNjE4MDk5MTA1LCJuYmYiOjE2MTgwOTkxMDV9.RP2ijYb-GzTVMhTw3SyoybHsANoT3cAUDFp2uvsE_rs";
-    $result = $keymanager->validateClaim($token);
-
-    var_dump(json_encode($result));
-    die;
+    
   }
 
 }

@@ -13,6 +13,7 @@ use Liveet\Models\BaseModel;
 use DateTime;
 use Illuminate\Database\Eloquent\Model;
 use Liveet\Domain\Constants;
+use Psr\Http\Message\UploadedFileInterface;
 
 class BaseController
 {
@@ -223,7 +224,7 @@ class BaseController
                 $return = [];
 
                 if (
-                    ($imageOption["multiple"] && gettype($data[$imageKey]) == "array")
+                    (isset($imageOption["multiple"]) && $imageOption["multiple"] && gettype($data[$imageKey]) == "array")
                     || gettype($data[$imageKey]) == "array"
                 ) {
                     foreach ($data[$imageKey] as $imageKe) {
@@ -330,6 +331,79 @@ class BaseController
 
         endif;
     }
+
+
+
+    /**
+     * Moves the uploaded file to the upload directory and assigns it a unique name
+     * to avoid overwriting an existing uploaded file.
+     *
+     * @param string $directory The directory to which the file is moved
+     * @param UploadedFileInterface $uploadedFile The file uploaded file to move
+     *
+     * @return string The filename of moved file
+     */
+    function handleUploadMedias($request)
+    {
+        // $directory = $this->get('upload_directory');
+        $directory = "assets/medias";
+        $uploadedFiles = $request->getUploadedFiles();
+        $outputs = [];
+
+        // handle single input with multiple file uploads
+        foreach ($uploadedFiles as $uploadedFileName => $uploadedFile) {
+            if (gettype($uploadedFile) == "object") {
+                $this->uploadFile(
+                    $uploadedFile,
+                    $directory,
+                    function ($output) use (&$outputs, $directory) {
+                        ["filename" => $filename, "filetype" => $filetype] = $output;
+                        $output["path"] = $directory . "/" . $filename;
+
+                        $outputs[] = $output;
+                    }
+                );
+            }
+
+            if (gettype($uploadedFile) == "array") {
+                foreach ($uploadedFile as $index => $uploadedFil) {
+                    $this->uploadFile(
+                        $uploadedFil,
+                        $directory,
+                        function ($output) use (&$outputs) {
+                            $outputs[] = $output;
+                        }
+                    );
+                }
+            }
+        }
+
+        return $outputs;
+    }
+
+    function moveUploadedFile(string $directory, UploadedFileInterface $uploadedFile)
+    {
+        $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
+
+        // see http://php.net/manual/en/function.random-bytes.php
+        $basename = bin2hex(random_bytes(8));
+        $basename += (new DateTime())->getTimeStamp();
+        $filename = sprintf('%s.%0.8s', $basename, $extension);
+
+        $uploadedFile->moveTo($directory . DIRECTORY_SEPARATOR . $filename);
+
+        return ["filename" => $filename, "filetype" => $extension];
+    }
+
+    function uploadFile($uploadedFile, $directory, $callback)
+    {
+        if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
+            $fileDetails = $this->moveUploadedFile($directory, $uploadedFile);
+
+            $callback($fileDetails);
+        }
+    }
+
 
     public function appendSecurity($allInputs, $accountOptions = [])
     {

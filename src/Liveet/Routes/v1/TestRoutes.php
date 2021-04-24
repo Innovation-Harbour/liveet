@@ -4,7 +4,9 @@ use Slim\Routing\RouteCollectorProxy;
 
 use Liveet\Controllers\TestController;
 use Liveet\Middlewares\AuthenticationMiddleware;
+use Psr\Http\Message\UploadedFileInterface;
 
+use function PHPSTORM_META\type;
 
 /**
  * Test priviledged

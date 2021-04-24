@@ -53,6 +53,11 @@ isset($v1Group) && $v1Group->group(
          */
         require "src/Liveet/Routes/v1/EventTimelineRoutes.php";
 
+        /**
+         * Timeline Media Routes
+         */
+        require "src/Liveet/Routes/v1/TimelineMediaRoutes.php";
+
 
         /** */
 

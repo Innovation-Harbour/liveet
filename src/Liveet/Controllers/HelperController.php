@@ -13,6 +13,15 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class HelperController extends BaseController
 {
+    public function uploadMedias($request, $response)
+    {
+        $json =  new JSON();
+        $uploadedFileDetails = Parent::handleUploadMedias($request);
+
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $uploadedFileDetails);
+
+        return $json->withJsonResponse($response, $payload);
+    }
     public function checkAdminAdminPermission(Request $request, ResponseInterface $response)
     {
         $json = new JSON();

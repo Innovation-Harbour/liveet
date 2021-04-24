@@ -5,22 +5,20 @@ namespace Liveet\Controllers;
 use Illuminate\Support\Facades\Event;
 use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
-use Liveet\Models\EventTimelineModel;
+use Liveet\Models\TimelineMediaModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
 use Liveet\Models\EventTicketModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class EventTimelineController extends HelperController
+class TimelineMediaController extends HelperController
 {
 
     /** Admin User */
 
-    public function createEventTimeline(Request $request, ResponseInterface $response): ResponseInterface
+    public function createTimelineMedia(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $this->checkAdminEventPermission($request, $response);
@@ -28,16 +26,14 @@ class EventTimelineController extends HelperController
         return $this->createSelf(
             $request,
             $response,
-            new EventTimelineModel(),
+            new TimelineMediaModel(),
             [
                 "required" => [
-                    "event_id",
-                    "timeline_desc", "timeline_media"
+                    "timeline_id", "timeline_media"
                 ],
 
                 "expected" => [
-                    "event_id",
-                    "timeline_desc", "timeline_media"
+                    "timeline_id", "timeline_media"
                 ],
             ],
             [
@@ -48,13 +44,13 @@ class EventTimelineController extends HelperController
         );
     }
 
-    public function getEventTimelines(Request $request, ResponseInterface $response): ResponseInterface
+    public function getTimelineMedias(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $this->checkAdminEventPermission($request, $response);
 
-        $expectedRouteParams = ["event_id"];
+        $expectedRouteParams = ["timeline_id"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];
 
@@ -64,19 +60,19 @@ class EventTimelineController extends HelperController
             }
         }
 
-        return $this->getByPage($request, $response, new EventTimelineModel(), null, $conditions, ["timelineMedia"]);
+        return $this->getByPage($request, $response, new TimelineMediaModel(), null, $conditions);
     }
 
-    public function getEventTimelineByPK(Request $request, ResponseInterface $response): ResponseInterface
+    public function getTimelineMediaByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $this->checkAdminEventPermission($request, $response);
 
-        return $this->getByPK($request, $response, new EventTimelineModel(), null, ["timelineMedia"]);
+        return $this->getByPK($request, $response, new TimelineMediaModel());
     }
 
-    public function updateEventTimelineByPK(Request $request, ResponseInterface $response): ResponseInterface
+    public function updateTimelineMediaByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -85,34 +81,39 @@ class EventTimelineController extends HelperController
         return $this->updateByPK(
             $request,
             $response,
-            new EventTimelineModel(),
+            new TimelineMediaModel(),
             [
                 "required" => [
-                    "event_id",
-                    "timeline_desc"
+                    "timeline_id",
+                    "timeline_media"
                 ],
 
                 "expected" => [
-                    "event_id",
-                    "timeline_desc"
+                    "timeline_id",
+                    "timeline_media", "timeline_mediaType"
+                ]
+            ],
+            [
+                "imageOptions" => [
+                    ["imageKey" => "timeline_media"]
                 ]
             ]
         );
     }
 
-    public function deleteEventTimelineByPK(Request $request, ResponseInterface $response): ResponseInterface
+    public function deleteTimelineMediaByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $this->checkAdminEventPermission($request, $response);
 
-        return $this->deleteByPK($request, $response, (new EventTimelineModel()));
+        return $this->deleteByPK($request, $response, (new TimelineMediaModel()));
     }
 
 
     /** Organiser Staff */
 
-    public function getOrganiserEventTimelines(Request $request, ResponseInterface $response): ResponseInterface
+    public function getOrganiserTimelineMedias(Request $request, ResponseInterface $response): ResponseInterface
     {
         $this->checkOrganiserEventPermission($request, $response);
         $expectedRouteParams = ["event_id"];
@@ -129,6 +130,6 @@ class EventTimelineController extends HelperController
             $this->eventBelongsToOrganiser($request, $response, $conditions["event_id"]);
         }
 
-        return $this->getByPage($request, $response, new EventTimelineModel(), null, $conditions, ["timelineMedia"]);
+        return $this->getByPage($request, $response, new TimelineMediaModel(), null, $conditions, ["timelineMedia"]);
     }
 }

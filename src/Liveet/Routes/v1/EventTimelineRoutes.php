@@ -46,29 +46,9 @@ isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
     function (RouteCollectorProxy $eventGroup) {
 
-        $eventGroup->post(
-            "/create/timeline",
-            EventTimelineController::class . ":createOrganiserEventTimeline"
-        );
-
         $eventGroup->get(
             "/get/timelines[/{event_id}[/{page}[/{limit}]]]",
             EventTimelineController::class . ":getOrganiserEventTimelines"
-        );
-
-        $eventGroup->get(
-            "/get/timeline/{event_ticket_user_id}",
-            EventTimelineController::class . ":getOrganiserEventTimelineByPK"
-        );
-
-        $eventGroup->put(
-            "/transfer/timeline/{event_ticket_user_id}",
-            EventTimelineController::class . ":transferOrganiserEventTimelineByPK"
-        );
-
-        $eventGroup->delete(
-            "/recall/timeline/{event_ticket_user_id}",
-            EventTimelineController::class . ":recallOrganiserEventTimeline"
         );
     }
 );

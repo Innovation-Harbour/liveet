@@ -81,8 +81,6 @@ trait LiveetFunction
   }
 
   public function createAwsEvent($event){
-    var_dump($event);
-    die;
 
     $json = new JSON();
     $aws_key = $_ENV["AWS_KEY"];
@@ -106,6 +104,9 @@ trait LiveetFunction
 		$result = $recognition->createCollection([
 		    'CollectionId' => $event, // REQUIRED
 		]);
+
+    var_dump($result);
+    die;
 
     return $result;
   }

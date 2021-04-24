@@ -112,30 +112,22 @@ class EventMobileController extends BaseController {
     $event_id = $args["event_id"];
 
     $results = $db->where("event_id",$event_id)->get();
-    var_dump($results);
-    die;
 
     foreach($results as $result)
     {
-      $datetime = $result->event_date_time;
-      $date = date('d',$datetime);
-      $month = date('M',$datetime);
-      $year = date('Y',$datetime);
+      $ticket_cost = intval($result->ticket_cost);
+      $ticket_discount = intval($result->ticket_discount);
+      $new_ticket_price = $ticket_cost - (($ticket_discount * $ticket_cost)/100);
 
-      $can_invite = ($result->event_can_invite === "CAN_INVITE") ? true : false;
-      $is_free = ($result->event_payment_type === "FREE") ? true : false;
-      $isFavourite = ($result->event_favourite_id !== null) ? true : false;
+      $readable_ticket_discount = $ticket_discount."%";
 
       $tmp = [
-        "event_id" => intval($result->event_id),
-        "event_image" => $result->event_multimedia,
-        "event_title" => $result->event_name,
-        "event_date" => intval($date),
-        "event_month" => $month,
-        "event_year" => $year,
-        "can_invite" => $can_invite,
-        "is_favourite" => $isFavourite,
-        "is_free" => $is_free,
+        "event_ticket_id" => intval($result->event_ticket_id),
+        "ticket_name" => $result->ticket_name,
+        "ticket_desc" => $result->ticket_desc,
+        "ticket_cost" => $new_ticket_price,
+        "ticket_discount" => $readable_ticket_discount,
+        "is_selected" => false
       ];
 
       array_push($response_data,$tmp);

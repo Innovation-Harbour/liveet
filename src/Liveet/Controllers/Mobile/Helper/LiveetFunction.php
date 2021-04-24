@@ -95,20 +95,18 @@ trait LiveetFunction
   		        'secret' => $aws_secret,
   		    ]
   		]);
+
+      $result = $recognition->createCollection([
+  		    'CollectionId' => $event, // REQUIRED
+  		]);
+
+      $status = "done";
     }
     catch (\Exception $e){
-      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
-      return $json->withJsonResponse($response, $error);
+      $status = "error";
     }
 
-		$result = $recognition->createCollection([
-		    'CollectionId' => $event, // REQUIRED
-		]);
-
-    var_dump($result);
-    die;
-
-    return $result;
+    return $status;
   }
 
   public function getCoordinates($address){

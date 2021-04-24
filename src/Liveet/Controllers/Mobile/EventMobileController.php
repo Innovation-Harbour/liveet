@@ -39,6 +39,7 @@ class EventMobileController extends BaseController {
       $datetime = $result->event_date_time;
       $date = date('d',$datetime);
       $month = date('M',$datetime);
+      $year = date('Y',$datetime);
 
       $can_invite = ($result->event_can_invite === "CAN_INVITE") ? true : false;
       $isFavourite = ($result->event_favourite_id !== null) ? true : false;
@@ -49,6 +50,7 @@ class EventMobileController extends BaseController {
         "event_title" => $result->event_name,
         "event_date" => intval($date),
         "event_month" => $month,
+        "event_year" => $year,
         "can_invite" => $can_invite,
         "is_favourite" => $isFavourite,
       ];

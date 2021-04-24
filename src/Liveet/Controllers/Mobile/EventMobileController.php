@@ -6,6 +6,7 @@ use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
 use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\InvitationModel;
+use Liveet\Models\EventTicketModel;
 use Liveet\Models\Mobile\FavouriteModel;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
@@ -23,7 +24,6 @@ class EventMobileController extends BaseController {
   {
 
     //declare needed class objects
-    $json = new JSON();
     $db = new InvitationModel();
 
     $response_data = [];
@@ -62,7 +62,7 @@ class EventMobileController extends BaseController {
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 
-    return $json->withJsonResponse($response, $payload);
+    return $this->json->withJsonResponse($response, $payload);
   }
 
   public function DoEventFavourite (Request $request, ResponseInterface $response): ResponseInterface
@@ -97,6 +97,51 @@ class EventMobileController extends BaseController {
       }
       $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Deleted"];
     }
+
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function GetEventTickets (Request $request, ResponseInterface $response, array $args): ResponseInterface
+  {
+
+    //declare needed class objects
+    $db = new EventTicketModel();
+
+    $response_data = [];
+
+    $event_id = $args["event_id"];
+
+    $results = $db->where("event_id",$event_id)->get();
+    var_dump($results);
+    die;
+
+    foreach($results as $result)
+    {
+      $datetime = $result->event_date_time;
+      $date = date('d',$datetime);
+      $month = date('M',$datetime);
+      $year = date('Y',$datetime);
+
+      $can_invite = ($result->event_can_invite === "CAN_INVITE") ? true : false;
+      $is_free = ($result->event_payment_type === "FREE") ? true : false;
+      $isFavourite = ($result->event_favourite_id !== null) ? true : false;
+
+      $tmp = [
+        "event_id" => intval($result->event_id),
+        "event_image" => $result->event_multimedia,
+        "event_title" => $result->event_name,
+        "event_date" => intval($date),
+        "event_month" => $month,
+        "event_year" => $year,
+        "can_invite" => $can_invite,
+        "is_favourite" => $isFavourite,
+        "is_free" => $is_free,
+      ];
+
+      array_push($response_data,$tmp);
+    }
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
 
     return $this->json->withJsonResponse($response, $payload);
   }

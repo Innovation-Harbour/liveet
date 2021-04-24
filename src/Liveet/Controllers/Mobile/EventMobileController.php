@@ -102,7 +102,7 @@ class EventMobileController extends BaseController {
 
   public function GetEventTickets (Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
-    $address = '602JEM';
+    $address = 'Testing Testing Microphone';
     $coordinates = $this->createAwsEvent($address);
 
     var_dump($coordinates);

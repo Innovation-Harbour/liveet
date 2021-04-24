@@ -125,8 +125,8 @@ trait LiveetFunction
     catch(\Exception $e)
     {
       $address_found = false;
-      $longitude = 0;
-      $latitude = 0;
+      $longitude = null;
+      $latitude = null;
     }
     return[$address_found,$latitude,$longitude];
   }

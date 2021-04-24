@@ -42,6 +42,7 @@ class EventMobileController extends BaseController {
       $year = date('Y',$datetime);
 
       $can_invite = ($result->event_can_invite === "CAN_INVITE") ? true : false;
+      $is_free = ($result->event_payment_type === "FREE") ? true : false;
       $isFavourite = ($result->event_favourite_id !== null) ? true : false;
 
       $tmp = [
@@ -53,6 +54,7 @@ class EventMobileController extends BaseController {
         "event_year" => $year,
         "can_invite" => $can_invite,
         "is_favourite" => $isFavourite,
+        "is_free" => $is_free,
       ];
 
       array_push($response_data,$tmp);

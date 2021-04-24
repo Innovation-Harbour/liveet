@@ -18,7 +18,7 @@ class InvitationModel extends BaseModel
     public function getMobileEvents($user_id, $offset, $limit){
       $sql = "
               SELECT
-              event.event_id,event.event_multimedia,event.event_name,event.event_date_time,event_control.event_can_invite,event_user_favourite.event_favourite_id
+              event.event_id,event.event_multimedia,event.event_name,event.event_date_time,event.event_payment_type,event_control.event_can_invite,event_user_favourite.event_favourite_id
               FROM event_invitation e
               LEFT JOIN user ON e.event_invitee_number = user.user_phone
               RIGHT JOIN event ON e.event_id = event.event_id

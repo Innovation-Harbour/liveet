@@ -40,7 +40,7 @@ class EventMobileController extends BaseController {
       $month = date('M',$datetime);
       $year = date('Y',$datetime);
 
-      $can_invite = ($result->event_can_invite === "CAN_INVITE") ? true : false;
+      $can_invite = ($result->event_can_invite === "CAN_INVITE" || $result->event_can_invite === "RESTRICTED") ? true : false;
       $is_free = ($result->event_payment_type === "FREE") ? true : false;
       $isFavourite = ($result->event_favourite_id !== null) ? true : false;
 

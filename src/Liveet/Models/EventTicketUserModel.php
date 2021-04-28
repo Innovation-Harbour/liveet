@@ -16,7 +16,7 @@ class EventTicketUserModel extends HelperModel
     protected $dateFormat = "U";
     public $primaryKey = "event_ticket_user_id";
     protected $fillable = ["user_id", "user_face_id"];
-
+    protected $appends = ["ticket_cost"];
 
     public function eventTicket()
     {
@@ -26,6 +26,11 @@ class EventTicketUserModel extends HelperModel
     public function user()
     {
         return $this->belongsTo(UserModel::class, "user_id", "user_id");
+    }
+
+    public function getTicketCostAttribute()
+    {
+        return $this->eventTicket->ticket_cost;
     }
 
     public function getStruct()

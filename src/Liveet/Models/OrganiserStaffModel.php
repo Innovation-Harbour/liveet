@@ -103,10 +103,27 @@ class OrganiserStaffModel extends BaseModel
     {
         $organiserStaff =  $this->where($this->primaryKey, $pk)->first();
         $organiser_id = $organiserStaff["organiser_id"];
-        $staffCount = $this->where("organiser_id", $organiser_id)->count();
+
+        $staffCount = $this->where("organiser_id", $organiser_id)->where("usertype", Constants::USERTYPE_ORGANISER_STAFF)->count();
+
+        $eventCount = EventModel::where("organiser_id", $organiser_id)->count();
+
+        $eventTicketUserCount = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->count();
+
+        $eventTickerAccessCount = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->count();
+
+        $eventTicketUserSum = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->sum("ticket_cost");
+
+        $eventTickerAccessSum =  EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->sum("ticket_cost");
 
         $dashboard = [
             "staffCount" => $staffCount,
+            "eventCount" => $eventCount,
+            "eventTicketUserCount" => $eventTicketUserCount,
+            "eventTickerAccessCount" => $eventTickerAccessCount,
+            "eventTicketUserSum" => $eventTicketUserSum,
+            "eventTicketAccessSum" => $eventTickerAccessSum,
+            "totalTickets" => $eventTicketUserSum + $eventTickerAccessSum,
         ];
 
         return ["error" => "", "data" => $dashboard];

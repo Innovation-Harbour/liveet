@@ -84,7 +84,6 @@ class BaseModel extends Model
     public function checkExistsError(array $details, array $uniqueColumns, Model $model = null)
     {
         $model = $model ?? $this;
-        $existExceptions =  ["password"];
         $isCreate = true;
         $pk = null;
 
@@ -109,7 +108,14 @@ class BaseModel extends Model
             $isCreate = false;
         }
 
+        return $this->checkUniqueColumns($model, $details, $uniqueColumns, $pk, $isCreate);
+    }
+
+    public function checkUniqueColumns($model, $details, $uniqueColumns, $pk, $isCreate)
+    {
+        $existExceptions =  ["password"];
         $returnVal = null;
+
         foreach ($uniqueColumns as $uniqueColumn) {
             $columnName = null;
             $key = null;
@@ -187,7 +193,7 @@ class BaseModel extends Model
 
     protected static function search($searchTerm)
     {
-        return $this->select();
+        return static::where("", "LIKE", "%" . $searchTerm . "%")->get();
     }
 
     //TODO create a query contructor to append conditions, relationships and other query options

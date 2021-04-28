@@ -5,10 +5,13 @@ namespace Liveet\Models;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Event;
 use Rashtell\Domain\CodeLibrary;
+use Liveet\Controllers\Mobile\Helper\LiveetFunction;
+use Liveet\Domain\Constants;
 
 class EventModel extends BaseModel
 {
     use SoftDeletes;
+    use LiveetFunction;
 
     protected $table = "event";
     protected $dateFormat = "U";
@@ -82,8 +85,21 @@ class EventModel extends BaseModel
         $event_can_transfer_ticket = $details["event_can_transfer_ticket"];
         $event_can_recall = $details["event_can_recall"];
 
+        $status = ""; // "done" on success, "error" on failure
+        $i = 0;
+        do {
+            $status = $this->createAwsEvent($event_code);
+            $i++;
+        } while ($status == "error" && $i < Constants::CREATE_AWS_EVENT_RETRY);
+        if ($status == "error") {
+            return ["data" => null, "error" => "An error occured while creating aws event"];
+        }
+
+        $cordinates = $this->getCoordinates($event_venue);
+        ["address_found" => $address_found, "longitude" => $longitude, "latitude" => $latitude] = $cordinates;
+
         //create event 
-        $this->create(["organiser_id" => $organiser_id, "event_name" => $event_name, "event_code" => $event_code, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type]);
+        $this->create(["organiser_id" => $organiser_id, "event_name" => $event_name, "event_code" => $event_code, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type, "location_lat" => $latitude, "location_long" => $longitude]);
 
         //Get event id
         $event_id = $this->select($this->primaryKey)->where("event_code", $event_code)->latest($this->primaryKey)->first()[$this->primaryKey];
@@ -93,7 +109,9 @@ class EventModel extends BaseModel
         $ticketIDs = [];
         foreach ($tickets as $ticket) {
             $ticketModel = new EventTicketModel();
-            $ticketModel->create(["event_id" => $event_id, "ticket_name" => $ticket->ticket_name, "ticket_desc" => $ticket->ticket_desc, "ticket_cost" => $ticket->ticket_cost, "ticket_population" => $ticket->ticket_population, "ticket_discount" => $ticket->ticket_discount]);
+            $ticket_cost = $event_payment_type == Constants::PAYMENT_TYPE_FREE ? 0 : $ticket->ticket_cost;
+
+            $ticketModel->create(["event_id" => $event_id, "ticket_name" => $ticket->ticket_name, "ticket_desc" => $ticket->ticket_desc, "ticket_cost" => $ticket_cost, "ticket_population" => $ticket->ticket_population, "ticket_discount" => $ticket->ticket_discount]);
 
             $ticketIDs[$ticketIndex] = $ticketModel->select($ticketModel->primaryKey)->where("event_id", $event_id)->latest($ticketModel->primaryKey)->first()[$ticketModel->primaryKey];
 
@@ -134,8 +152,11 @@ class EventModel extends BaseModel
         $event_can_transfer_ticket = $details["event_can_transfer_ticket"];
         $event_can_recall = $details["event_can_recall"];
 
+        $cordinates = $this->getCoordinates($event_venue);
+        ["address_found" => $address_found, "longitude" => $longitude, "latitude" => $latitude] = $cordinates;
+
         //create event 
-        $this->find($pk)->update(["event_name" => $event_name, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type]);
+        $this->find($pk)->update(["event_name" => $event_name, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type, "location_lat" => $latitude, "location_long" => $longitude]);
 
         //Get event id
         $event_id = $pk;
@@ -150,7 +171,9 @@ class EventModel extends BaseModel
             $ticketQuery = $ticketModel->where("event_ticket_id", $event_ticket_id)->where("event_id", $event_id);
 
             if ($ticketQuery->exists()) {
-                $ticketQuery->update(["ticket_name" => $ticket->ticket_name, "ticket_desc" => $ticket->ticket_desc, "ticket_cost" => $ticket->ticket_cost, "ticket_population" => $ticket->ticket_population, "ticket_discount" => $ticket->ticket_discount]);
+                $ticket_cost = $event_payment_type == Constants::PAYMENT_TYPE_FREE ? 0 : $ticket->ticket_cost;
+
+                $ticketQuery->update(["ticket_name" => $ticket->ticket_name, "ticket_desc" => $ticket->ticket_desc, "ticket_cost" => $ticket_cost, "ticket_population" => $ticket->ticket_population, "ticket_discount" => $ticket->ticket_discount]);
             } else {
                 $ticketInstance = new EventTicketModel();
 

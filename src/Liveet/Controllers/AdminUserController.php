@@ -4,6 +4,7 @@ namespace Liveet\Controllers;
 
 use Liveet\Domain\Constants;
 use Liveet\Domain\MailHandler;
+use Liveet\Models\AdminActivityLogModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\JSON;
@@ -14,6 +15,8 @@ class AdminUserController extends HelperController
 
     public function loginAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
+        // (new AdminActivityLogModel())->createSelf(["admin_user_id" => "", "acitivity_log_desc" => "Admin login"]);
+
         return $this->login($request, $response, new AdminUserModel(), ["admin_username", "admin_password"], ["publicKeyKey" => "public_key", "passwordKey" => "admin_password"], [
             "dataOptions" => [
                 "overrideKeys" => [

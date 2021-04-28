@@ -34,6 +34,11 @@ class EventTicketModel extends BaseModel
         return $this->hasMany(PaymentModel::class, "event_ticket_id", "event_ticket_id");
     }
 
+    public function eventTicketUsers()
+    {
+        return $this->hasMany(EventTicketUserModel::class, "event_ticket_user_id", "event_ticket_user_id");
+    }
+
     public function getStruct()
     {
         return self::select("event_ticket_id", "event_id", "ticket_name", "ticket_desc", "ticket_cost", "ticket_population", "ticket_discount", "created_at", "updated_at");

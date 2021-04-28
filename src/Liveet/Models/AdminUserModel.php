@@ -2,6 +2,7 @@
 
 namespace Liveet\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Liveet\Domain\Constants;
 use Rashtell\Domain\KeyManager;
@@ -56,8 +57,33 @@ class AdminUserModel extends BaseModel
     {
         $adminsCount = self::count();
 
+        $organiserCount = (new OrganiserModel())->where("usertype", Constants::USERTYPE_ORGANISER_ADMIN)->count();
+
+        $organiserStaffCount = (new OrganiserModel())->where("usertype", Constants::USERTYPE_ORGANISER_STAFF)->count();
+
+        $eventCount = EventModel::count();
+
+        $eventTicketUserCount = EventTicketUserModel::count();
+
+        $eventTickerAccessCount = EventAccessModel::count();
+
+        $eventTicketUserSum = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->sum("ticket_cost");
+
+        $eventTickerAccessSum =  EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->sum("ticket_cost");
+        $usersCount = UserModel::count();
+
+
         $dashboard = [
             "adminsCount" => $adminsCount,
+            "organiserCount" => $organiserCount,
+            "organiserStaffCount" => $organiserStaffCount,
+            "eventCount" => $eventCount,
+            "eventTicketUserCount" => $eventTicketUserCount,
+            "eventTickerAccessCount" => $eventTickerAccessCount,
+            "eventTicketUserSum" => $eventTicketUserSum,
+            "eventTicketAccessSum" => $eventTickerAccessSum,
+            "totalTickets" => $eventTicketUserSum + $eventTickerAccessSum,
+            "usersCount" => $usersCount
         ];
 
         return ["error" => "", "data" => $dashboard];

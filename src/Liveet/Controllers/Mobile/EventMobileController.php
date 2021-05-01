@@ -213,13 +213,13 @@ class EventMobileController extends BaseController {
 				]);
     }
     catch (\Exception $e){
-      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
+      $error = ["errorMessage" => "Error connecting to image server 1. Please try again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
 
     if(!isset($result['FaceRecords'][0]['FaceDetail']['Gender']))
 		{
-      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
+      $error = ["errorMessage" => "Error connecting to image server 2. Please try again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
 		}
 

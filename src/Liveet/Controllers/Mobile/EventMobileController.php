@@ -170,9 +170,7 @@ class EventMobileController extends BaseController {
     $user_image_key = $user_details->user_image_key;
 
     //get event details
-    $event_query = $event_db->where("event_id",$event_id)->count();
-    var_dump($event_query);
-    die;
+    $event_query = $event_db->where("event_id",$event_id);
 
     if (!$event_query->exists()) {
       $error = ["errorMessage" => "Event Not Found", "statusCode" => 400];

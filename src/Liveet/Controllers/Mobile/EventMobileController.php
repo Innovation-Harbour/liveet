@@ -181,7 +181,7 @@ class EventMobileController extends BaseController {
     $event_details = $event_db->where("event_id",$event_id)->first();
     $eventCode = $event_details->event_code;
 
-    if ($ticket_db->where("event_ticket_id", $event_ticket_id)->where("user_id", $user_id)->exists()) {
+    if ($ticket_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->exists()) {
         $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];
         return $this->json->withJsonResponse($response, $error);
     }
@@ -200,7 +200,7 @@ class EventMobileController extends BaseController {
   		]);
     }
     catch (\Exception $e){
-      $error = ["errorMessage" => "Error connecting to image server 1. Please try again", "statusCode" => 400];
+      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
 
@@ -217,13 +217,13 @@ class EventMobileController extends BaseController {
 				]);
     }
     catch (\Exception $e){
-      $error = ["errorMessage" => "Error connecting to image server 3. Please try again", "statusCode" => 400];
+      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
 
     if(!isset($result['FaceRecords'][0]['FaceDetail']['Gender']))
 		{
-      $error = ["errorMessage" => "Error connecting to image server 2. Please try again", "statusCode" => 400];
+      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
 		}
 

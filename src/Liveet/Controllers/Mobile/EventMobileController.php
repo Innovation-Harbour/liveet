@@ -214,7 +214,7 @@ class EventMobileController extends BaseController {
 				    'Image' => [ // REQUIRED
               'S3Object' => [
                 'Bucket' => 'liveet-users',
-                'Name' => $user_image_key,
+                'Name' => "user-34579550-image.png",
               ]
 				    ]
 				]);

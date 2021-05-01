@@ -238,12 +238,6 @@ class EventMobileController extends BaseController {
 
     $addTicketUser = $ticket_db->createSelf($db_details);
 
-    if($addTicketUser['error'] !== "")
-    {
-      $error = ["errorMessage" => "Error Adding Ticket to user. Please try Again", "statusCode" => 400];
-      return $this->json->withJsonResponse($response, $error);
-    }
-
     if($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists())
     {
       $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->update(["event_invitation_status" => "ACCEPTED"]);

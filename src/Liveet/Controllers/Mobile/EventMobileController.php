@@ -180,9 +180,6 @@ class EventMobileController extends BaseController {
 
     $event_details = $event_db->where("event_id",$event_id)->first();
     $eventCode = $event_details->event_code;
-    var_dump($eventCode,$user_image_key);
-
-
 
     if ($ticket_db->where("event_ticket_id", $event_ticket_id)->where("user_id", $user_id)->exists()) {
         $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];
@@ -240,13 +237,12 @@ class EventMobileController extends BaseController {
     ];
 
     $addTicketUser = $ticket_db->createSelf($db_details);
-    var_dump($addTicketUser->error,$addTicketUser['error']);
-    /*
-    if($addTicketUser->error !== "")
+
+    if($addTicketUser['error'] !== "")
     {
       $error = ["errorMessage" => "Error Adding Ticket to user. Please try Again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
-    }*/
+    }
 
     if($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists())
     {

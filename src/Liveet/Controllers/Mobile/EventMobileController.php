@@ -14,6 +14,7 @@ use Liveet\Models\Mobile\FavouriteModel;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
 use Rashtell\Domain\KeyManager;
+use Liveet\Domain\Constants;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class EventMobileController extends BaseController {

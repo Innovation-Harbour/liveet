@@ -15,8 +15,6 @@ class AdminUserController extends HelperController
 
     public function loginAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        // (new AdminActivityLogModel())->createSelf(["admin_user_id" => "", "acitivity_log_desc" => "Admin login"]);
-
         return $this->login($request, $response, new AdminUserModel(), ["admin_username", "admin_password"], ["publicKeyKey" => "public_key", "passwordKey" => "admin_password"], [
             "dataOptions" => [
                 "overrideKeys" => [
@@ -31,6 +29,8 @@ class AdminUserController extends HelperController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created admin user"]);
 
         $this->checkAdminAdminPermission($request, $response);
 
@@ -96,8 +96,9 @@ class AdminUserController extends HelperController
     public function updateAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
-
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated admin user"]);
 
         $this->checkAdminAdminPermission($request, $response);
 
@@ -144,8 +145,9 @@ class AdminUserController extends HelperController
     public function logoutAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
-
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "loggded out admin user"]);
 
         $this->checkAdminAdminPermission($request, $response);
 
@@ -164,6 +166,10 @@ class AdminUserController extends HelperController
 
     public function updateAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated profile"]);
+
         return $this->updateSelf(
             $request,
             $response,
@@ -200,11 +206,19 @@ class AdminUserController extends HelperController
 
     public function updateAdminUserPassword(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "changed password"]);
+
         return $this->updatePassword($request, $response, new AdminUserModel());
     }
 
     public function logoutAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "logged out"]);
+
         return $this->logoutSelf($request, $response, new AdminUserModel());
     }
 

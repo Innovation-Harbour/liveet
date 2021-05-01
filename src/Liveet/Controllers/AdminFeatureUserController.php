@@ -3,6 +3,7 @@
 namespace Liveet\Controllers;
 
 use Liveet\Domain\Constants;
+use Liveet\Models\AdminActivityLogModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\JSON;
@@ -16,7 +17,10 @@ class AdminFeatureUserController extends HelperController
     public function assignAdminFeature(Request $request, ResponseInterface $response): ResponseInterface
     {
         $json = new JSON();
+
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "assigned an admin feature to a user"]);
 
         $this->checkAdminAdminPermission($request, $response);
 
@@ -58,7 +62,10 @@ class AdminFeatureUserController extends HelperController
 
     public function updateAssignedAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an assigned admin user feature"]);
 
         $this->checkAdminAdminPermission($request, $response);
 

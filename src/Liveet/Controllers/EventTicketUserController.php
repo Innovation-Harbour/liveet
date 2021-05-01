@@ -6,8 +6,11 @@ use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
 use Liveet\Models\EventTicketUserModel;
 use Liveet\Controllers\BaseController;
+use Liveet\Models\AdminActivityLogModel;
 use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketModel;
+use Liveet\Models\OrganiserActivityLogModel;
+use Liveet\Models\OrganiserStaffModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -19,6 +22,8 @@ class EventTicketUserController extends HelperController
     public function createEventTicketUser(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "assigned an event ticket to a user"]);
 
         $this->checkAdminEventPermission($request, $response);
 
@@ -70,6 +75,8 @@ class EventTicketUserController extends HelperController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "transfered an event ticket to a user"]);
+
         $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
@@ -93,6 +100,8 @@ class EventTicketUserController extends HelperController
         $json = new JSON();
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "recalled an event ticket from a user"]);
+
         $this->checkAdminEventPermission($request, $response);
 
         ["event_ticket_user_id" => $event_ticket_user_id] = $this->getRouteParams($request, ["event_ticket_user_id"]);
@@ -115,6 +124,10 @@ class EventTicketUserController extends HelperController
     public function createOrganiserEventTicketUser(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "assigned an event ticket to a user"]);
 
         $this->checkOrganiserEventPermission($request, $response);
 
@@ -183,6 +196,10 @@ class EventTicketUserController extends HelperController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "transfered an event ticket to a user"]);
+
         $this->checkOrganiserEventPermission($request, $response);
 
         $routeParams = $this->getRouteParams($request, ["event_ticket_user_id"]);
@@ -210,6 +227,10 @@ class EventTicketUserController extends HelperController
     {
         $json = new JSON();
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "recalled an event ticket from a user"]);
 
         $this->checkOrganiserEventPermission($request, $response);
 

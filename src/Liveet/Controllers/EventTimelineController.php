@@ -8,6 +8,7 @@ use Liveet\Domain\Constants;
 use Liveet\Models\EventTimelineModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
+use Liveet\Models\AdminActivityLogModel;
 use Liveet\Models\EventTicketModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -22,6 +23,8 @@ class EventTimelineController extends HelperController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an event timeline"]);
 
         $this->checkAdminEventPermission($request, $response);
 
@@ -80,6 +83,8 @@ class EventTimelineController extends HelperController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an event timeline"]);
+
         $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
@@ -103,6 +108,8 @@ class EventTimelineController extends HelperController
     public function deleteEventTimelineByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deleted an event timeline"]);
 
         $this->checkAdminEventPermission($request, $response);
 

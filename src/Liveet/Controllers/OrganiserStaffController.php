@@ -4,6 +4,8 @@ namespace Liveet\Controllers;
 
 use Liveet\Domain\Constants;
 use Liveet\Domain\MailHandler;
+use Liveet\Models\AdminActivityLogModel;
+use Liveet\Models\OrganiserActivityLogModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\JSON;
@@ -12,135 +14,131 @@ use Liveet\Models\OrganiserStaffModel;
 class OrganiserStaffController extends HelperController
 {
 
-    /** Organiser Admin or Staff */
+    /** Admin User */
 
-    public function loginOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
+    public function getOrganiserStaffs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return $this->login(
-            $request,
-            $response,
-            new OrganiserStaffModel(),
-            ["organiser_staff_username", "organiser_staff_password"],
-            ["publicKeyKey" => "public_key", "passwordKey" => "organiser_staff_password"],
-            [
-                // "dataOptions" => [
-                //     "overrideKeys" => [
-                //         "username" => "organiser_staff_username", "password" => "organiser_staff_password"
-                //     ]
-                // ],
-            ]
-        );
-    }
+        $json = new JSON();
 
-    public function getOrganiserAdminOrStaffDashboard(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return $this->getSelfDashboard($request, $response, new OrganiserStaffModel());
-    }
-
-    public function getOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return $this->getSelf($request, $response, new OrganiserStaffModel());
-    }
-
-    public function updateOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
-    {
         $authDetails = static::getTokenInputsFromRequest($request);
-        $organiser_id = $authDetails["organiser_id"];
-        $usertype = $authDetails["usertype"];
 
-        if ($usertype == Constants::USERTYPE_ORGANISER_ADMIN) {
-            return $this->updateOrganiserAdmin($request, $response);
+        $this->checkAdminOrganiserPermission($request, $response);
+
+        return $this->getByPage($request, $response, new OrganiserStaffModel());
+    }
+
+    public function getOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $json = new JSON();
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $this->checkAdminOrganiserPermission($request, $response);
+
+        return $this->getByPK($request, $response, new OrganiserStaffModel());
+    }
+
+    public function logoutOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $json = new JSON();
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "logged out an organiser staff"]);
+
+        $this->checkAdminOrganiserPermission($request, $response);
+
+        return $this->logoutByPK($request, $response, new OrganiserStaffModel());
+    }
+
+    /**
+     * Disable Organiser
+
+    public function deleteOrganiserStaff(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        return $this->deleteSelf($request, $response, new OrganiserStaffModel());
+    }
+
+    public function deleteOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $json = new JSON();
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["organiser_staff_priviledges"]) ? json_decode($authDetails["organiser_staff_priviledges"]) : [];
+
+        if (!in_array(Constants::PRIVILEDGE_DELETE_ANY_ORGANISER, $ownerPriviledges)) {
+            $error = ["errorMessage" => "You do not have sufficient privelege to perform this action", "statusCode", "errorStatus" => 1, "statusCode" => 406];
+
+            return $json->withJsonResponse($response, $error);
         }
 
-        return $this->updateSelf(
-            $request,
-            $response,
-            new OrganiserStaffModel(),
-            [
-                "required" => [
-                    "organiser_staff_username", "organiser_staff_name", "organiser_staff_phone"
-                ],
-
-                "expected" => [
-                    "organiser_staff_username", "organiser_staff_name",  "organiser_staff_phone", "organiser_staff_profile_picture"
-                ],
-            ],
-            [
-                "imageOptions" => [
-                    [
-                        "imageKey" => "organiser_staff_profile_picture"
-                    ]
-                ]
-            ],
-            ["organiser_id" => $organiser_id],
-            [
-                [
-                    "detailsKey" => "organiser_staff_id", "columnName" => "organiser_staff_id", "errorText" =>
-                    "Organiser Staff Id", "primaryKey" => true
-                ],
-                [
-                    "detailsKey" => "organiser_staff_username", "columnName" => "organiser_staff_username", "errorText" =>
-                    "Organiser Staff Username"
-                ]
-            ]
-        );
+        return $this->deleteByPK($request, $response, new OrganiserStaffModel());
     }
 
-    public function updateOrganiserAdmin(Request $request, ResponseInterface $response): ResponseInterface
+     **/
+
+    public function createOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $json = new JSON();
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
-                $this->checkOrganiserAdminPermission($request, $response);
-        $organiser_id = $authDetails["organiser_id"];
-        $organiser_staff_id = $authDetails["organiser_staff_id"];
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an organiser"]);
 
-        return $this->updateByConditions(
+        $this->checkAdminOrganiserPermission($request, $response);
+
+        return (new OrganiserController())->createOrganiser($request, $response);
+    }
+
+    public function updateOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $json = new JSON();
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an organiser staff details"]);
+
+        $this->checkAdminOrganiserPermission($request, $response);
+
+        return $this->updateByPK(
             $request,
             $response,
-            new OrganiserStaffModel(),
+            (new OrganiserStaffModel()),
             [
                 "required" => [
-                    "organiser_staff_name", "organiser_staff_phone", "organiser_staff_username"
+                    "organiser_name", "organiser_phone", "organiser_staff_priviledges"
                 ],
 
                 "expected" => [
-                    "organiser_staff_name",  "organiser_staff_phone", "organiser_staff_address", "organiser_staff_username", "organiser_staff_profile_picture"
-                ],
+                    "organiser_id", "organiser_name", "organiser_email", "organiser_staff_priviledges", "organiser_profile_picture"
+                ]
             ],
-            ["organiser_id" => $organiser_id],
+            [
+
+                "imageOptions" => [
+                    [
+                        "imageKey" => "organiser_profile_picture"
+                    ]
+                ]
+            ],
+            [],
             [
                 [
-                    "detailsKey" => "organiser_staff_id", "columnName" => "organiser_staff_id", "errorText" =>
+                    "detailsKey" => "organiser_id", "columnName" => "organiser_id", "errorText" =>
                     "Organiser Staff Id", "primaryKey" => true
                 ],
                 [
-                    "detailsKey" => "organiser_staff_username", "columnName" => "organiser_staff_username", "errorText" =>
-                    "Organiser Staff Username"
+                    "detailsKey" => "organiser_username", "columnName" => "organiser_username", "errorText" =>
+                    "Organiser Staff username"
                 ],
                 [
-                    "detailsKey" => "organiser_staff_phone", "columnName" => "organiser_staff_phone", "errorText" =>
-                    "Organiser Staff Phone"
-                ]
-            ],
-            ["organiser_id" => $organiser_id, "organiser_staff_id" => $organiser_staff_id],
-            [
-                "imageOptions" => [
-                    [
-                        "imageKey" => "organiser_staff_profile_picture"
-                    ]
+                    "detailsKey" => "organiser_email", "columnName" => "organiser_email", "errorText" =>
+                    "Organiser Staff email"
                 ]
             ]
+
         );
-    }
-
-    public function updateOrganiserAdminOrStaffPassword(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return $this->updatePassword($request, $response, new OrganiserStaffModel());
-    }
-
-    public function logoutOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return $this->logoutSelf($request, $response, new OrganiserStaffModel());
     }
 
     /** Organiser Admin */
@@ -150,6 +148,10 @@ class OrganiserStaffController extends HelperController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "created an organiser staff"]);
 
         $this->checkOrganiserOrganiserPermission($request, $response);
 
@@ -226,6 +228,10 @@ class OrganiserStaffController extends HelperController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "updated an organiser staff details"]);
+
         $this->checkOrganiserOrganiserPermission($request, $response);
 
         $organiser_id = $authDetails["organiser_id"];
@@ -272,6 +278,10 @@ class OrganiserStaffController extends HelperController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "logged out an organiser staff"]);
+
         $this->checkOrganiserOrganiserPermission($request, $response);
 
         $organiser_id = $authDetails["organiser_id"];
@@ -280,124 +290,155 @@ class OrganiserStaffController extends HelperController
         return $this->logoutByCondition($request, $response, new OrganiserStaffModel(), ["organiser_staff_id" => $organiser_staff_id, "organiser_id" => $organiser_id]);
     }
 
-    /** Admin User */
+    /** Organiser Admin or Staff */
 
-    public function getOrganiserStaffs(Request $request, ResponseInterface $response): ResponseInterface
+    public function loginOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminOrganiserPermission($request, $response);
-
-        return $this->getByPage($request, $response, new OrganiserStaffModel());
-    }
-
-    public function getOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminOrganiserPermission($request, $response);
-
-        return $this->getByPK($request, $response, new OrganiserStaffModel());
-    }
-
-    public function logoutOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminOrganiserPermission($request, $response);
-
-        return $this->logoutByPK($request, $response, new OrganiserStaffModel());
-    }
-
-    /**
-     * Disable Organiser
-
-    public function deleteOrganiserStaff(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return $this->deleteSelf($request, $response, new OrganiserStaffModel());
-    }
-
-    public function deleteOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $ownerPriviledges = isset($authDetails["organiser_staff_priviledges"]) ? json_decode($authDetails["organiser_staff_priviledges"]) : [];
-
-        if (!in_array(Constants::PRIVILEDGE_DELETE_ANY_ORGANISER, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient privelege to perform this action", "statusCode", "errorStatus" => 1, "statusCode" => 406];
-
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return $this->deleteByPK($request, $response, new OrganiserStaffModel());
-    }
-
-     **/
-
-    public function createOrganiser(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminOrganiserPermission($request, $response);
-
-        return (new OrganiserController())->createOrganiser($request, $response);
-    }
-
-    public function updateOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminOrganiserPermission($request, $response);
-
-        return $this->updateByPK(
+        return $this->login(
             $request,
             $response,
-            (new OrganiserStaffModel()),
+            new OrganiserStaffModel(),
+            ["organiser_staff_username", "organiser_staff_password"],
+            ["publicKeyKey" => "public_key", "passwordKey" => "organiser_staff_password"],
+            [
+                // "dataOptions" => [
+                //     "overrideKeys" => [
+                //         "username" => "organiser_staff_username", "password" => "organiser_staff_password"
+                //     ]
+                // ],
+            ]
+        );
+    }
+
+    public function getOrganiserAdminOrStaffDashboard(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        return $this->getSelfDashboard($request, $response, new OrganiserStaffModel());
+    }
+
+    public function getOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        return $this->getSelf($request, $response, new OrganiserStaffModel());
+    }
+
+    public function updateOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "Updated organiser staff details"]);
+
+        $organiser_id = $authDetails["organiser_id"];
+        $usertype = $authDetails["usertype"];
+
+        if ($usertype == Constants::USERTYPE_ORGANISER_ADMIN) {
+            return $this->updateOrganiserAdmin($request, $response);
+        }
+
+        return $this->updateSelf(
+            $request,
+            $response,
+            new OrganiserStaffModel(),
             [
                 "required" => [
-                    "organiser_name", "organiser_phone", "organiser_staff_priviledges"
+                    "organiser_staff_username", "organiser_staff_name", "organiser_staff_phone"
                 ],
 
                 "expected" => [
-                    "organiser_id", "organiser_name", "organiser_email", "organiser_staff_priviledges", "organiser_profile_picture"
-                ]
+                    "organiser_staff_username", "organiser_staff_name",  "organiser_staff_phone", "organiser_staff_profile_picture"
+                ],
             ],
             [
-
                 "imageOptions" => [
                     [
-                        "imageKey" => "organiser_profile_picture"
+                        "imageKey" => "organiser_staff_profile_picture"
                     ]
                 ]
             ],
-            [],
+            ["organiser_id" => $organiser_id],
             [
                 [
-                    "detailsKey" => "organiser_id", "columnName" => "organiser_id", "errorText" =>
+                    "detailsKey" => "organiser_staff_id", "columnName" => "organiser_staff_id", "errorText" =>
                     "Organiser Staff Id", "primaryKey" => true
                 ],
                 [
-                    "detailsKey" => "organiser_username", "columnName" => "organiser_username", "errorText" =>
-                    "Organiser Staff username"
-                ],
-                [
-                    "detailsKey" => "organiser_email", "columnName" => "organiser_email", "errorText" =>
-                    "Organiser Staff email"
+                    "detailsKey" => "organiser_staff_username", "columnName" => "organiser_staff_username", "errorText" =>
+                    "Organiser Staff Username"
                 ]
             ]
-
         );
+    }
+
+    public function updateOrganiserAdmin(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "Updated organiser admin details"]);
+
+        $this->checkOrganiserAdminPermission($request, $response);
+        $organiser_id = $authDetails["organiser_id"];
+        $organiser_staff_id = $authDetails["organiser_staff_id"];
+
+        return $this->updateByConditions(
+            $request,
+            $response,
+            new OrganiserStaffModel(),
+            [
+                "required" => [
+                    "organiser_staff_name", "organiser_staff_phone", "organiser_staff_username"
+                ],
+
+                "expected" => [
+                    "organiser_staff_name",  "organiser_staff_phone", "organiser_staff_address", "organiser_staff_username", "organiser_staff_profile_picture"
+                ],
+            ],
+            ["organiser_id" => $organiser_id],
+            [
+                [
+                    "detailsKey" => "organiser_staff_id", "columnName" => "organiser_staff_id", "errorText" =>
+                    "Organiser Staff Id", "primaryKey" => true
+                ],
+                [
+                    "detailsKey" => "organiser_staff_username", "columnName" => "organiser_staff_username", "errorText" =>
+                    "Organiser Staff Username"
+                ],
+                [
+                    "detailsKey" => "organiser_staff_phone", "columnName" => "organiser_staff_phone", "errorText" =>
+                    "Organiser Staff Phone"
+                ]
+            ],
+            ["organiser_id" => $organiser_id, "organiser_staff_id" => $organiser_staff_id],
+            [
+                "imageOptions" => [
+                    [
+                        "imageKey" => "organiser_staff_profile_picture"
+                    ]
+                ]
+            ]
+        );
+    }
+
+    public function updateOrganiserAdminOrStaffPassword(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "updated organiser staff password"]);
+
+        return $this->updatePassword($request, $response, new OrganiserStaffModel());
+    }
+
+    public function logoutOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "organiser staff logged out"]);
+
+        return $this->logoutSelf($request, $response, new OrganiserStaffModel());
     }
 }

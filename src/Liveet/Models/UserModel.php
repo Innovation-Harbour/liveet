@@ -15,6 +15,7 @@ class UserModel extends BaseModel
     protected $fillable = ['user_fullname', 'user_phone', 'user_email', 'user_password', 'user_picture', 'image_key'];
     protected $hidden = ["user_password"];
     protected $guarded = [];
+    public $primaryKey = "user_id";
 
     public function eventTickets()
     {
@@ -114,6 +115,6 @@ class UserModel extends BaseModel
 
     public function getStruct()
     {
-        return $this->select("user_id", "user_fullname", "user_phone", "user_email", "user_password", "user_picture", "created_at", "updated_at");
+        return $this->select("user_id", "user_fullname", "user_phone", "user_email", "user_password", "image_key", "user_picture", "created_at", "updated_at");
     }
 }

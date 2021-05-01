@@ -6,8 +6,11 @@ use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
 use Liveet\Models\EventAccessModel;
 use Liveet\Controllers\BaseController;
+use Liveet\Models\AdminActivityLogModel;
 use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketModel;
+use Liveet\Models\OrganiserActivityLogModel;
+use Liveet\Models\OrganiserStaffModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -21,6 +24,8 @@ class EventAccessController extends HelperController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an event accesses"]);
 
         $this->checkAdminEventPermission($request, $response);
 
@@ -85,6 +90,8 @@ class EventAccessController extends HelperController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "assigned an event access"]);
+
         $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
@@ -107,6 +114,8 @@ class EventAccessController extends HelperController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deleted an event access"]);
+
         $this->checkAdminEventPermission($request, $response);
 
         return $this->deleteByPK($request, $response, (new EventAccessModel()));
@@ -115,6 +124,8 @@ class EventAccessController extends HelperController
     public function deleteEventAccessByPKs(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deleted event acesses"]);
 
         $this->checkAdminEventPermission($request, $response);
 
@@ -173,6 +184,11 @@ class EventAccessController extends HelperController
         $this->checkOrganiserEventPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "assigned an event access"]);
+
         $organiser_id = $authDetails["organiser_id"];
         $event_ticket_ids = $this->getEventTicketIdsOfOrganiser($organiser_id);
 

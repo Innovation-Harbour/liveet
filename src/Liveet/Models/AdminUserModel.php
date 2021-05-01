@@ -13,7 +13,7 @@ class AdminUserModel extends BaseModel
 
     protected $table = "admin_user";
     protected $dateFormat = "U";
-    protected $hidden = ["admin_password"];
+    protected $hidden = ["admin_password", "public_key", "email_verification_token", "forgot_password_token", "deleted_at"];
     public $primaryKey = "admin_user_id";
     protected $guarded = [];
     public $passwordKey = "admin_password";
@@ -36,9 +36,9 @@ class AdminUserModel extends BaseModel
             return ["isAuthenticated" => false, "error" => "Invalid token"];
         }
 
-        $public_key = $authDetails["public_key"];
-        $admin_username = $authDetails["admin_username"];
-        $usertype = $authDetails["usertype"];
+        $public_key = $authDetails["public_key"] ?? "";
+        $admin_username = $authDetails["admin_username"] ?? "";
+        $usertype = $authDetails["usertype"] ?? "";
 
         $users =  self::where("public_key", $public_key)
             ->where("admin_username", "=", $admin_username)
@@ -130,6 +130,15 @@ class AdminUserModel extends BaseModel
         $public_key = $details["public_key"];
 
         if (!(new BaseModel())->isExist($this->where("admin_username", $admin_username)->where("admin_password", $admin_password))) {
+
+            $adminQuery = $this->where("admin_username", $admin_username);
+            if ($adminQuery->exists()) {
+
+                $admin_user_id = $adminQuery->first()["admin_user_id"];
+
+                (new AdminActivityLogModel())->createSelf(["admin_user_id" => $admin_user_id, "activity_log_desc" => "Admin login failed"]);
+            }
+
             return ["error" => "Invalid Login credential", "data" => null];
         }
 
@@ -139,6 +148,8 @@ class AdminUserModel extends BaseModel
 
         $pkColumnName = $this->primaryKey;
         $admin = self::select($pkColumnName, "admin_fullname", "admin_username", "admin_email", "admin_priviledges", "email_verified",  "public_key", "usertype", "created_at", "updated_at")->where("admin_username", $admin_username)->where("public_key", $public_key)->where("admin_password", $admin_password)->first();
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $admin["admin_user_id"], "activity_log_desc" => "Admin login successfully"]);
 
         return ["data" => $admin, "error" => ""];
     }

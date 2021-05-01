@@ -290,6 +290,14 @@ class BaseModel extends Model
             $query = $query->where($conditions);
         }
 
+        if (isset($queryOptions["whereIn"])) {
+            foreach ($queryOptions["whereIn"] as $whereIn) {
+                foreach ($whereIn as $whereInKey => $whereInValue) {
+                    $query = $query->whereIn($whereInKey, $whereInValue);
+                }
+            }
+        }
+
         if ($relationships) {
             $query = $query->with($relationships);
         }

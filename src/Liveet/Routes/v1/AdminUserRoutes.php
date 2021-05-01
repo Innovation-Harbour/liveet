@@ -13,6 +13,12 @@ isset($v1Group) && $v1Group->group(
     "/admins",
     function (RouteCollectorProxy $adminGroup) {
 
+
+        /**
+         * Activity Log Routes
+         */
+        require "src/Liveet/Routes/v1/ActivityLogRoutes.php";
+
         /**
          * Organiser Routes
          */
@@ -37,6 +43,11 @@ isset($v1Group) && $v1Group->group(
          * Event Ticket Routes
          */
         require "src/Liveet/Routes/v1/EventTicketRoutes.php";
+
+        /**
+         * Event Invitation Routes
+         */
+        require "src/Liveet/Routes/v1/EventInvitationRoutes.php";
 
         /**
          * Event Access Routes

@@ -7,6 +7,7 @@ use Liveet\Domain\Constants;
 use Liveet\Models\EventTicketModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
+use Liveet\Models\AdminActivityLogModel;
 use Liveet\Models\EventModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -21,6 +22,8 @@ class EventTicketController extends HelperController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an event ticket"]);
 
         $this->checkAdminEventPermission($request, $response);
 
@@ -77,6 +80,8 @@ class EventTicketController extends HelperController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an event ticket"]);
+
         $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
@@ -98,7 +103,9 @@ class EventTicketController extends HelperController
     public function deleteEventTicketByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
-        
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deleted an event ticket"]);
+
         $this->checkAdminEventPermission($request, $response);
 
         return $this->deleteByPK($request, $response, (new EventTicketModel()));
@@ -111,8 +118,9 @@ class EventTicketController extends HelperController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
-        
-        $this->checkOrganiserEventPermission($request, $response);        $organiser_id = $authDetails["organiser_id"];
+
+        $this->checkOrganiserEventPermission($request, $response);
+        $organiser_id = $authDetails["organiser_id"];
         $event_ids = (new EventModel())->select("event_id")->where("organiser_id", $organiser_id)->without("eventControl", "eventTickets")->get();
         $whereInEventIds = [];
         foreach ($event_ids as $event_id_value) {

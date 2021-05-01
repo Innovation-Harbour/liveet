@@ -13,7 +13,7 @@ class OrganiserStaffModel extends BaseModel
     protected $table = "organiser_staff";
     protected $dateFormat = "U";
     public $primaryKey = "organiser_staff_id";
-    protected $hidden = ["organiser_staff_password"];
+    protected $hidden = ["organiser_staff_password", "email_verification_token", "forgot_password_token", "public_key", "deleted_at"];
     protected $guarded = [];
     public $passwordKey = "organiser_staff_password";
 
@@ -86,6 +86,15 @@ class OrganiserStaffModel extends BaseModel
         $public_key = $details["public_key"];
 
         if (!(new BaseModel())->isExist($this->where("organiser_staff_username", $organiser_staff_username)->where("organiser_staff_password", $organiser_staff_password))) {
+
+            $organiserStaffQuery = $this->where("organiser_staff_username", $organiser_staff_username);
+            if ($organiserStaffQuery->exists()) {
+
+                $organiser_staff_id = $organiserStaffQuery->first()["organiser_staff_id"];
+
+                (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "Organiser login failed"]);
+            }
+
             return ["error" => "Invalid Login credential", "data" => null];
         }
 
@@ -95,6 +104,8 @@ class OrganiserStaffModel extends BaseModel
 
         $pkKey = $this->primaryKey;
         $user = self::select($pkKey, "organiser_id", "organiser_staff_name", "organiser_staff_username", "organiser_staff_phone", "organiser_staff_email", "organiser_staff_profile_picture", "organiser_staff_priviledges", "phone_verified", "email_verified", "usertype", "public_key", "created_at", "updated_at")->where("organiser_staff_username", $organiser_staff_username)->where("organiser_staff_password", $organiser_staff_password)->first();
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $user["organiser_staff_id"], "activity_log_desc" => "Organiser login successful"]);
 
         return ["data" => $user, "error" => ""];
     }

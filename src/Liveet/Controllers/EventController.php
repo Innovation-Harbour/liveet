@@ -7,6 +7,7 @@ use Liveet\Domain\Constants;
 use Liveet\Models\EventModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
+use Liveet\Models\AdminActivityLogModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -20,6 +21,8 @@ class EventController extends HelperController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an event"]);
 
         $this->checkAdminEventPermission($request, $response);
 
@@ -89,6 +92,8 @@ class EventController extends HelperController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an event details"]);
+
         $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
@@ -118,6 +123,8 @@ class EventController extends HelperController
     public function deleteEventByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deletd an event"]);
 
         $this->checkAdminEventPermission($request, $response);
 

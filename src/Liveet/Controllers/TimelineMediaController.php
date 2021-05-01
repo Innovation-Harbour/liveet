@@ -2,13 +2,7 @@
 
 namespace Liveet\Controllers;
 
-use Illuminate\Support\Facades\Event;
-use Rashtell\Domain\JSON;
-use Liveet\Domain\Constants;
 use Liveet\Models\TimelineMediaModel;
-use Liveet\Domain\MailHandler;
-use Liveet\Controllers\BaseController;
-use Liveet\Models\EventTicketModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 

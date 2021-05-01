@@ -151,7 +151,17 @@ class OrganiserModel extends BaseModel
         $organiser_password = $details["organiser_password"];
         $public_key = $details["public_key"];
 
+        $organiserStaffModel = new OrganiserStaffModel();
         if (!(new BaseModel())->isExist($this->where("organiser_username", $organiser_username)->where("organiser_password", $organiser_password))) {
+
+            $organiserStaffQuery = $organiserStaffModel->where("organiser_staff_username", $organiser_username);
+            if ($organiserStaffQuery->exists()) {
+
+                $organiser_staff_id = $organiserStaffQuery->first()["organiser_staff_id"];
+
+                (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "Organiser login failed"]);
+            }
+
             return ["error" => "Invalid Login credential", "data" => null];
         }
 
@@ -165,6 +175,10 @@ class OrganiserModel extends BaseModel
 
         $pkColumnName = $this->primaryKey;
         $organiser = self::select($pkColumnName, "organiser_username",  "organiser_name", "organiser_email", "organiser_phone", "organiser_address", "phone_verified", "usertype", "email_verified",  "public_key", "usertype", "created_at", "updated_at")->where("organiser_username", $organiser_username)->where("public_key", $public_key)->where("organiser_password", $organiser_password)->first();
+
+        $user = $organiserStaffModel->where("organiser_username", $organiser_username)->first();
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $user["organiser_staff_id"], "activity_log_desc" => "Organiser login successful"]);
 
         return ["data" => $organiser, "error" => ""];
     }

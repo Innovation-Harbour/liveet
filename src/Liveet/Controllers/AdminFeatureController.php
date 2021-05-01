@@ -4,6 +4,7 @@ namespace Liveet\Controllers;
 
 use Liveet\Domain\Constants;
 use Liveet\Domain\MailHandler;
+use Liveet\Models\AdminActivityLogModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\JSON;
@@ -19,6 +20,8 @@ class AdminFeatureController extends HelperController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an admin feature"]);
 
         $this->checkAdminAdminPermission($request, $response);
 
@@ -71,6 +74,8 @@ class AdminFeatureController extends HelperController
     public function updateAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an admin feature"]);
 
         $this->checkAdminAdminPermission($request, $response);
 

@@ -4,6 +4,8 @@ namespace Liveet\Controllers;
 
 use Liveet\Domain\Constants;
 use Liveet\Domain\MailHandler;
+use Liveet\Models\AdminActivityLogModel;
+use Liveet\Models\OrganiserActivityLogModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\JSON;
@@ -20,6 +22,8 @@ class OrganiserController extends HelperController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an organiser"]);
 
         $this->checkAdminOrganiserPermission($request, $response);
 
@@ -85,6 +89,8 @@ class OrganiserController extends HelperController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an organiser details"]);
+
         $this->checkAdminOrganiserPermission($request, $response);
 
         return $this->updateByPK(
@@ -121,6 +127,8 @@ class OrganiserController extends HelperController
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "logged out an organiser"]);
 
         $this->checkAdminOrganiserPermission($request, $response);
 
@@ -167,8 +175,12 @@ class OrganiserController extends HelperController
     {
         $authDetails = static::getTokenInputsFromRequest($request);
 
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "Updated organiser details"]);
+
         $this->checkOrganiserAdminPermission($request, $response);
-        
+
         $organiser_id = $authDetails["organiser_id"];
 
         return $this->updateByConditions(
@@ -205,6 +217,12 @@ class OrganiserController extends HelperController
 
     public function logoutOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "Logged out organiser"]);
+
         return $this->logoutSelf($request, $response, new OrganiserModel());
     }
 

@@ -50,6 +50,11 @@ isset($v1Group) && $v1Group->group(
         require "src/Liveet/Routes/v1/EventTicketRoutes.php";
 
         /**
+         * Event Invitation Routes
+         */
+        require "src/Liveet/Routes/v1/EventInvitationRoutes.php";
+
+        /**
          * Event Access Routes
          */
         require "src/Liveet/Routes/v1/EventAccessRoutes.php";
@@ -63,6 +68,11 @@ isset($v1Group) && $v1Group->group(
          * Event Timeline Routes
          */
         require "src/Liveet/Routes/v1/EventTimelineRoutes.php";
+
+        /**
+         * Activity Log Routes
+         */
+        require "src/Liveet/Routes/v1/ActivityLogRoutes.php";
 
         /**
          * Helper Routes

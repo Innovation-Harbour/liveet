@@ -180,7 +180,7 @@ class EventMobileController extends BaseController {
 
     $event_details = $event_db->where("event_id",$event_id)->first();
     $eventCode = $event_details->event_code;
-    var_dump($eventCode);
+    var_dump($eventCode,$user_image_key);
 
 
 
@@ -241,7 +241,7 @@ class EventMobileController extends BaseController {
 
     $addTicketUser = $ticket_db->createSelf($db_details);
 
-    if(!$addTicketUser['error'])
+    if($addTicketUser->error !== "")
     {
       $error = ["errorMessage" => "Error Adding Ticket to user. Please try Again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);

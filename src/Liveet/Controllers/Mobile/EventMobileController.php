@@ -144,9 +144,9 @@ class EventMobileController extends BaseController {
   public function doAttentEvent (Request $request, ResponseInterface $response): ResponseInterface
   {
     $user_db = new UserModel();
-    $ticket_db = new EventTicketUserModel();
-    $event_db = new EventModel();
-    $invitation_db = new InvitationModel();
+    //$ticket_db = new EventTicketUserModel();
+    //$event_db = new EventModel();
+    //$invitation_db = new InvitationModel();
 
     $data = $request->getParsedBody();
 

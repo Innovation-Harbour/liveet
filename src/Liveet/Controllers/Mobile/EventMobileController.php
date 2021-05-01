@@ -171,6 +171,8 @@ class EventMobileController extends BaseController {
 
     //get event details
     $event_query = $event_db->where("event_id",$event_id);
+    var_dump($event_query);
+    die;
 
     if (!$event_query->exists()) {
       $error = ["errorMessage" => "Event Not Found", "statusCode" => 400];

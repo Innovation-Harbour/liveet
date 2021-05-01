@@ -166,7 +166,7 @@ class EventMobileController extends BaseController {
     }
 
     $user_details = $user_db->where("user_id",$user_id)->first();
-
+/*
     $user_phone = $user_details->user_phone;
     $user_image_key = $user_details->user_image_key;
 
@@ -182,7 +182,7 @@ class EventMobileController extends BaseController {
     $event_details = $event_db->where("event_id",$event_id)->first();
     $eventCode = $event_details->event_code;
 
-    /*
+
 
     if ($ticket_db->where("event_ticket_id", $event_ticket_id)->where("user_id", $user_id)->exists()) {
         $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];

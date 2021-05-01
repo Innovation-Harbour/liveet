@@ -51,11 +51,7 @@ class EventTicketUserModel extends HelperModel
         if (!(new UserModel())->where("user_id", $user_id)->exists()) {
             return ["error" => "User not found"];
         }
-
-        if ($this->where("event_ticket_id", $event_ticket_id)->where("user_id", $user_id)->exists()) {
-            return ["error" => "User already registered for event"];
-        }
-
+        
         if ($this->isEventTicketSaleExpired($event_ticket_id)) {
             return ["error" => "Ticket sales closed"];
         }

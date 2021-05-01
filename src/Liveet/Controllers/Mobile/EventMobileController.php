@@ -8,11 +8,14 @@ use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\InvitationModel;
 use Liveet\Models\EventTicketModel;
 use Liveet\Models\UserModel;
+use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketUserModel;
 use Liveet\Models\Mobile\FavouriteModel;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
 use Rashtell\Domain\KeyManager;
+use Aws\Rekognition\RekognitionClient;
+use Liveet\Domain\Constants;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class EventMobileController extends BaseController {
@@ -142,6 +145,8 @@ class EventMobileController extends BaseController {
   {
     $user_db = new UserModel();
     $ticket_db = new EventTicketUserModel();
+    $event_db = new EventModel();
+    $invitation_db = new InvitationModel();
 
     $data = $request->getParsedBody();
 
@@ -151,7 +156,7 @@ class EventMobileController extends BaseController {
     $user_id = $data["user_id"];
     $isFree = $data["is_free"] === "true" ? true : false;
 
-    //get user detailsKey
+    //get user details
     $query = $user_db->where("user_id",$user_id);
 
     if (!$query->exists()) {
@@ -162,40 +167,85 @@ class EventMobileController extends BaseController {
 
     $user_details = $user_db->where("user_id",$user_id)->first();
 
+    $user_phone = $user_details->user_phone;
+    $user_image_key = $user_details->user_image_key;
+
+    //get event details
+    $event_query = $event_db->where("event_id",$event_id);
+
+    if (!$event_query->exists()) {
+      $error = ["errorMessage" => "Event Not Found", "statusCode" => 400];
+
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    $event_details = $event_db->where("event_id",$event_id)->first();
+    $eventCode = $event_details->event_code;
+
+    if ($ticket_db->where("event_ticket_id", $event_ticket_id)->where("user_id", $user_id)->exists()) {
+        $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];
+        return $this->json->withJsonResponse($response, $error);
+    }
+
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+
+    try{
+      $recognition = new RekognitionClient([
+  		    'region'  => 'us-west-2',
+  		    'version' => 'latest',
+  		    'credentials' => [
+  		        'key'    => $aws_key,
+  		        'secret' => $aws_secret,
+  		    ]
+  		]);
+
+      $result = $recognition->indexFaces([
+				    'CollectionId' => $eventCode, // REQUIRED
+				    'DetectionAttributes' => ['ALL'],
+				    'Image' => [ // REQUIRED
+              'S3Object' => [
+                'Bucket' => 'liveet-users',
+                'Name' => $user_image_key,
+              ]
+				    ]
+				]);
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    if(!isset($result['FaceRecords'][0]['FaceDetail']['Gender']))
+		{
+      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+		}
+
+    $face_id = $result['FaceRecords'][0]['Face']['FaceId'];
+
     $db_details = [
       "event_ticket_id" => $ticket_id,
       "user_id" => $user_id,
+      "user_face_id" => $face_id,
+      "status" => Constants::EVENT_TICKET_USED
     ];
 
     $addTicketUser = $ticket_db->createSelf($db_details);
 
-    var_dump($addTicketUser);
-    die;
-
-    /*
-    $favourite_count = $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->count();
-
-    if($doFavourite){
-      if($favourite_count == 0)
-      {
-        $favourite_db->create([
-            "event_id" => $event_id,
-            "user_id" => $user_id
-        ]);
-      }
-      $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Added"];
-    }
-    else{
-      //remove record from db
-      if($favourite_count == 1)
-      {
-        $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->forceDelete();
-      }
-      $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Deleted"];
+    if(!$addTicketUser['error'])
+    {
+      $error = ["errorMessage" => "Error Adding Ticket to user. Please try Again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
     }
 
+    if($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists())
+    {
+      $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->update(["event_invitation_status" => Constants::INVITATION_ACCEPT]);
+    }
+
+    $payload = ["statusCode" => 200, "successMessage" => "Ticket Registered"];
     return $this->json->withJsonResponse($response, $payload);
-    */
   }
 
 }

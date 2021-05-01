@@ -7,6 +7,8 @@ use Liveet\Domain\Constants;
 use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\InvitationModel;
 use Liveet\Models\EventTicketModel;
+use Liveet\Models\UserModel;
+use Liveet\Models\EventTicketUserModel;
 use Liveet\Models\Mobile\FavouriteModel;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
@@ -32,7 +34,7 @@ class EventMobileController extends BaseController {
     $limit = $args["limit"];
 
     $results = $db->getMobileEvents($user_id, $offset, $limit);
-    
+
     foreach($results as $result)
     {
       $datetime = $result->event_date_time;
@@ -136,6 +138,56 @@ class EventMobileController extends BaseController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
+  public function doAttentEvent (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $user_db = new UserModel();
 
+    $data = $request->getParsedBody();
+
+
+    $event_id = $data["event_id"];
+    $ticket_id = $data["ticket_id"];
+    $user_id = $data["user_id"];
+    $isFree = $data["is_free"] === "true" ? true : false;
+
+    //get user detailsKey
+    $query = $user_db->where("user_id",$user_id);
+
+    if (!$query->exists()) {
+      $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
+
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    $user_details = $user_db->where("user_id",$user_id)->first();
+
+    var_dump($user_details);
+    die;
+
+    /*
+    $favourite_count = $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->count();
+
+    if($doFavourite){
+      if($favourite_count == 0)
+      {
+        $favourite_db->create([
+            "event_id" => $event_id,
+            "user_id" => $user_id
+        ]);
+      }
+      $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Added"];
+    }
+    else{
+      //remove record from db
+      if($favourite_count == 1)
+      {
+        $favourite_db->where("event_id",$event_id)->where("user_id", $user_id)->forceDelete();
+      }
+      $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Deleted"];
+    }
+
+    return $this->json->withJsonResponse($response, $payload);
+    */
+  }
 
 }

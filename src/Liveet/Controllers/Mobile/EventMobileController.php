@@ -180,6 +180,7 @@ class EventMobileController extends BaseController {
 
     $event_details = $event_db->where("event_id",$event_id)->first();
     $eventCode = $event_details->event_code;
+    var_dump($eventCode);
 
 
 
@@ -200,7 +201,13 @@ class EventMobileController extends BaseController {
   		        'secret' => $aws_secret,
   		    ]
   		]);
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error connecting to image server 1. Please try again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
 
+    try{
       $result = $recognition->indexFaces([
 				    'CollectionId' => $eventCode, // REQUIRED
 				    'DetectionAttributes' => ['ALL'],
@@ -213,7 +220,7 @@ class EventMobileController extends BaseController {
 				]);
     }
     catch (\Exception $e){
-      $error = ["errorMessage" => "Error connecting to image server 1. Please try again", "statusCode" => 400];
+      $error = ["errorMessage" => "Error connecting to image server 3. Please try again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
 

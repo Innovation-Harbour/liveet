@@ -141,6 +141,7 @@ class EventMobileController extends BaseController {
   public function doAttentEvent (Request $request, ResponseInterface $response): ResponseInterface
   {
     $user_db = new UserModel();
+    $ticket_db = new EventTicketUserModel();
 
     $data = $request->getParsedBody();
 
@@ -161,7 +162,14 @@ class EventMobileController extends BaseController {
 
     $user_details = $user_db->where("user_id",$user_id)->first();
 
-    var_dump($user_details);
+    $db_details = [
+      "event_ticket_id" => $ticket_id,
+      "user_id" => $user_id,
+    ];
+
+    $addTicketUser = $ticket_db->createSelf($db_details);
+
+    var_dump($addTicketUser);
     die;
 
     /*

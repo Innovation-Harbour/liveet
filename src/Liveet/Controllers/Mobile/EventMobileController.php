@@ -31,6 +31,9 @@ class EventMobileController extends BaseController {
     $offset = $args["offset"];
     $limit = $args["limit"];
 
+    var_dump($user_id,$offset);
+    die;
+
     $results = $db->getMobileEvents($user_id, $offset, $limit);
 
     foreach($results as $result)

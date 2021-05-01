@@ -167,7 +167,7 @@ class EventMobileController extends BaseController {
     $user_details = $user_db->where("user_id",$user_id)->first();
 
     $user_phone = $user_details->user_phone;
-    $user_image_key = $user_details->user_image_key;
+    $user_image_key = $user_details->image_key;
 
     //get event details
     $event_query = $event_db->where("event_id",$event_id);
@@ -214,7 +214,7 @@ class EventMobileController extends BaseController {
 				    'Image' => [ // REQUIRED
               'S3Object' => [
                 'Bucket' => 'liveet-users',
-                'Name' => "user-34579550-image.png",
+                'Name' => $user_image_key,
               ]
 				    ]
 				]);
@@ -240,12 +240,13 @@ class EventMobileController extends BaseController {
     ];
 
     $addTicketUser = $ticket_db->createSelf($db_details);
-
+    var_dump($addTicketUser->error,$addTicketUser['error']);
+    /*
     if($addTicketUser->error !== "")
     {
       $error = ["errorMessage" => "Error Adding Ticket to user. Please try Again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
-    }
+    }*/
 
     if($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists())
     {

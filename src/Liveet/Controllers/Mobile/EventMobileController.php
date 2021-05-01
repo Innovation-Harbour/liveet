@@ -186,7 +186,7 @@ class EventMobileController extends BaseController {
         $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];
         return $this->json->withJsonResponse($response, $error);
     }
-
+    /*
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
 
@@ -246,6 +246,7 @@ class EventMobileController extends BaseController {
 
     $payload = ["statusCode" => 200, "successMessage" => "Ticket Registered"];
     return $this->json->withJsonResponse($response, $payload);
+    */
   }
 
 }

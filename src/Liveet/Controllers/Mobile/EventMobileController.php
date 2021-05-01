@@ -182,11 +182,13 @@ class EventMobileController extends BaseController {
     $event_details = $event_db->where("event_id",$event_id)->first();
     $eventCode = $event_details->event_code;
 
+    /*
+
     if ($ticket_db->where("event_ticket_id", $event_ticket_id)->where("user_id", $user_id)->exists()) {
         $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];
         return $this->json->withJsonResponse($response, $error);
     }
-    /*
+
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
 

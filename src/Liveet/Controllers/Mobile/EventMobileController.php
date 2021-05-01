@@ -143,9 +143,9 @@ class EventMobileController extends BaseController {
   public function doAttentEvent (Request $request, ResponseInterface $response): ResponseInterface
   {
     $user_db = new UserModel();
-    //$ticket_db = new EventTicketUserModel();
-    //$event_db = new EventModel();
-    //$invitation_db = new InvitationModel();
+    $ticket_db = new EventTicketUserModel();
+    $event_db = new EventModel();
+    $invitation_db = new InvitationModel();
 
     $data = $request->getParsedBody();
 
@@ -165,7 +165,7 @@ class EventMobileController extends BaseController {
     }
 
     $user_details = $user_db->where("user_id",$user_id)->first();
-/*
+
     $user_phone = $user_details->user_phone;
     $user_image_key = $user_details->user_image_key;
 
@@ -229,7 +229,7 @@ class EventMobileController extends BaseController {
       "event_ticket_id" => $ticket_id,
       "user_id" => $user_id,
       "user_face_id" => $face_id,
-      "status" => Constants::EVENT_TICKET_USED
+      "status" => "TICKET_USED"
     ];
 
     $addTicketUser = $ticket_db->createSelf($db_details);
@@ -242,12 +242,12 @@ class EventMobileController extends BaseController {
 
     if($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists())
     {
-      $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->update(["event_invitation_status" => Constants::INVITATION_ACCEPT]);
+      $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->update(["event_invitation_status" => "ACCEPTED"]);
     }
 
     $payload = ["statusCode" => 200, "successMessage" => "Ticket Registered"];
     return $this->json->withJsonResponse($response, $payload);
-    */
+
   }
 
 }

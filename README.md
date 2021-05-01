@@ -10,8 +10,7 @@
 
 - deleting a ticket type should delete all its access codes
 - check event time and event controls before doing anything with its ticket type, ticket and access codes
-- work on event invitation
-- lobatan
+- work on report module
 
 ## PROBLEMS
 

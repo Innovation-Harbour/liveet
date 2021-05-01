@@ -103,11 +103,12 @@ class OrganiserStaffModel extends BaseModel
         ]);
 
         $pkKey = $this->primaryKey;
-        $user = self::select($pkKey, "organiser_id", "organiser_staff_name", "organiser_staff_username", "organiser_staff_phone", "organiser_staff_email", "organiser_staff_profile_picture", "organiser_staff_priviledges", "phone_verified", "email_verified", "usertype", "public_key", "created_at", "updated_at")->where("organiser_staff_username", $organiser_staff_username)->where("organiser_staff_password", $organiser_staff_password)->first();
+        $organiserStaff = self::select($pkKey, "organiser_id", "organiser_staff_name", "organiser_staff_username", "organiser_staff_phone", "organiser_staff_email", "organiser_staff_profile_picture", "organiser_staff_priviledges", "phone_verified", "email_verified", "usertype", "public_key", "created_at", "updated_at")->where("organiser_staff_username", $organiser_staff_username)->where("organiser_staff_password", $organiser_staff_password)->first();
+        $organiserStaff->makeVisible(["public_key"]);
 
-        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $user["organiser_staff_id"], "activity_log_desc" => "Organiser login successful"]);
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiserStaff["organiser_staff_id"], "activity_log_desc" => "Organiser login successful"]);
 
-        return ["data" => $user, "error" => ""];
+        return ["data" => $organiserStaff, "error" => ""];
     }
 
     public function getDashboard($pk, $queryOptions = null, $extras = null)

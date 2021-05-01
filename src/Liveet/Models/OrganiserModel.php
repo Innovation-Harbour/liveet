@@ -175,6 +175,7 @@ class OrganiserModel extends BaseModel
 
         $pkColumnName = $this->primaryKey;
         $organiser = self::select($pkColumnName, "organiser_username",  "organiser_name", "organiser_email", "organiser_phone", "organiser_address", "phone_verified", "usertype", "email_verified",  "public_key", "usertype", "created_at", "updated_at")->where("organiser_username", $organiser_username)->where("public_key", $public_key)->where("organiser_password", $organiser_password)->first();
+        $organiser->makeVisible(["public_key"]);
 
         $user = $organiserStaffModel->where("organiser_username", $organiser_username)->first();
 

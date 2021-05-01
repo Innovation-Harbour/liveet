@@ -13,7 +13,11 @@ class AdminUserModel extends BaseModel
 
     protected $table = "admin_user";
     protected $dateFormat = "U";
-    protected $hidden = ["admin_password", "public_key", "email_verification_token", "forgot_password_token", "deleted_at"];
+    protected $hidden = [
+        "admin_password",
+        "public_key",
+        "email_verification_token", "forgot_password_token", "deleted_at"
+    ];
     public $primaryKey = "admin_user_id";
     protected $guarded = [];
     public $passwordKey = "admin_password";
@@ -40,7 +44,7 @@ class AdminUserModel extends BaseModel
         $admin_username = $authDetails["admin_username"] ?? "";
         $usertype = $authDetails["usertype"] ?? "";
 
-        $users =  self::where("public_key", $public_key)
+        $users =  $this::where("public_key", $public_key)
             ->where("admin_username", "=", $admin_username)
             ->where("usertype", "=", $usertype)
             ->take(1)
@@ -148,6 +152,7 @@ class AdminUserModel extends BaseModel
 
         $pkColumnName = $this->primaryKey;
         $admin = self::select($pkColumnName, "admin_fullname", "admin_username", "admin_email", "admin_priviledges", "email_verified",  "public_key", "usertype", "created_at", "updated_at")->where("admin_username", $admin_username)->where("public_key", $public_key)->where("admin_password", $admin_password)->first();
+        $admin->makeVisible(["public_key"]);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $admin["admin_user_id"], "activity_log_desc" => "Admin login successfully"]);
 

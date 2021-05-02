@@ -64,11 +64,12 @@ class EventMobileController extends BaseController {
       ];
 
       //check if the user already attending this event
-      $eventQuery = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')->count();
+      $eventQuery = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
+      ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')->get();
       var_dump($eventQuery);
       die;
       /*
-      ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
+
       ->count();
 
       var_dump($eventQuery);

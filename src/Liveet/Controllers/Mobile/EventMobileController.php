@@ -61,7 +61,7 @@ class EventMobileController extends BaseController {
         "is_favourite" => $isFavourite,
         "is_free" => $is_free,
       ];
-
+      /*
       //check if the user already attending this event
       $eventQuery = DB::table('event_ticket')->join('event', 'event_ticket.event_id', '=', 'event.event_id')
       ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
@@ -71,9 +71,10 @@ class EventMobileController extends BaseController {
       die;
 
       if($eventQuery < 1 || (time() < $result->event_date_time)){
-        array_push($response_data,$tmp);
-      }
 
+      }
+      */
+      array_push($response_data,$tmp);
     }
 
     $payload = ["statusCode" => 200, "data" => $response_data];

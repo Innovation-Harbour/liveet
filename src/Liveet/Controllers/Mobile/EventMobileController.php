@@ -49,7 +49,7 @@ class EventMobileController extends BaseController {
 
       $can_invite_count = intval($result->invitee_can_invite_count);
 
-      $can_invite = ($result->event_can_invite === "CAN_INVITE" || ($result->event_can_invite === "RESTRICTED" && $can_invite_count > 0)) ? true : false;
+      $can_invite = ($result->event_can_invite === "CAN_INVITE" || ($result->event_can_invite === "CAN_INVITE_RESTRICTED" && $can_invite_count > 0)) ? true : false;
       $is_free = ($result->event_payment_type === "FREE") ? true : false;
       $isFavourite = ($result->event_favourite_id !== null) ? true : false;
 

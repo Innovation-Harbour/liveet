@@ -10,6 +10,7 @@ use Liveet\Models\EventTicketModel;
 use Liveet\Models\UserModel;
 use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketUserModel;
+use Illuminate\Support\Facades\DB;
 use Liveet\Models\Mobile\FavouriteModel;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
@@ -28,6 +29,7 @@ class EventMobileController extends BaseController {
   {
     //declare needed class objects
     $db = new InvitationModel();
+    //$ticket_db = new EventTicketModel();
 
     $response_data = [];
 
@@ -60,7 +62,15 @@ class EventMobileController extends BaseController {
         "is_free" => $is_free,
       ];
 
-      array_push($response_data,$tmp);
+      //check if the user already attending this event
+      $eventQuery = DB::table('event_ticket')->join('event', 'event_ticket.event_id', '=', 'event.event_id')
+      ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
+      ->where("event_ticket.event_id",$result->event_id)->where("event_ticket_users.user_id",$user_id)->count();
+
+      if($eventQuery < 1 || (time() < $result->event_date_time)){
+        array_push($response_data,$tmp);
+      }
+
     }
 
     $payload = ["statusCode" => 200, "data" => $response_data];

@@ -29,7 +29,8 @@ class EventMobileController extends BaseController {
   {
     //declare needed class objects
     $db = new InvitationModel();
-    //$ticket_db = new EventTicketModel();
+    $ticket_db = new DB();
+
 
     $response_data = [];
 
@@ -61,9 +62,12 @@ class EventMobileController extends BaseController {
         "is_favourite" => $isFavourite,
         "is_free" => $is_free,
       ];
-      /*
+
       //check if the user already attending this event
-      $eventQuery = DB::table('event_ticket')->join('event', 'event_ticket.event_id', '=', 'event.event_id')
+      $eventQuery = $ticket_db::table('event_ticket')->join('event', 'event_ticket.event_id', '=', 'event.event_id')->select("*");
+      var_dump($eventQuery);
+      die;
+      /*
       ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
       ->count();
 

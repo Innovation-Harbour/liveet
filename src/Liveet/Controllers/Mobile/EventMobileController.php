@@ -52,6 +52,7 @@ class EventMobileController extends BaseController {
       $can_invite = ($result->event_can_invite === "CAN_INVITE" || ($result->event_can_invite === "CAN_INVITE_RESTRICTED" && $can_invite_count > 0)) ? true : false;
       $is_free = ($result->event_payment_type === "FREE") ? true : false;
       $isFavourite = ($result->event_favourite_id !== null) ? true : false;
+      $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
 
       $tmp = [
         "event_id" => intval($result->event_id),
@@ -66,6 +67,7 @@ class EventMobileController extends BaseController {
         "can_invite" => $can_invite,
         "is_favourite" => $isFavourite,
         "is_free" => $is_free,
+        "use_map" => $useMap,
       ];
 
       //check if the user already attending this event

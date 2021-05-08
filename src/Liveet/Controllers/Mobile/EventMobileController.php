@@ -257,7 +257,7 @@ class EventMobileController extends BaseController {
 
     if($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists())
     {
-      $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->update(["event_invitation_status" => "ACCEPTED"]);
+      $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->update(["event_invitation_status" => Constants::INVITATION_ACCEPT]);
     }
 
     $payload = ["statusCode" => 200, "successMessage" => "Ticket Registered"];
@@ -370,6 +370,37 @@ class EventMobileController extends BaseController {
     }
 
     $payload = ["statusCode" => 200, "data" => $response_data];
+
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function DoRecallTicket (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $db = new EventTicketUserModel();
+    $user_db = new UserModel();
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $ticket_id = $data["event_ticket_id"];
+
+    $ticket_count = $db->where("event_ticket_user_id",$ticket_id)->count();
+
+    if($ticket_count < 1)
+    {
+      $error = ["errorMessage" => "Ticket does not exist.Please try again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    //get user phone number for SMS
+    $user_data = $user_db->where('user_id', $user_id)->take(1)->get();
+    $user_data_clean = $user_data[0];
+
+    $user_phone = $user_data_clean->user_phone;
+
+    $db->where("event_ticket_user_id", $ticket_id)->update(["ownership_status" => Constants::EVENT_TICKET_RECALLED]);
+
+    $payload = ["statusCode" => 200, "successMessage" => "Recall successful"];
 
     return $this->json->withJsonResponse($response, $payload);
   }

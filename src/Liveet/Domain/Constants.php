@@ -72,5 +72,5 @@ class Constants
   const EVENT_TICKET_RECALLED = "RECALLED";
   const EVENT_TICKET_ACTIVE = "ACTIVE";
 
-  const SMS_NEW_ACCESS_CODE = "";
+  const MOBILE_APP_DOWNLOAD_URL = "https://bit.ly/liveet";
 }

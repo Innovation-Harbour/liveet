@@ -143,17 +143,21 @@ class EventAccessModel extends HelperModel
             $event = $eventAccess->eventTicket->event;
             $event_name = $event["event_name"];
 
-            $termiiResponse = (new TermiiAPI())->sendSMS($user_phone, "Your access code to $event_name is $event_access_code. Please download the Liveet app to use your access code.");
+            $appDownloadLink = Constants::MOBILE_APP_DOWNLOAD_URL;
+            $termiiResponse = (new TermiiAPI())->sendSMS($user_phone, "Your access code to $event_name is $event_access_code. Please download the Liveet app at $appDownloadLink to use your access code.");
 
             // var_dump($termiiResponse);
-            // {
-            //     "message_id": "9122821270554876574",
-            //     "message": "Successfully Sent",
-            //     "balance": 9,
-            //     "user": "Peter Mcleish"
-            //  }
+            //     {
+            //         "code":"ok",
+            //         "message_id":"5882719683744136910",
+            //         "message":"Successfully Sent",
+            //         "balance":2942.6,
+            //         "user":"Kolapo Obanewa"
+            //      }
 
-            if (!isset($termiiResponse->message_id)) {
+            if (!isset($termiiResponse->message_id)
+                // || (!isset($termiiResponse->code) || $termiiResponse->code != "ok")
+            ) {
                 return ["data" => null, "error" => "User not registered and sms failed"];
             }
 

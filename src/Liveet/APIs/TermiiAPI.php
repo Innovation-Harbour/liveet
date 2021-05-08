@@ -71,15 +71,12 @@ class TermiiAPI
   public function sendSMS($phone, $message)
   {
     return $this->setupRequest("/sms/send", "POST", [
-      "data" => [
         "api_key" => $_ENV["TERMII_KEY"],
-        "message_type" => "NUMERIC",
         "to" => $phone,
         "from" => "Liveet",
         "sms" => $message,
         "type" => "plain",
-        "channel" => "dnd"
-      ]
+        "channel" => "generic"
     ]);
   }
 }

@@ -159,6 +159,10 @@ class EventTicketUserModel extends HelperModel
         if ($event_ticket_user_status == Constants::EVENT_TICKET_USED) {
             return ["error" => "Ticket already used"];
         }
+        $event_ticket_user_ownership_status = $event_ticket_user["ownership_status"];
+        if ($event_ticket_user_ownership_status != Constants::EVENT_TICKET_ACTIVE) {
+            return ["error" => "Invalid Ticket"];
+        }
 
         $event_ticket_id = $event_ticket_user["event_ticket_id"];
         $user_id = $event_ticket_user["user_id"];
@@ -168,7 +172,8 @@ class EventTicketUserModel extends HelperModel
         }
 
         $user = (new UserModel())->getStruct()->where("user_id", $user_id)->first();
-        $query->delete();
+        $query->update(["ownership_status" => Constants::EVENT_TICKET_RECALLED]);
+        // $query->delete();
         //TODO: Add refund protocol
 
         return ["data" => ["type" => "success", "message" => "ticket recalled successfully", "event_ticket_user_id" => $event_ticket_user_id, "user" => $user]];

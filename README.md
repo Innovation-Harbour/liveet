@@ -11,6 +11,8 @@
 - deleting a ticket type should delete all its access codes
 - check event time and event controls before doing anything with its ticket type, ticket and access codes
 - work on report module
+- send access code to text if number not available
+- add new status column to eventticketuser
 
 ## PROBLEMS
 

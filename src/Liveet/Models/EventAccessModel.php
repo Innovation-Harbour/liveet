@@ -4,6 +4,7 @@ namespace Liveet\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Event;
+use Liveet\APIs\TermiiAPI;
 use Liveet\Domain\Constants;
 use Rashtell\Domain\CodeLibrary;
 
@@ -129,17 +130,36 @@ class EventAccessModel extends HelperModel
 
         unset($allInputs[$this->primaryKey]);
 
-        $user_phone = $allInputs["user_phone"];
-        $userQuery = (new UserModel())->select("user_id")->where("user_phone", $user_phone);
-        if (!$userQuery->exists()) {
-            return ["error" => "User not found", "data" => null];
-        }
-        $user_id = $userQuery->first()["user_id"];
-
         $eventAccess = $this->find($pk);
         if (!$eventAccess) {
             return ["error" => "Access code not found", "data" => null];
         }
+
+        $user_phone = $allInputs["user_phone"];
+        $userQuery = (new UserModel())->select("user_id")->where("user_phone", $user_phone);
+        if (!$userQuery->exists()) {
+            //send text to phone number
+            $event_access_code = $eventAccess["event_access_code"];
+            $event = $eventAccess->eventTicket->event;
+            $event_name = $event["event_name"];
+
+            $termiiResponse = (new TermiiAPI())->sendSMS($user_phone, "Your access code to $event_name is $event_access_code. Please download the Liveet app to use your access code.");
+
+            // var_dump($termiiResponse);
+            // {
+            //     "message_id": "9122821270554876574",
+            //     "message": "Successfully Sent",
+            //     "balance": 9,
+            //     "user": "Peter Mcleish"
+            //  }
+
+            if (!isset($termiiResponse->message_id)) {
+                return ["data" => null, "error" => "User not registered and sms failed"];
+            }
+
+            return ["data" => ["success" => "Access code sent by sms.", "error" => "User not registered"], "error" => null];
+        }
+        $user_id = $userQuery->first()["user_id"];
 
         $event_ticket_id = $eventAccess["event_ticket_id"];
         if ($this->isEventTicketSaleExpired($event_ticket_id)) {

@@ -363,7 +363,7 @@ class EventMobileController extends BaseController {
         "event_month" => $month,
         "event_year" => $year,
         "can_recall" => $can_recall,
-        "$can_transfer" => $can_transfer,
+        "can_transfer" => $can_transfer,
       ];
 
       array_push($response_data,$tmp);

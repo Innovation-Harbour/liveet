@@ -437,28 +437,26 @@ class EventMobileController extends BaseController {
     {
       $error = ["errorMessage" => "Selected Country not supported at the moment for now", "statusCode" => 400];
 
-      return $json->withJsonResponse($response, $error);
+      return $this->json->withJsonResponse($response, $error);
     }
 
     if ($phone_count != 10 || !in_array($rest_of_phone_number[0], $eligible_phone_starting))
     {
       $error = ["errorMessage" => "Phone Number Does Not Match The Number Format for Selected Country", "statusCode" => 400];
 
-      return $json->withJsonResponse($response, $error);
+      return $this->json->withJsonResponse($response, $error);
     }
 
     //get user phone number for SMS
     $country_code_clean = substr($country_code, 1);
     $phone_clean = $country_code_clean.$rest_of_phone_number;
     $user_count = $user_db->where('user_phone', $phone_clean)->count();
-    var_dump($user_count);
-    die;
 
     if($user_count < 1)
     {
       $error = ["errorMessage" => "User Does not exist. Please tell recipient to register on Liveet with this number and try transfer again", "statusCode" => 400];
 
-      return $json->withJsonResponse($response, $error);
+      return $this->json->withJsonResponse($response, $error);
     }
 
     $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
@@ -471,7 +469,7 @@ class EventMobileController extends BaseController {
     {
       $error = ["errorMessage" => "Sorry You cannot Transfer Ticket To Yourself", "statusCode" => 400];
 
-      return $json->withJsonResponse($response, $error);
+      return $this->json->withJsonResponse($response, $error);
     }
 
     $event_details = $event_db->where("event_id",$event_id)->first();

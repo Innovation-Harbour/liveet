@@ -325,4 +325,72 @@ class EventMobileController extends BaseController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
+  public function getUserEventHistory(Request $request, ResponseInterface $response, array $args): ResponseInterface
+  {
+    //declare needed class objects
+    $db = new EventTicketModel();
+
+
+    $response_data = [];
+
+    $user_id = $args["user_id"];
+    $offset = $args["offset"];
+    $limit = $args["limit"];
+
+    $results = $db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
+    ->leftJoin('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
+    ->leftJoin('event_control', 'event_ticket.event_id', '=', 'event_control.event_id')
+    ->select('event_ticket_users.event_ticket_user_id','event.event_id','event.event_multimedia','event.event_name','event.event_date_time','event_control.event_can_recall','event_control.event_can_transfer_ticket')
+    ->where("event_ticket_users.user_id",$user_id)
+    ->offset($offset)->limit($limit)->get();
+
+    var_dump($results);
+    die;
+
+
+    foreach($results as $result)
+    {
+      $datetime = $result->event_date_time;
+      $date = date('d',$datetime);
+      $month = date('M',$datetime);
+      $year = date('Y',$datetime);
+
+      $can_invite_count = intval($result->invitee_can_invite_count);
+
+      $can_invite = ($result->event_can_invite === "CAN_INVITE" || ($result->event_can_invite === "CAN_INVITE_RESTRICTED" && $can_invite_count > 0)) ? true : false;
+      $is_free = ($result->event_payment_type === "FREE") ? true : false;
+      $isFavourite = ($result->event_favourite_id !== null) ? true : false;
+      $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
+
+      $tmp = [
+        "event_id" => intval($result->event_id),
+        "event_image" => $result->event_multimedia,
+        "event_title" => $result->event_name,
+        "event_date" => intval($date),
+        "event_month" => $month,
+        "event_year" => $year,
+        "event_venue" => $result->event_venue,
+        "event_lat" => is_null($result->location_lat) ? 1.111111 : doubleval($result->location_lat),
+        "event_long" => is_null($result->location_long) ? 1.11111 : doubleval($result->location_long),
+        "can_invite" => $can_invite,
+        "is_favourite" => $isFavourite,
+        "is_free" => $is_free,
+        "use_map" => $useMap,
+      ];
+
+      //check if the user already attending this event
+      $eventQuery = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
+      ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
+      ->where("event_ticket.event_id",$result->event_id)->where("event_ticket_users.user_id",$user_id)->count();
+
+      if($eventQuery < 1 && (intval($datetime) > time())){
+        array_push($response_data,$tmp);
+      }
+    }
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
 }

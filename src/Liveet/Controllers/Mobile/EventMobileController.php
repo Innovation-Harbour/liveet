@@ -398,10 +398,143 @@ class EventMobileController extends BaseController {
 
     $user_phone = $user_data_clean->user_phone;
 
+    //do SMS Logic here
+
     $db->where("event_ticket_user_id", $ticket_id)->update(["ownership_status" => Constants::EVENT_TICKET_RECALLED]);
 
     $payload = ["statusCode" => 200, "successMessage" => "Recall successful"];
 
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function DoTicketTransfer (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $db = new EventTicketUserModel();
+    $user_db = new UserModel();
+    $event_db = new EventModel();
+
+    $eligible_phone_starting = array("6","7","8","9");
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $user_phone_full = $data["user_phone"];
+    $ticket_id = $data["event_ticket_id"];
+    $event_id = $data["event_id"];
+
+    $country_code = substr($user_phone_full, 0, 4);
+
+    $rest_of_phone_number = substr($user_phone_full, 4);
+
+    if(strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0")
+    {
+      $rest_of_phone_number = substr($rest_of_phone_number, 1);
+    }
+
+    $phone_count = strlen($rest_of_phone_number);
+
+    if ($country_code !=="+234")
+    {
+      $error = ["errorMessage" => "Selected Country not supported at the moment for now", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
+    if ($phone_count != 10 || !in_array($rest_of_phone_number[0], $eligible_phone_starting))
+    {
+      $error = ["errorMessage" => "Phone Number Does Not Match The Number Format for Selected Country", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
+    //get user phone number for SMS
+    $country_code_clean = substr($country_code, 1);
+    $phone_clean = $country_code_clean.$rest_of_phone_number;
+    $user_count = $user_db->where('user_phone', $phone_clean)->count();
+
+    if($user_count < 1)
+    {
+      $error = ["errorMessage" => "User Does not exist. Please tell recipient to register on Liveet with this number and try transfer again", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
+    $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
+    $user_data_clean = $user_data[0];
+
+    $db_user_id = $user_data_clean->user_id;
+    $user_image_key = $user_data_clean->image_key;
+
+    if($db_user_id == $user_id)
+    {
+      $error = ["errorMessage" => "Sorry You cannot Transfer Ticket To Yourself", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
+    $event_details = $event_db->where("event_id",$event_id)->first();
+    $eventCode = $event_details->event_code;
+
+
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+
+    try{
+      $recognition = new RekognitionClient([
+  		    'region'  => 'us-west-2',
+  		    'version' => 'latest',
+  		    'credentials' => [
+  		        'key'    => $aws_key,
+  		        'secret' => $aws_secret,
+  		    ]
+  		]);
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    try{
+      $result = $recognition->indexFaces([
+				    'CollectionId' => $eventCode, // REQUIRED
+				    'DetectionAttributes' => ['ALL'],
+				    'Image' => [ // REQUIRED
+              'S3Object' => [
+                'Bucket' => 'liveet-users',
+                'Name' => $user_image_key,
+              ]
+				    ]
+				]);
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    if(!isset($result['FaceRecords'][0]['FaceDetail']['Gender']))
+		{
+      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+		}
+
+    $face_id = $result['FaceRecords'][0]['Face']['FaceId'];
+
+    $db->where("event_ticket_user_id", $ticket_id)->update(["ownership_status" => Constants::EVENT_TICKET_TRANSFERRED]);
+
+    $ticket_details = $db->where("event_ticket_user_id",$ticket_id)->first();
+    $eventTicketId = $ticket_details->event_ticket_id;
+
+    $db_details = [
+      "event_ticket_id" => $eventTicketId,
+      "user_id" => $db_user_id,
+      "user_face_id" => $face_id,
+    ];
+
+    $addTicketUser = $db->createSelf($db_details);
+
+    //do SMS Logic here to inform recipient of the transfer
+
+    $payload = ["statusCode" => 200, "successMessage" => "Transfer successful"];
     return $this->json->withJsonResponse($response, $payload);
   }
 

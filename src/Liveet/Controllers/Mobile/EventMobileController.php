@@ -475,6 +475,14 @@ class EventMobileController extends BaseController {
     $event_details = $event_db->where("event_id",$event_id)->first();
     $eventCode = $event_details->event_code;
 
+    $ticket_details = $db->where("event_ticket_user_id",$ticket_id)->first();
+    $eventTicketId = $ticket_details->event_ticket_id;
+
+    if ($db->where("event_ticket_id", $eventTicketId)->where("user_id", $db_user_id)->exists()) {
+        $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];
+        return $this->json->withJsonResponse($response, $error);
+    }
+
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
@@ -520,9 +528,6 @@ class EventMobileController extends BaseController {
     $face_id = $result['FaceRecords'][0]['Face']['FaceId'];
 
     $db->where("event_ticket_user_id", $ticket_id)->update(["ownership_status" => Constants::EVENT_TICKET_TRANSFERRED]);
-
-    $ticket_details = $db->where("event_ticket_user_id",$ticket_id)->first();
-    $eventTicketId = $ticket_details->event_ticket_id;
 
     $db_details = [
       "event_ticket_id" => $eventTicketId,

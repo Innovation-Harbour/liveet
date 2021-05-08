@@ -45,6 +45,7 @@ class EventMobileController extends BaseController {
       $datetime = $result->event_date_time;
       $date = date('d',$datetime);
       $month = date('M',$datetime);
+      $month_num = date('n',$datetime);
       $year = date('Y',$datetime);
 
       $can_invite_count = intval($result->invitee_can_invite_count);
@@ -60,6 +61,7 @@ class EventMobileController extends BaseController {
         "event_title" => $result->event_name,
         "event_date" => intval($date),
         "event_month" => $month,
+        "event_month_num" => intval($month_num),
         "event_year" => $year,
         "event_venue" => $result->event_venue,
         "event_lat" => is_null($result->location_lat) ? 1.111111 : doubleval($result->location_lat),
@@ -285,6 +287,7 @@ class EventMobileController extends BaseController {
       $datetime = $result->event_date_time;
       $date = date('d',$datetime);
       $month = date('M',$datetime);
+      $month_num = date('n',$datetime);
       $year = date('Y',$datetime);
 
       $can_invite_count = intval($result->invitee_can_invite_count);
@@ -300,6 +303,7 @@ class EventMobileController extends BaseController {
         "event_title" => $result->event_name,
         "event_date" => intval($date),
         "event_month" => $month,
+        "event_month_num" => intval($month_num),
         "event_year" => $year,
         "event_venue" => $result->event_venue,
         "event_lat" => is_null($result->location_lat) ? 1.111111 : doubleval($result->location_lat),

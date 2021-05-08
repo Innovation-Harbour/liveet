@@ -15,4 +15,19 @@ class FavouriteModel extends BaseModel
     protected $guarded = [];
     protected $fillable = ['event_id','user_id'];
 
+    public function getUserFavourites($user_id, $offset, $limit){
+      $sql = "
+              SELECT
+              event.event_id,event.event_venue,event.location_lat,event.location_long,event_invitation.invitee_can_invite_count,event.event_multimedia,event.event_name,event.event_date_time,event.event_payment_type,event_control.event_can_invite,fav.event_favourite_id
+              FROM event_user_favourite fav
+              INNER JOIN event ON fav.event_id = event.event_id
+              LEFT JOIN event_control ON fav.event_id = event_control.event_id
+              LEFT JOIN event_invitation ON fav.event_id = event_invitation.event_id
+              WHERE fav.user_id = ".$user_id."
+              ORDER BY event.event_date_time DESC, event.event_id LIMIT ".$offset.", ".$limit."
+              ";
+      $result = $this->getConnection()->select($sql);
+      return $result;
+    }
+
 }

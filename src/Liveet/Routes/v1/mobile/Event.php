@@ -16,6 +16,11 @@ isset($mobileGroup) && $mobileGroup->group(
             EventMobileController::class . ":GetEvents"
         );
 
+        $mobileEventGroup->get(
+            "/getfavourite/{user_id}/{offset}/{limit}",
+            EventMobileController::class . ":getEventFavourites"
+        );
+
         $mobileEventGroup->post(
             "/dofavourite",
             EventMobileController::class . ":DoEventFavourite"

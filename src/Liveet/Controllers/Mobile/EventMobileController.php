@@ -251,7 +251,6 @@ class EventMobileController extends BaseController {
       "event_ticket_id" => $ticket_id,
       "user_id" => $user_id,
       "user_face_id" => $face_id,
-      "status" => "TICKET_USED"
     ];
 
     $addTicketUser = $ticket_db->createSelf($db_details);

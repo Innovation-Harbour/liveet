@@ -478,7 +478,7 @@ class EventMobileController extends BaseController {
     $ticket_details = $db->where("event_ticket_user_id",$ticket_id)->first();
     $eventTicketId = $ticket_details->event_ticket_id;
 
-    if ($db->where("event_ticket_id", $eventTicketId)->where("user_id", $db_user_id)->exists()) {
+    if ($db->where("event_ticket_id", $eventTicketId)->where("user_id", $db_user_id)->where("ownership_status", Constants::EVENT_TICKET_ACTIVE)->exists()) {
         $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];
         return $this->json->withJsonResponse($response, $error);
     }
@@ -535,7 +535,14 @@ class EventMobileController extends BaseController {
       "user_face_id" => $face_id,
     ];
 
-    $addTicketUser = $db->createSelf($db_details);
+    if ($db->where("event_ticket_id", $eventTicketId)->where("user_id", $db_user_id)->where("ownership_status", Constants::EVENT_TICKET_TRANSFERRED)->exists()) {
+        $db->where("event_ticket_id", $eventTicketId)->where("user_id", $db_user_id)->update(["ownership_status" => Constants::EVENT_TICKET_ACTIVE]);
+    }
+    else{
+      $addTicketUser = $db->createSelf($db_details);
+    }
+
+
 
     //do SMS Logic here to inform recipient of the transfer
 

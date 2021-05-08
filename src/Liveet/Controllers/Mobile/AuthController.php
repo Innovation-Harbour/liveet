@@ -147,8 +147,9 @@ class AuthController extends BaseController {
     //get user data
     $fullname = $user_data_clean->user_fullname;
     $user_id = $user_data_clean->user_id;
+    $user_picture = $user_data_clean->user_picture;
 
-    $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname,"user_id" => $user_id];
+    $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname,"user_id" => $user_id,"user_pics" => $user_picture];
 
     $payload = ["statusCode" => 200, "data" => $data_to_view];
 
@@ -412,12 +413,13 @@ class AuthController extends BaseController {
       $user_data_clean = $user_data[0];
 
       $user_id = $user_data_clean->user_id;
+      $user_picture = $user_data_clean->user_picture;
 
 
       //remove record from temp db
       $temp_db->where('temp_phone', $phone_clean)->delete();
 
-      $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname,"user_id" => $user_id];
+      $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname,"user_id" => $user_id,"user_pics" => $user_picture];
 
       $payload = ["statusCode" => 200, "data" => $data_to_view];
 
@@ -433,7 +435,7 @@ class AuthController extends BaseController {
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
-    
+
   }
 
 }

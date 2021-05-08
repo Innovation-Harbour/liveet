@@ -341,12 +341,8 @@ class EventMobileController extends BaseController {
     ->leftJoin('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
     ->leftJoin('event_control', 'event_ticket.event_id', '=', 'event_control.event_id')
     ->select('event_ticket_users.event_ticket_user_id','event.event_id','event.event_multimedia','event.event_name','event.event_date_time','event_control.event_can_recall','event_control.event_can_transfer_ticket')
-    ->where("event_ticket_users.user_id",$user_id)
+    ->where("event_ticket_users.user_id",$user_id)->where("event_ticket_users.ownership_status",Constants::EVENT_TICKET_ACTIVE)
     ->offset($offset)->limit($limit)->get();
-
-    var_dump($results);
-    die;
-
 
     foreach($results as $result)
     {
@@ -355,37 +351,22 @@ class EventMobileController extends BaseController {
       $month = date('M',$datetime);
       $year = date('Y',$datetime);
 
-      $can_invite_count = intval($result->invitee_can_invite_count);
-
-      $can_invite = ($result->event_can_invite === "CAN_INVITE" || ($result->event_can_invite === "CAN_INVITE_RESTRICTED" && $can_invite_count > 0)) ? true : false;
-      $is_free = ($result->event_payment_type === "FREE") ? true : false;
-      $isFavourite = ($result->event_favourite_id !== null) ? true : false;
-      $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
+      $can_recall = ($result->event_can_recall == Constants::EVENT_CAN_RECALL_TICKET) ? true : false;
+      $can_transfer = ($result->event_can_transfer_ticket == Constants::EVENT_CAN_TRANSFER_TICKET) ? true : false;
 
       $tmp = [
+        "event_ticket_user_id" => intval($result->event_ticket_user_id),
         "event_id" => intval($result->event_id),
         "event_image" => $result->event_multimedia,
         "event_title" => $result->event_name,
         "event_date" => intval($date),
         "event_month" => $month,
         "event_year" => $year,
-        "event_venue" => $result->event_venue,
-        "event_lat" => is_null($result->location_lat) ? 1.111111 : doubleval($result->location_lat),
-        "event_long" => is_null($result->location_long) ? 1.11111 : doubleval($result->location_long),
-        "can_invite" => $can_invite,
-        "is_favourite" => $isFavourite,
-        "is_free" => $is_free,
-        "use_map" => $useMap,
+        "can_recall" => $can_recall,
+        "$can_transfer" => $can_transfer,
       ];
 
-      //check if the user already attending this event
-      $eventQuery = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
-      ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
-      ->where("event_ticket.event_id",$result->event_id)->where("event_ticket_users.user_id",$user_id)->count();
-
-      if($eventQuery < 1 && (intval($datetime) > time())){
-        array_push($response_data,$tmp);
-      }
+      array_push($response_data,$tmp);
     }
 
     $payload = ["statusCode" => 200, "data" => $response_data];

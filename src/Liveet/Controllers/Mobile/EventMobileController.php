@@ -451,6 +451,8 @@ class EventMobileController extends BaseController {
     $country_code_clean = substr($country_code, 1);
     $phone_clean = $country_code_clean.$rest_of_phone_number;
     $user_count = $user_db->where('user_phone', $phone_clean)->count();
+    var_dump($user_count);
+    die;
 
     if($user_count < 1)
     {

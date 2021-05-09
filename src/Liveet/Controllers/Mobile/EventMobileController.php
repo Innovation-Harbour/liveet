@@ -408,6 +408,12 @@ class EventMobileController extends BaseController {
     $user_id = $data["user_id"];
     $ticket_id = $data["event_ticket_id"];
 
+    if($db->where("event_ticket_user_id",$ticket_id)->where("status",Constants::EVENT_TICKET_USED)->exists())
+    {
+      $error = ["errorMessage" => "Ticket Already used and can't be Recalled Again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
     $ticket_count = $db->where("event_ticket_user_id",$ticket_id)->count();
 
     if($ticket_count < 1)

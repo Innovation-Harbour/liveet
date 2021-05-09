@@ -164,6 +164,7 @@ class EventMobileController extends BaseController {
   {
     $user_db = new UserModel();
     $ticket_db = new EventTicketUserModel();
+    $event_ticket_db = new EventTicketModel();
     $event_db = new EventModel();
     $invitation_db = new InvitationModel();
 
@@ -175,12 +176,24 @@ class EventMobileController extends BaseController {
     $user_id = $data["user_id"];
     $isFree = $data["is_free"] === "true" ? true : false;
 
+
     //get user details
     $query = $user_db->where("user_id",$user_id);
 
     if (!$query->exists()) {
       $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
 
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    $event_ticket_details = $event_ticket_db->where("event_ticket_id",$ticket_id)->first();
+    $eventCapacity = $event_ticket_details->ticket_population;
+
+    $alreadyRegisteredCount = $ticket_db->where("event_ticket_id",$ticket_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE)->count();
+
+    if($alreadyRegisteredCount >= intval($eventCapacity))
+    {
+      $error = ["errorMessage" => "Event Ticket capacity Filled. Registration Failed", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
 
@@ -194,12 +207,19 @@ class EventMobileController extends BaseController {
 
     if (!$event_query->exists()) {
       $error = ["errorMessage" => "Event Not Found", "statusCode" => 400];
-
       return $this->json->withJsonResponse($response, $error);
     }
 
-    $event_details = $event_db->where("event_id",$event_id)->first();
+    $event_details = $event_db->join('event_control', 'event.event_id', '=', 'event_control.event_id')->where("event.event_id",$event_id)->first();
     $eventCode = $event_details->event_code;
+    $eventStopSaleTime = $event_details->event_sale_stop_time;
+
+    //check if the stop time is not elapsed
+    if(!is_null($eventStopSaleTime) && time() > intval($eventStopSaleTime))
+    {
+      $error = ["errorMessage" => "Event Registration Time Has Elapsed", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
 
     if ($ticket_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->exists()) {
         $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];
@@ -425,6 +445,12 @@ class EventMobileController extends BaseController {
     $user_phone_full = $data["user_phone"];
     $ticket_id = $data["event_ticket_id"];
     $event_id = $data["event_id"];
+
+    if($db->where("event_ticket_user_id",$ticket_id)->where("status",Constants::EVENT_TICKET_USED)->exists())
+    {
+      $error = ["errorMessage" => "Ticket Already used and can't be Transferred Again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
 
     $country_code = substr($user_phone_full, 0, 4);
 

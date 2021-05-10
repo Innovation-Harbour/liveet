@@ -37,6 +37,11 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $mobileEventGroup->post(
+            "/checkpayment",
+            EventMobileController::class . ":doCheckPayment"
+        );
+
+        $mobileEventGroup->post(
             "/doeventtransfer",
             EventMobileController::class . ":DoTicketTransfer"
         );

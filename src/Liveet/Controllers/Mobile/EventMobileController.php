@@ -287,6 +287,117 @@ class EventMobileController extends BaseController {
 
   }
 
+  public function doCheckPayment (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $user_db = new UserModel();
+    $ticket_db = new EventTicketUserModel();
+    $event_ticket_db = new EventTicketModel();
+    $event_db = new EventModel();
+    $invitation_db = new InvitationModel();
+
+    $data = $request->getParsedBody();
+
+
+    $event_id = $data["event_id"];
+    $ticket_id = $data["ticket_id"];
+    $user_id = $data["user_id"];
+
+
+    //get user details
+    $query = $user_db->where("user_id",$user_id);
+
+    if (!$query->exists()) {
+      $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
+
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    $event_ticket_details = $event_ticket_db->where("event_ticket_id",$ticket_id)->first();
+    $eventCapacity = $event_ticket_details->ticket_population;
+    $eventCost = $event_ticket_details->ticket_cost;
+
+    $alreadyRegisteredCount = $ticket_db->where("event_ticket_id",$ticket_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE)->count();
+
+    if($alreadyRegisteredCount >= intval($eventCapacity))
+    {
+      $error = ["errorMessage" => "Event Ticket capacity Filled. Registration Failed", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    $user_details = $user_db->where("user_id",$user_id)->first();
+
+    $user_phone = $user_details->user_phone;
+    $user_email = $user_details->user_email;
+    $user_name = $user_details->user_fullname;
+
+    //get event details
+    $event_query = $event_db->where("event_id",$event_id);
+
+    if (!$event_query->exists()) {
+      $error = ["errorMessage" => "Event Not Found", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    $event_details = $event_db->join('event_control', 'event.event_id', '=', 'event_control.event_id')->where("event.event_id",$event_id)->first();
+    $eventCode = $event_details->event_code;
+    $eventStopSaleTime = $event_details->event_sale_stop_time;
+
+    //check if the stop time is not elapsed
+    if(!is_null($eventStopSaleTime) && time() > intval($eventStopSaleTime))
+    {
+      $error = ["errorMessage" => "Event Registration Time Has Elapsed", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    if ($ticket_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->exists()) {
+        $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];
+        return $this->json->withJsonResponse($response, $error);
+    }
+
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+
+    $flutterwave_public = $_ENV["FLUTTERWAVE_PUBLIC_KEY"];
+    $flutterwave_encryption = $_ENV["FLUTTERWAVE_ENCRYPTION"];
+
+    try{
+      $recognition = new RekognitionClient([
+  		    'region'  => 'us-west-2',
+  		    'version' => 'latest',
+  		    'credentials' => [
+  		        'key'    => $aws_key,
+  		        'secret' => $aws_secret,
+  		    ]
+  		]);
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error connecting to image server. Please try again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    try{
+      $result = $recognition->describeCollection([
+				    'CollectionId' => $eventCode, // REQUIRED
+				]);
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error Registering for Event. Please try again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    $payment_data = [
+      "user_phone" => $user_phone,
+      "user_email" => $user_email,
+      "user_name" => $user_name,
+      "ticket_cost" => $eventCost,
+      "public_key" => $flutterwave_public,
+      "encryption_key" => $flutterwave_encryption,
+    ];
+
+    $payload = ["statusCode" => 200, "data" => $payment_data];
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
   public function getEventFavourites(Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
     //declare needed class objects

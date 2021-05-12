@@ -10,6 +10,7 @@ class PaymentModel extends BaseModel
 
     protected $table = "payment";
     protected $dateFormat = "U";
+    protected $fillable = ["event_ticket_id", "user_id"];
 
     public function user()
     {

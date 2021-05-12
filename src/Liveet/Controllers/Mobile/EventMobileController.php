@@ -4,6 +4,7 @@ namespace Liveet\Controllers\Mobile;
 
 use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
+use Liveet\APIs\TermiiAPI;
 use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\InvitationModel;
 use Liveet\Models\EventTicketModel;
@@ -24,6 +25,7 @@ class EventMobileController extends BaseController {
 
   public function __construct (){
     $this->json = new JSON();
+    $this->termii = new TermiiAPI();
   }
 
   public function GetEvents (Request $request, ResponseInterface $response, array $args): ResponseInterface
@@ -529,11 +531,13 @@ class EventMobileController extends BaseController {
   {
     $db = new EventTicketUserModel();
     $user_db = new UserModel();
+    $event_db = new EventModel();
 
     $data = $request->getParsedBody();
 
     $user_id = $data["user_id"];
     $ticket_id = $data["event_ticket_id"];
+    $event_id = $data["event_id"];
 
     if($db->where("event_ticket_user_id",$ticket_id)->where("status",Constants::EVENT_TICKET_USED)->exists())
     {
@@ -555,7 +559,24 @@ class EventMobileController extends BaseController {
 
     $user_phone = $user_data_clean->user_phone;
 
-    //do SMS Logic here
+    $event_details = $event_db->where("event_id",$event_id)->first();
+
+    $event_name = $event_details->event_name;
+    $event_payment = $user_details->event_payment_type;
+    $is_free = $event_payment === Constants::PAYMENT_TYPE_FREE ? true : false;
+
+    //do SMS Logic
+    if($is_free){
+      $message = "Your Ticket for the event: ".$event_name." has been recalled successfully. No further action required";
+    }
+    else{
+      $message = "Your Ticket for the event: ".$event_name." has been recalled successfully and payment refunds will be made to you within 14 business days.";
+    }
+
+    //send sms
+
+    $send_sms = $this->termii->sendSMS($user_phone, $message);
+
 
     $db->where("event_ticket_user_id", $ticket_id)->update(["ownership_status" => Constants::EVENT_TICKET_RECALLED]);
 

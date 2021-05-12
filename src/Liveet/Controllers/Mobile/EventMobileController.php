@@ -658,6 +658,7 @@ class EventMobileController extends BaseController {
 
     $event_details = $event_db->where("event_id",$event_id)->first();
     $eventCode = $event_details->event_code;
+    $event_name = $event_details->event_name;
 
     $ticket_details = $db->where("event_ticket_user_id",$ticket_id)->first();
     $eventTicketId = $ticket_details->event_ticket_id;
@@ -667,6 +668,8 @@ class EventMobileController extends BaseController {
         return $this->json->withJsonResponse($response, $error);
     }
 
+    $user_details = $user_db->where("user_id",$user_id)->first();
+    $username = $user_details->user_fullname;
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
@@ -726,9 +729,9 @@ class EventMobileController extends BaseController {
       $addTicketUser = $db->createSelf($db_details);
     }
 
-
-
     //do SMS Logic here to inform recipient of the transfer
+    $message = "Ticket for the event: ".$event_name. " was transferred to you by ".$username.". Please go to your history tab on the Liveet App to find details of the event.";
+    $send_sms = $this->termii->sendSMS($phone_clean, $message);
 
     $payload = ["statusCode" => 200, "successMessage" => "Transfer successful"];
     return $this->json->withJsonResponse($response, $payload);

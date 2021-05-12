@@ -56,4 +56,4 @@ isset($mobileGroup) && $mobileGroup->group(
             EventMobileController::class . ":doAttentEvent"
         );
     }
-)->addMiddleware(new AuthenticationMiddleware((new UserModel())));
+);

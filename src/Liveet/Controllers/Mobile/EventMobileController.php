@@ -9,6 +9,7 @@ use Liveet\Models\InvitationModel;
 use Liveet\Models\EventTicketModel;
 use Liveet\Models\UserModel;
 use Liveet\Models\EventModel;
+use Liveet\Models\PaymentModel;
 use Liveet\Models\EventTicketUserModel;
 use Illuminate\Support\Facades\DB;
 use Liveet\Models\Mobile\FavouriteModel;
@@ -165,6 +166,7 @@ class EventMobileController extends BaseController {
     $user_db = new UserModel();
     $ticket_db = new EventTicketUserModel();
     $event_ticket_db = new EventTicketModel();
+    $payment_db = new PaymentModel();
     $event_db = new EventModel();
     $invitation_db = new InvitationModel();
 
@@ -276,6 +278,16 @@ class EventMobileController extends BaseController {
     ];
 
     $addTicketUser = $ticket_db->createSelf($db_details);
+
+    if(!$isFree)
+    {
+      $payment_db_details = [
+        "event_ticket_id" => $ticket_id,
+        "user_id" => $user_id,
+      ];
+
+      $addPaymentDetails = $payment_db->createSelf($payment_db_details);
+    }
 
     if($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists())
     {

@@ -281,12 +281,16 @@ class EventMobileController extends BaseController {
 
     if(!$isFree)
     {
-      $payment_db_details = [
-        "event_ticket_id" => $ticket_id,
-        "user_id" => $user_id,
-      ];
-
-      $addPaymentDetails = $payment_db->createSelf($payment_db_details);
+      try{
+        $payment_db->create([
+            "event_ticket_id" => $ticket_id,
+            "user_id" => $user_id,
+        ]);
+      }
+      catch (\Exception $e){
+        $error = ["errorMessage" => $e->message(), "statusCode" => 400];
+        return $json->withJsonResponse($response, $error);
+      }
     }
 
     if($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists())

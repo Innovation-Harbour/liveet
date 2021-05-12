@@ -50,7 +50,7 @@ isset($mobileGroup) && $mobileGroup->group(
             "/geteventtickets/{event_id}",
             EventMobileController::class . ":GetEventTickets"
         );
-
+        
         $mobileEventGroup->post(
             "/doattendevent",
             EventMobileController::class . ":doAttentEvent"

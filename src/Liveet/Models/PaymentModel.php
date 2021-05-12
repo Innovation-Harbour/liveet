@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PaymentModel extends BaseModel
 {
     use SoftDeletes;
-    
+
     protected $table = "payment";
     protected $dateFormat = "U";
 
@@ -23,6 +23,11 @@ class PaymentModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select("payment_id", "event_ticket_id", "user_id", "payment_desc", "payment_amount", "payment_discount_amount", "created_at", "updated_at");
+        return self::select("payment_id", "event_ticket_id", "user_id", "payment_desc", "created_at", "updated_at");
+    }
+
+    public function createSelf($details, $checks = [])
+    {
+        return Parent::createSelf($details, []);
     }
 }

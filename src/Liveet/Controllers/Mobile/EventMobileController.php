@@ -9,6 +9,7 @@ use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\InvitationModel;
 use Liveet\Models\EventTicketModel;
 use Liveet\Models\UserModel;
+use Liveet\Models\EventAccessModel;
 use Liveet\Models\EventModel;
 use Liveet\Models\PaymentModel;
 use Liveet\Models\EventTicketUserModel;
@@ -478,6 +479,56 @@ class EventMobileController extends BaseController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
+  public function getEventFromAccess(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $user_db = new UserModel();
+    $access_db = new EventAccessModel();
+    $event_db = new EventModel();
+
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $access_code = $data["access_code"];
+
+    $accessDetails = $access_db->join('event_ticket', 'event_access.event_ticket_id', '=', 'event_ticket.event_ticket_id')
+    ->where("event_access.event_access_code",$access_code)->first();
+
+    $event_id = $accessDetails->event_id;
+    $access_user_id = $accessDetails->user_id;
+    $access_status = $accessDetails->event_access_used_status;
+    $access_id = $accessDetails->event_access_id;
+
+    if(!is_null($access_user_id) && $access_user_id !== $user_id)
+    {
+      $error = ["errorMessage" => "Access Token Already Assigned to another User", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    if($access_status === Constants::EVENT_ACCESS_USED)
+    {
+      $error = ["errorMessage" => "Access Token Already Used", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    $event_details_db = $event_db->where("event_id",$access_code)->first();
+    $event_stop_time = $event_details_db->event_date_time;
+
+    if(time() > intval($event_stop_time))
+    {
+      $error = ["errorMessage" => "Event For this Access Code has taken place already", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    //get the Event details
+    $is_free = true;
+    $geteventDetails = $this->getEventDetailsBody($event_id,$is_free);
+
+    $payload = ["statusCode" => 200, "data" => $geteventDetails];
+
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
   public function getUserEventHistory(Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
     //declare needed class objects
@@ -735,6 +786,42 @@ class EventMobileController extends BaseController {
 
     $payload = ["statusCode" => 200, "successMessage" => "Transfer successful"];
     return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function getEventDetailsBody($event_id,$is_free=false){
+    $db = new EventModel();
+    $result = $db->where("event_id",$event_id)->first();
+
+    $datetime = $result->event_date_time;
+    $date = date('d',$datetime);
+    $month = date('M',$datetime);
+    $month_num = date('n',$datetime);
+    $year = date('Y',$datetime);
+
+    $can_invite = false;
+    $event_free = ($result->event_payment_type === Constants::PAYMENT_TYPE_FREE) ? true : false;
+    $isFavourite = false;
+    $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
+
+    $response_data = [
+      "event_id" => intval($result->event_id),
+      "event_image" => $result->event_multimedia,
+      "event_title" => $result->event_name,
+      "event_date" => intval($date),
+      "event_month" => $month,
+      "event_month_num" => intval($month_num),
+      "event_year" => $year,
+      "event_venue" => $result->event_venue,
+      "event_lat" => is_null($result->location_lat) ? 1.111111 : doubleval($result->location_lat),
+      "event_long" => is_null($result->location_long) ? 1.11111 : doubleval($result->location_long),
+      "can_invite" => $can_invite,
+      "is_favourite" => $isFavourite,
+      "is_free" => $is_free ? $is_free : $event_free,
+      "use_map" => $useMap,
+    ];
+
+    return $response_data;
+
   }
 
 }

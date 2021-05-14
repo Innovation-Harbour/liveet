@@ -491,6 +491,12 @@ class EventMobileController extends BaseController {
     $user_id = $data["user_id"];
     $access_code = $data["access_code"];
 
+    if(!$access_db->where("event_access_code",$access_code)->exists())
+    {
+      $error = ["errorMessage" => "Access Code Does not Exist. Please try Check the Access Code and try Again", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
     $accessDetails = $access_db->join('event_ticket', 'event_access.event_ticket_id', '=', 'event_ticket.event_ticket_id')
     ->where("event_access.event_access_code",$access_code)->first();
 

@@ -518,7 +518,7 @@ class EventMobileController extends BaseController {
       return $this->json->withJsonResponse($response, $error);
     }
 
-    if(!is_null($access_user_id) && $access_user_id != $access_user_id)
+    if(!is_null($access_user_id) && $access_user_id != $user_id)
     {
       $error = ["errorMessage" => "Access Token Already Assigned to another User", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);

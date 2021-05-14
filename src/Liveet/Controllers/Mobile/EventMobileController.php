@@ -171,6 +171,7 @@ class EventMobileController extends BaseController {
     $event_ticket_db = new EventTicketModel();
     $payment_db = new PaymentModel();
     $event_db = new EventModel();
+    $access_db = new EventAccessModel();
     $invitation_db = new InvitationModel();
 
     $data = $request->getParsedBody();
@@ -299,6 +300,11 @@ class EventMobileController extends BaseController {
     if($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists())
     {
       $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->update(["event_invitation_status" => Constants::INVITATION_ACCEPT]);
+    }
+
+    if($access_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->exists())
+    {
+      $access_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->update(["event_access_used_status" => Constants::EVENT_ACCESS_USED]);
     }
 
     $payload = ["statusCode" => 200, "successMessage" => "Ticket Registered"];
@@ -484,6 +490,7 @@ class EventMobileController extends BaseController {
     $user_db = new UserModel();
     $access_db = new EventAccessModel();
     $event_db = new EventModel();
+    $invitation_db = new InvitationModel();
 
 
     $data = $request->getParsedBody();
@@ -517,8 +524,18 @@ class EventMobileController extends BaseController {
       return $this->json->withJsonResponse($response, $error);
     }
 
+    if($access_status === Constants::EVENT_ACCESS_USED && $user_id === $access_user_id)
+    {
+      $error = ["errorMessage" => "You have already used this Access Code", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
     $event_details_db = $event_db->where("event_id",$event_id)->first();
     $event_stop_time = $event_details_db->event_date_time;
+    $event_type = $event_details_db->event_type;
+
+    $user_details = $user_db->where("user_id",$user_id)->first();
+    $user_phone = $user_details->user_phone;
 
     if(time() > intval($event_stop_time))
     {
@@ -530,8 +547,19 @@ class EventMobileController extends BaseController {
     $is_free = true;
     $geteventDetails = $this->getEventDetailsBody($event_id,$is_free);
 
-    $payload = ["statusCode" => 200, "data" => $geteventDetails];
 
+
+    $access_db->where("event_access_code", $access_code)->update(["user_id" => $user_id,"event_access_used_status" => Constants::EVENT_ACCESS_ASSIGNED]);
+
+    if(!$invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists() && $event_type === Constants::EVENT_TYPE_PRIVATE)
+    {
+      $invitation_db->create([
+          "event_id" => $event_id,
+          "event_invitee_user_phone" => $user_phone,
+      ]);
+    }
+
+    $payload = ["statusCode" => 200, "data" => $geteventDetails];
     return $this->json->withJsonResponse($response, $payload);
   }
 

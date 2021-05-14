@@ -51,8 +51,8 @@ isset($mobileGroup) && $mobileGroup->group(
             EventMobileController::class . ":getEventFromAccess"
         );
 
-        $mobileEventGroup->get(
-            "/geteventtickets/{event_id}",
+        $mobileEventGroup->post(
+            "/geteventtickets",
             EventMobileController::class . ":GetEventTickets"
         );
 

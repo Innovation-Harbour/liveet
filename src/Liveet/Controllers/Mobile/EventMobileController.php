@@ -513,7 +513,6 @@ class EventMobileController extends BaseController {
     $access_id = $accessDetails->event_access_id;
 
     var_dump($access_user_id,$access_user_id);
-    die;
 
     if(($access_status === Constants::EVENT_ACCESS_USED)  && $user_id === $access_user_id)
     {
@@ -521,7 +520,7 @@ class EventMobileController extends BaseController {
       return $this->json->withJsonResponse($response, $error);
     }
 
-    if(!is_null($access_user_id) && $access_user_id !== $access_user_id)
+    if(!is_null($access_user_id) && $access_user_id != $access_user_id)
     {
       $error = ["errorMessage" => "Access Token Already Assigned to another User", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);

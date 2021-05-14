@@ -496,7 +496,7 @@ class EventMobileController extends BaseController {
     $data = $request->getParsedBody();
 
     $user_id = $data["user_id"];
-    $access_code = $data["access_code"];
+    $access_code = strtoupper($data["access_code"]);
 
     if(!$access_db->where("event_access_code",$access_code)->exists())
     {

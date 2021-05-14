@@ -517,7 +517,7 @@ class EventMobileController extends BaseController {
       return $this->json->withJsonResponse($response, $error);
     }
 
-    $event_details_db = $event_db->where("event_id",$access_code)->first();
+    $event_details_db = $event_db->where("event_id",$event_id)->first();
     $event_stop_time = $event_details_db->event_date_time;
 
     var_dump($event_stop_time);

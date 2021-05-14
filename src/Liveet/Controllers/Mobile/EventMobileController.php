@@ -517,6 +517,7 @@ class EventMobileController extends BaseController {
       $error = ["errorMessage" => "You have already used this Access Code", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
+    
 
     if(!is_null($access_user_id) && $access_user_id != $access_user_id)
     {

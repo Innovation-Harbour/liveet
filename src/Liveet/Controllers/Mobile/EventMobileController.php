@@ -512,8 +512,6 @@ class EventMobileController extends BaseController {
     $access_status = $accessDetails->event_access_used_status;
     $access_id = $accessDetails->event_access_id;
 
-    var_dump($access_user_id,$access_user_id);
-
     if(($access_status === Constants::EVENT_ACCESS_USED)  && $user_id === $access_user_id)
     {
       $error = ["errorMessage" => "You have already used this Access Code", "statusCode" => 400];

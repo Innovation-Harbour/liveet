@@ -520,6 +520,10 @@ class EventMobileController extends BaseController {
     $event_details_db = $event_db->where("event_id",$access_code)->first();
     $event_stop_time = $event_details_db->event_date_time;
 
+    var_dump($event_stop_time);
+    var_dump(time());
+    die;
+
     if(time() > intval($event_stop_time))
     {
       $error = ["errorMessage" => "Event For this Access Code has taken place already", "statusCode" => 400];

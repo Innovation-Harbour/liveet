@@ -26,9 +26,4 @@ class PaymentModel extends BaseModel
     {
         return self::select("payment_id", "event_ticket_id", "user_id", "payment_desc", "created_at", "updated_at");
     }
-
-    public function createSelf($details, $checks = [])
-    {
-        return Parent::createSelf($details, []);
-    }
 }

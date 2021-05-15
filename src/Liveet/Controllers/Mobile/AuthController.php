@@ -482,7 +482,7 @@ class AuthController extends BaseController {
       return $json->withJsonResponse($response, $error);
     }
 
-    if(!$user_db->where("user_id",$user)->exists()){
+    if(!$user_db->where("user_id",$user_id)->exists()){
       $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }

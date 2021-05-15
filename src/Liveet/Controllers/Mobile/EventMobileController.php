@@ -128,14 +128,18 @@ class EventMobileController extends BaseController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
-  public function GetEventTickets (Request $request, ResponseInterface $response, array $args): ResponseInterface
+  public function GetEventTickets (Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
     $db = new EventTicketModel();
+    $access_db = new EventAccessModel();
 
     $response_data = [];
 
-    $event_id = $args["event_id"];
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $event_id = $data["event_id"];
 
     $results = $db->where("event_id",$event_id)->get();
 
@@ -144,6 +148,11 @@ class EventMobileController extends BaseController {
       $ticket_cost = intval($result->ticket_cost);
       $ticket_discount = intval($result->ticket_discount);
       $new_ticket_price = $ticket_cost - (($ticket_discount * $ticket_cost)/100);
+
+      if($access_db->where("event_ticket_id", $result->event_ticket_id)->where("user_id", $user_id)->exists())
+      {
+        $new_ticket_price = 0;
+      }
 
       $readable_ticket_discount = $ticket_discount."%";
 
@@ -543,9 +552,7 @@ class EventMobileController extends BaseController {
       return $this->json->withJsonResponse($response, $error);
     }
 
-    //get the Event details
-    $is_free = true;
-    $geteventDetails = $this->getEventDetailsBody($event_id,$is_free);
+    $geteventDetails = $this->getEventDetailsBody($event_id);
 
 
 
@@ -822,7 +829,7 @@ class EventMobileController extends BaseController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
-  public function getEventDetailsBody($event_id,$is_free=false){
+  public function getEventDetailsBody($event_id){
     $db = new EventModel();
     $result = $db->where("event_id",$event_id)->first();
 
@@ -850,7 +857,7 @@ class EventMobileController extends BaseController {
       "event_long" => is_null($result->location_long) ? 1.11111 : doubleval($result->location_long),
       "can_invite" => $can_invite,
       "is_favourite" => $isFavourite,
-      "is_free" => $is_free ? $is_free : $event_free,
+      "is_free" => $event_free,
       "use_map" => $useMap,
     ];
 

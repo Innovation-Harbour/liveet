@@ -570,6 +570,38 @@ class EventMobileController extends BaseController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
+  public function getEventMetrics(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $ticket_db = new EventTicketUserModel();
+    $favourite_db = new FavouriteModel();
+    $invitation_db = new InvitationModel();
+
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+
+    $user_details = $user_db->where("user_id",$user_id)->first();
+    $user_phone = $user_details->user_phone;
+
+    $invitation_count = 0;
+    $history_count = 0;
+    $favourite_count = 0;
+
+    $history_count = $ticket_db->where("user_id",$user_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE)->count();
+    $invitation_count = $invitation_db->where("event_invitee_user_phone",$user_phone)->where("event_invitation_status", '!=' , Constants::INVITATION_DECLINED)->count();
+    $favourite_count = $favourite_db->where("user_id",$user_id)->count();
+
+    $response_data = [
+      "invitation_count" => $invitation_count,
+      "history_count" => $history_count,
+      "favourite_count" => $favourite_count,
+    ];
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
   public function getUserEventHistory(Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
     //declare needed class objects

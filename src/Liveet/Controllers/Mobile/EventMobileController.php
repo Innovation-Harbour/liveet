@@ -584,6 +584,9 @@ class EventMobileController extends BaseController {
     $user_details = $user_db->where("user_id",$user_id)->first();
     $user_phone = $user_details->user_phone;
 
+    var_dump($user_phone);
+    die;
+
     $invitation_count = 0;
     $history_count = 0;
     $favourite_count = 0;

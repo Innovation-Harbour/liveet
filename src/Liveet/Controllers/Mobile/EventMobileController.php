@@ -575,6 +575,7 @@ class EventMobileController extends BaseController {
     $ticket_db = new EventTicketUserModel();
     $favourite_db = new FavouriteModel();
     $invitation_db = new InvitationModel();
+    $user_db = new UserModel();
 
 
     $data = $request->getParsedBody();
@@ -584,15 +585,12 @@ class EventMobileController extends BaseController {
     $user_details = $user_db->where("user_id",$user_id)->first();
     $user_phone = $user_details->user_phone;
 
-    var_dump($user_phone);
-    die;
-
     $invitation_count = 0;
     $history_count = 0;
     $favourite_count = 0;
 
     $history_count = $ticket_db->where("user_id",$user_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE)->count();
-    //$invitation_count = $invitation_db->where("event_invitee_user_phone",$user_phone)->where("event_invitation_status", '!=' , Constants::INVITATION_DECLINED)->count();
+    $invitation_count = $invitation_db->where("event_invitee_user_phone",$user_phone)->where("event_invitation_status", '!=' , Constants::INVITATION_DECLINED)->count();
     $favourite_count = $favourite_db->where("user_id",$user_id)->count();
 
     $response_data = [

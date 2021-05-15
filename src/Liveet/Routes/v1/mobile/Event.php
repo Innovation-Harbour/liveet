@@ -57,6 +57,11 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $mobileEventGroup->post(
+            "/geteventmetrics",
+            EventMobileController::class . ":getEventMetrics"
+        );
+
+        $mobileEventGroup->post(
             "/doattendevent",
             EventMobileController::class . ":doAttentEvent"
         );

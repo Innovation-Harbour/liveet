@@ -40,6 +40,16 @@ isset($mobileGroup) && $mobileGroup->group(
             AuthController::class . ":Login"
         );
 
+        $authGroup->post(
+            "/changeusername",
+            AuthController::class . ":changeUsername"
+        );
+
+        $authGroup->post(
+            "/changepassword",
+            AuthController::class . ":changePassword"
+        );
+
         $authGroup->get(
             "/testaws",
             AuthController::class . ":AWSAddEvent"

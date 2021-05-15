@@ -436,4 +436,80 @@ class AuthController extends BaseController {
 
   }
 
+  public function changeUsername(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $json = new JSON();
+    $user_db = new UserModel();
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $username = $data["username"];
+
+    if(strlen($username) < 2)
+    {
+      $error = ["errorMessage" => "Username Empty or too short", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    if(!$user_db->where("user_id",$user_id)->exists()){
+      $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    $user_db->where("user_id",$user_id)->update(["user_fullname" => $username]);
+
+    $payload = ["statusCode" => 200, "successMessage" => "Username Changed Successfully"];
+    return $json->withJsonResponse($response, $payload);
+  }
+
+  public function changePassword(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $json = new JSON();
+    $user_db = new UserModel();
+
+    $data = $request->getParsedBody();
+
+    $oldpassword = $data["old_password"];
+    $newpassword = $data["new_password"];
+    $user_id = $data["user_id"];
+
+    if(strlen($newpassword) < 2)
+    {
+      $error = ["errorMessage" => "New Password Empty or too short", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    if(!$user_db->where("user_id",$user)->exists()){
+      $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    if($oldpassword === $newpassword)
+    {
+      $error = ["errorMessage" => "New Password same as old password. Please change and try Again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    $user_details = $user_db->where("user_id",$user_id)->first();
+    $db_password = $user_details->user_password;
+
+    $oldpasswordHash = hash('sha256', $oldpassword);
+
+    if($oldpasswordHash !== $db_password)
+    {
+      $error = ["errorMessage" => "Password Incorrect. Please try Again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    $newpasswordHash = hash('sha256', $newpassword);
+
+    $user_db->where("user_id",$user_id)->update(["user_password" => $newpasswordHash]);
+
+    $payload = ["statusCode" => 200, "successMessage" => "Password Changed Successfully"];
+    return $json->withJsonResponse($response, $payload);
+  }
+
 }

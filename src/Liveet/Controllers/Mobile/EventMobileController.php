@@ -594,9 +594,9 @@ class EventMobileController extends BaseController {
     $favourite_count = $favourite_db->where("user_id",$user_id)->count();
 
     $response_data = [
-      "invitation_count" => $invitation_count,
-      "history_count" => $history_count,
-      "favourite_count" => $favourite_count,
+      "invitation_count" => intval($invitation_count),
+      "history_count" => intval($history_count),
+      "favourite_count" => intval($favourite_count),
     ];
 
     $payload = ["statusCode" => 200, "data" => $response_data];

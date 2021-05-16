@@ -683,6 +683,7 @@ class EventMobileController extends BaseController {
       //process Phone Number
       if(((strlen($stripped_phone) === 13 && (substr($stripped_phone, 0, 3) === "234")) || (strlen($stripped_phone) === 11 && in_array(substr($stripped_phone, 0, 2), $eligible_phone_starting))) && $invitation_count > 0)
       {
+        var_dump($stripped_phone);
         if(strlen($stripped_phone) === 11)
         {
           $stripped_phone = substr($stripped_phone, 1);

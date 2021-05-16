@@ -651,10 +651,7 @@ class EventMobileController extends BaseController {
     $event_id = $data["event_id"];
     $phones = $data["phones"];
 
-    $error = ["errorMessage" => "This are the phones ".$phones." that was found", "statusCode" => 400];
-    return $this->json->withJsonResponse($response, $error);
-
-    /*$user_db->where("user_id",$user_id)->update(["user_picture" => $phones]);
+    $user_db->where("user_id",$user_id)->update(["user_picture" => $phones]);
 
 
     $response_data = [
@@ -663,7 +660,7 @@ class EventMobileController extends BaseController {
     ];
 
     $payload = ["statusCode" => 200, "data" => $response_data];
-    return $this->json->withJsonResponse($response, $payload);*/
+    return $this->json->withJsonResponse($response, $payload);
   }
 
   public function getUserEventHistory(Request $request, ResponseInterface $response, array $args): ResponseInterface

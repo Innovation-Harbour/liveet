@@ -654,6 +654,11 @@ class EventMobileController extends BaseController {
     $phones = substr($phones, 0, -1);
     $phones = substr($phones, 1);
 
+    $all_phone = explode(",",$phones);
+
+    var_dump($all_phone);
+    die;
+
     $user_db->where("user_id",$user_id)->update(["user_picture" => $phones]);
 
 

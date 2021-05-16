@@ -662,13 +662,20 @@ class EventMobileController extends BaseController {
 
     $all_phones = explode(",",$phones);
 
+    $user_details = $user_db->where("user_id",$user_id)->first();
+    $user_name = $user_details->user_fullname;
+    $inviter_phone = $user_details->user_phone;
+
+    $control_details = $control_db->where("event_id",$event_id)->first();
+    $can_invite = $control_details->event_can_invite;
+
+    $event_details = $event_db->where("event_id",$event_id)->first();
+    $event_name = $event_details->event_name;
+
+
     foreach($all_phones as $phone){
       $first_strip= preg_replace('/[^a-zA-Z0-9-_\.]/','', trim($phone));
       $stripped_phone = preg_replace('/-/','', trim($first_strip));
-
-      $user_details = $user_db->where("user_id",$user_id)->first();
-      $user_name = $user_details->user_fullname;
-      $inviter_phone = $user_details->user_phone;
 
       $invitation_details = $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$inviter_phone)->first();
       $invitation_count = $invitation_details->invitee_can_invite_count;
@@ -692,9 +699,6 @@ class EventMobileController extends BaseController {
               "event_inviter_user_id" => $user_id,
           ]);
 
-          $control_details = $control_db->where("event_id",$event_id)->first();
-          $can_invite = $control_details->event_can_invite;
-
           if($can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED){
             //Decrease Inviters number of invite
             $can_invite = $can_invite - 1;
@@ -705,9 +709,6 @@ class EventMobileController extends BaseController {
           //check if user exists with that Number
           if(!$user_db->where("user_phone",$clean_phone)->exists())
           {
-            $event_details = $event_db->where("event_id",$event_id)->first();
-            $event_name = $event_details->event_name;
-
             $appDownloadLink = Constants::MOBILE_APP_DOWNLOAD_URL;
 
             $sms_message = "You have been invited to the event:".$event_name." by ".$user_name.". Please download the Liveet app at ".$appDownloadLink." to confirm your attendance";

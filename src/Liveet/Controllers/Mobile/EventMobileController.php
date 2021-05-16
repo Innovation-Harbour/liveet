@@ -644,6 +644,12 @@ class EventMobileController extends BaseController {
     $event_db = new EventModel();
     $invitation_db = new InvitationModel();
     $user_db = new UserModel();
+    $control_db = new EventControlModel();
+
+    $eligible_phone_starting = array("06","07","08","09");
+
+    $sent_counter = 0;
+    $failed_counter = 0;
 
     $data = $request->getParsedBody();
 
@@ -656,26 +662,69 @@ class EventMobileController extends BaseController {
 
     $all_phones = explode(",",$phones);
 
-    $clean_phone = [];
-
     foreach($all_phones as $phone){
       $first_strip= preg_replace('/[^a-zA-Z0-9-_\.]/','', trim($phone));
       $stripped_phone = preg_replace('/-/','', trim($first_strip));
-      var_dump($stripped_phone);
+
+      $user_details = $user_db->where("user_id",$user_id)->first();
+      $user_name = $user_details->user_fullname;
+      $inviter_phone = $user_details->user_phone;
+
+      $invitation_details = $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$inviter_phone)->first();
+      $invitation_count = $invitation_details->invitee_can_invite_count;
+
+      //process Phone Number
+      if(((strlen($stripped_phone) === 13 && (substr($stripped_phone, 0, 3) === "234")) || (strlen($stripped_phone) === 11 && in_array(substr($stripped_phone, 0, 2), $eligible_phone_starting))) && $invitation_count > 0)
+      {
+        if(strlen($stripped_phone) === 11)
+        {
+          $stripped_phone = substr($stripped_phone, 1);
+          $stripped_phone = "234".$stripped_phone;
+        }
+
+        $clean_phone = $stripped_phone;
+
+        if(!$invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$clean_phone)->exists()){
+          //add invitation to DB
+          $invitation_db->create([
+              "event_id" => $event_id,
+              "event_invitee_user_phone" => $user_phone,
+              "event_inviter_user_id" => $user_id,
+          ]);
+
+          $control_details = $control_db->where("event_id",$event_id)->first();
+          $can_invite = $control_details->event_can_invite;
+
+          if($can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED){
+            //Decrease Inviters number of invite
+            $can_invite = $can_invite - 1;
+
+            $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$inviter_phone)->update(["invitee_can_invite_count" => $can_invite]);
+          }
+
+          //check if user exists with that Number
+          if(!$user_db->where("user_phone",$clean_phone)->exists())
+          {
+            $event_details = $event_db->where("event_id",$event_id)->first();
+            $event_name = $event_details->event_name;
+
+            $appDownloadLink = Constants::MOBILE_APP_DOWNLOAD_URL;
+
+            $sms_message = "You have been invited to the event:".$event_name." by ".$user_name.". Please download the Liveet app at ".$appDownloadLink." to confirm your attendance";
+            $send_sms = $this->termii->sendSMS($clean_phone, $sms_message);
+          }
+        }
+
+        $sent_counter++;
+      }
+      else{
+        $failed_counter++;
+      }
     }
 
-    var_dump($all_phones);
-    die;
+    $response_message = "Invitation Complete. ".$sent_counter." invitations sent & ".$failed_counter." Failed. You can check the status of your invitations Here";
 
-    $user_db->where("user_id",$user_id)->update(["user_picture" => $phones]);
-
-
-    $response_data = [
-      "isRestricted" => "Done",
-      "numInvitees" => "Done",
-    ];
-
-    $payload = ["statusCode" => 200, "data" => $response_data];
+    $payload = ["statusCode" => 200, "successMessage" => $response_message];
     return $this->json->withJsonResponse($response, $payload);
   }
 

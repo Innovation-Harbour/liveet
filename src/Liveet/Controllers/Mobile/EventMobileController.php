@@ -659,7 +659,7 @@ class EventMobileController extends BaseController {
     $clean_phone = [];
 
     foreach($all_phones as $phone){
-      $stripped_phone = preg_replace('/[^a-zA-Z0-9-_\.]/','', $phone);
+      $stripped_phone = preg_replace('-','', $phone);
       var_dump($stripped_phone);
     }
 

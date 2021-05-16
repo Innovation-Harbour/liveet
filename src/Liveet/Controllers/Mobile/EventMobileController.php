@@ -654,9 +654,16 @@ class EventMobileController extends BaseController {
     $phones = substr($phones, 0, -1);
     $phones = substr($phones, 1);
 
-    $all_phone = explode(",",$phones);
+    $all_phones = explode(",",$phones);
 
-    var_dump($all_phone);
+    $clean_phone = [];
+
+    foreach($all_phone as $phone){
+      $phone = preg_replace('/[^A-Za-z0-9\-]/', '', $phone);
+      array_push($clean_phone,$phone);
+    }
+
+    var_dump($clean_phone);
     die;
 
     $user_db->where("user_id",$user_id)->update(["user_picture" => $phones]);

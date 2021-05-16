@@ -651,6 +651,9 @@ class EventMobileController extends BaseController {
     $event_id = $data["event_id"];
     $phones = $data["phones"];
 
+    var_dump($user_id,$event_id,$phones);
+    die;
+
     $error = ["errorMessage" => "This are the phones ".$phones." that was found", "statusCode" => 400];
     return $this->json->withJsonResponse($response, $error);
 

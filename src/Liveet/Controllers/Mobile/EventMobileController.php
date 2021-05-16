@@ -11,6 +11,7 @@ use Liveet\Models\EventTicketModel;
 use Liveet\Models\UserModel;
 use Liveet\Models\EventAccessModel;
 use Liveet\Models\EventModel;
+use Liveet\Models\EventControlModel;
 use Liveet\Models\PaymentModel;
 use Liveet\Models\EventTicketUserModel;
 use Illuminate\Support\Facades\DB;
@@ -593,6 +594,45 @@ class EventMobileController extends BaseController {
     $response_data = [
       "invitation_count" => intval($invitation_count),
       "history_count" => intval($history_count),
+    ];
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function getNumInvitations(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $event_db = new EventModel();
+    $invitation_db = new InvitationModel();
+    $user_db = new UserModel();
+    $control_db = new EventControlModel();
+
+    $isRestricted = false;
+    $numInvitees = 0;
+
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $event_id = $data["event_id"];
+
+    $control_details = $control_db->where("event_id",$event_id)->first();
+    $can_invite = $control_details->event_can_invite;
+
+    if($can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED){
+      $user_details = $user_db->where("user_id",$user_id)->first();
+      $user_phone = $user_details->user_phone;
+
+      $invitation_details = $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$user_phone)->first();
+      $inviteCount = $invitation_details->invitee_can_invite_count;
+
+      $isRestricted = true;
+      $numInvitees = $inviteCount;
+    }
+
+    $response_data = [
+      "isRestricted" => $isRestricted,
+      "numInvitees" => $numInvitees,
     ];
 
     $payload = ["statusCode" => 200, "data" => $response_data];

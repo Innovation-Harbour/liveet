@@ -639,6 +639,30 @@ class EventMobileController extends BaseController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
+  public function sendInvitations(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $event_db = new EventModel();
+    $invitation_db = new InvitationModel();
+    $user_db = new UserModel();
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $event_id = $data["event_id"];
+    $phones = $data["phones"];
+
+    $user_db->where("user_id",$user_id)->update(["user_picture" => $phones]);
+
+
+    $response_data = [
+      "isRestricted" => "Done",
+      "numInvitees" => "Done",
+    ];
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
   public function getUserEventHistory(Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
     //declare needed class objects

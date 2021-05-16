@@ -67,6 +67,16 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $mobileEventGroup->post(
+            "/getuserinvitations",
+            EventMobileController::class . ":getUserInvitations"
+        );
+
+        $mobileEventGroup->post(
+            "/getinvitationdetails",
+            EventMobileController::class . ":getInvitationDetails"
+        );
+
+        $mobileEventGroup->post(
             "/sendinvitation",
             EventMobileController::class . ":sendInvitations"
         );

@@ -702,9 +702,9 @@ class EventMobileController extends BaseController {
 
           if($can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED){
             //Decrease Inviters number of invite
-            $can_invite = $can_invite - 1;
+            $invitation_count--;
 
-            $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$inviter_phone)->update(["invitee_can_invite_count" => $can_invite]);
+            $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$inviter_phone)->update(["invitee_can_invite_count" => $invitation_count]);
           }
 
           //check if user exists with that Number

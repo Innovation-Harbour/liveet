@@ -656,10 +656,16 @@ class EventMobileController extends BaseController {
 
     $all_phones = explode(",",$phones);
 
+    $patterns = array();
+    $patterns[0] = '/(/';
+    $patterns[1] = '/)/';
+    $patterns[2] = '/-/';
+    $patterns[3] = '/+/';
+
     $clean_phone = [];
 
     foreach($all_phones as $phone){
-      $stripped_phone = preg_replace('/-)(/','', trim($phone));
+      $stripped_phone = preg_replace($patterns,'', trim($phone));
       var_dump($stripped_phone);
     }
 

@@ -683,7 +683,6 @@ class EventMobileController extends BaseController {
       //process Phone Number
       if(((strlen($stripped_phone) === 13 && (substr($stripped_phone, 0, 3) === "234")) || (strlen($stripped_phone) === 11 && in_array(substr($stripped_phone, 0, 2), $eligible_phone_starting))) && $invitation_count > 0)
       {
-        var_dump($stripped_phone);
         if(strlen($stripped_phone) === 11)
         {
           $country_code = "234";
@@ -691,16 +690,13 @@ class EventMobileController extends BaseController {
           $stripped_phone = $country_code.$stripped_phone;
         }
 
-        var_dump("I am here 1");
-        
         $clean_phone = $stripped_phone;
 
         if(!$invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$clean_phone)->exists()){
-          var_dump("I am here 2");
           //add invitation to DB
           $invitation_db->create([
               "event_id" => $event_id,
-              "event_invitee_user_phone" => $user_phone,
+              "event_invitee_user_phone" => $clean_phone,
               "event_inviter_user_id" => $user_id,
           ]);
 

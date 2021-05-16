@@ -651,6 +651,8 @@ class EventMobileController extends BaseController {
     $event_id = $data["event_id"];
     $phones = $data["phones"];
 
+    $phones = preg_replace('/[^a-zA-Z0-9-_\.]/','', $phones);
+
     $user_db->where("user_id",$user_id)->update(["user_picture" => $phones]);
 
 

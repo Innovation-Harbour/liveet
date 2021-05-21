@@ -256,7 +256,9 @@ class BaseController
         }
 
         $imagePrefix = isset($imageOption["imagePrefix"]) ? $imageOption["imagePrefix"] . " - " : "";
-        $imageName = $imagePrefix . (new DateTime())->getTimeStamp();
+
+        $imageName = bin2hex(random_bytes(8));
+        $imageName .= $imagePrefix . (new DateTime())->getTimeStamp();
 
         $imageExtType = $this->getFileTypeOfBase64($image);
         if (!in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
@@ -351,6 +353,7 @@ class BaseController
         $outputs = [];
 
         // handle single input with multiple file uploads
+        $i = 0;
         foreach ($uploadedFiles as $uploadedFileName => $uploadedFile) {
             if (gettype($uploadedFile) == "object") {
                 $this->uploadFile(

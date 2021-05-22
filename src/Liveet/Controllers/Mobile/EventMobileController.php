@@ -645,29 +645,45 @@ class EventMobileController extends BaseController {
 
     $data = $request->getParsedBody();
 
-    $user_id = $data["user_id"];
-    $event_id = $data["event_id"];
+    $invitation_id = $data["invitation_id"];
+
+    $invitation_db->where("event_invitation_id",$invitation_id)->update(["event_invitation_status" => Constants::INVITATION_DECLINED ]);
+
+    $payload = ["statusCode" => 200, "successMessage" => "Event Declined"];
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function deleteInvitation(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $invitation_db = new InvitationModel();
+    $user_db = new UserModel();
+    $control_db = new EventControlModel();
+
+    $data = $request->getParsedBody();
+
+    $invitation_id = $data["invitation_id"];
+
+    //get invitation details
+
+    $invitation_details = $invitation_db->where("event_invitation_id",$invitation_id)->first();
+    $event_id = $invitation_details->event_id;
+    $user_id = $invitation_details->event_inviter_user_id;
+    $invite_count  = $invitation_details->invitee_can_invite_count;
+
+    $user_details = $user_db->where("user_id",$user_id)->first();
+    $inviter_phone = $user_details->user_phone;
 
     $control_details = $control_db->where("event_id",$event_id)->first();
     $can_invite = $control_details->event_can_invite;
 
+    $invitation_db->where("event_invitation_id",$invitation_id)->forceDelete();
+
     if($can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED){
-      $user_details = $user_db->where("user_id",$user_id)->first();
-      $user_phone = $user_details->user_phone;
-
-      $invitation_details = $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$user_phone)->first();
-      $inviteCount = $invitation_details->invitee_can_invite_count;
-
-      $isRestricted = true;
-      $numInvitees = $inviteCount;
+      $invite_count = $invite_count + 1;
+      $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$inviter_phone)->update(["invitee_can_invite_count" => $invite_count]);
     }
 
-    $response_data = [
-      "isRestricted" => $isRestricted,
-      "numInvitees" => $numInvitees,
-    ];
-
-    $payload = ["statusCode" => 200, "data" => $response_data];
+    $payload = ["statusCode" => 200, "successMessage" => "Event Deleted"];
     return $this->json->withJsonResponse($response, $payload);
   }
 

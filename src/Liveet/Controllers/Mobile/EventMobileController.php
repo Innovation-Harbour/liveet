@@ -82,7 +82,7 @@ class EventMobileController extends BaseController {
       ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
       ->where("event_ticket.event_id",$result->event_id)->where("event_ticket_users.user_id",$user_id)->count();
 
-      if($eventQuery < 1 && (intval($datetime) > time())){
+      if($eventQuery < 1 && (intval($datetime) > time()) && ($result->event_invitation_status !== null && $result->event_invitation_status === Constants::INVITATION_PENDING)){
         array_push($response_data,$tmp);
       }
 

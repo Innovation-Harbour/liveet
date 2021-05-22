@@ -913,6 +913,54 @@ class EventMobileController extends BaseController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
+  public function getInvitationDetails(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $invitation_db = new InvitationModel();
+    $user_db = new UserModel();
+
+
+    $response_data = [];
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $event_id = $data["event_id"];
+    $offset = $data["offset"];
+    $limit = $data["limit"];
+
+    $results = $invitation_db->where("event_id",$event_id)->where("event_inviter_user_id",$user_id)->offset($offset)->limit($limit)->get();
+
+    foreach($results as $result)
+    {
+      $user_phone = $result->event_invitee_user_phone;
+
+      $userCount = $user_db->where("user_phone",$user_phone)->count();
+
+      if($userCount > 0){
+        $user_details = $user_db->where("user_phone",$user_phone)->first();
+        $user_pics = $user_details->user_picture;
+        $user_name = $user_details->user_fullname;
+      }
+
+      $tmp = [
+        "invitation_id" => intval($result->event_invitation_id),
+        "invitee_name" => ($userCount > 0) ? $user_name : $user_phone,
+        "invitee_number" => $user_phone,
+        "invitee_pics" => ($userCount > 0) ? $user_pics : null,
+        "invitee_shortname" => ($userCount > 0) ? "NN" : "",
+        "invitee_status" => strtolower($result->event_invitation_status),
+        "can_close" => ($result->event_invitation_status === Constants::INVITATION_ACCEPT) ? false : true,
+      ];
+
+      array_push($response_data,$tmp);
+    }
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
   public function getUserEventHistory(Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
     //declare needed class objects

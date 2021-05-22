@@ -639,6 +639,38 @@ class EventMobileController extends BaseController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
+  public function declineInvitation(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $invitation_db = new InvitationModel();
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $event_id = $data["event_id"];
+
+    $control_details = $control_db->where("event_id",$event_id)->first();
+    $can_invite = $control_details->event_can_invite;
+
+    if($can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED){
+      $user_details = $user_db->where("user_id",$user_id)->first();
+      $user_phone = $user_details->user_phone;
+
+      $invitation_details = $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$user_phone)->first();
+      $inviteCount = $invitation_details->invitee_can_invite_count;
+
+      $isRestricted = true;
+      $numInvitees = $inviteCount;
+    }
+
+    $response_data = [
+      "isRestricted" => $isRestricted,
+      "numInvitees" => $numInvitees,
+    ];
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
   public function sendInvitations(Request $request, ResponseInterface $response): ResponseInterface
   {
     $event_db = new EventModel();
@@ -787,6 +819,7 @@ class EventMobileController extends BaseController {
       $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
 
       $tmp = [
+        "invitation_id" => intval($result->event_invitation_id),
         "event_id" => intval($result->event_id),
         "event_image" => $result->event_multimedia,
         "event_title" => $result->event_name,
@@ -834,6 +867,7 @@ class EventMobileController extends BaseController {
       $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
 
       $tmp = [
+        "invitation_id" => intval($result->event_invitation_id),
         "event_id" => intval($result->event_id),
         "event_image" => $result->event_multimedia,
         "event_title" => $result->event_name,

@@ -749,7 +749,7 @@ class EventMobileController extends BaseController {
     $user_pics = $user_details->user_picture;
 
     $distinct_result = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_inviter_user_id",$user_id)
-    ->where("event_invitation_status",Constants::INVITATION_PENDING)->unique("event_id")->get();
+    ->where("event_invitation_status",Constants::INVITATION_PENDING)->get();
 
     var_dump($distinct_result);
     die;

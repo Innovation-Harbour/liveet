@@ -970,6 +970,8 @@ class EventMobileController extends BaseController {
   {
     //declare needed class objects
     $db = new EventTicketModel();
+    $invitation_db = new InvitationModel();
+    $user_db = new UserModel();
 
 
     $response_data = [];
@@ -978,10 +980,13 @@ class EventMobileController extends BaseController {
     $offset = $args["offset"];
     $limit = $args["limit"];
 
+    $user_details = $user_db->where("user_id",$user_id)->first();
+    $user_phone = $user_details->user_phone;
+
     $results = $db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
     ->leftJoin('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
     ->leftJoin('event_control', 'event_ticket.event_id', '=', 'event_control.event_id')
-    ->select('event_ticket_users.event_ticket_user_id','event.event_id','event.event_multimedia','event.event_name','event.event_date_time','event_control.event_can_recall','event_control.event_can_transfer_ticket')
+    ->select('event_ticket_users.event_ticket_user_id','event.event_id','event.event_multimedia','event.event_venue','event.location_lat','event.location_long','event.event_name','event.event_date_time','event_control.event_can_recall','event_control.event_can_invite','event_control.event_can_transfer_ticket')
     ->where("event_ticket_users.user_id",$user_id)->where("event_ticket_users.ownership_status",Constants::EVENT_TICKET_ACTIVE)
     ->offset($offset)->limit($limit)->get();
 
@@ -992,8 +997,18 @@ class EventMobileController extends BaseController {
       $month = date('M',$datetime);
       $year = date('Y',$datetime);
 
+      if($result->event_can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED)
+      {
+        $invitation_details = $invitation_db->where("event_id",$result->event_id)->where("event_invitee_user_phone",$user_phone)->first();
+        $can_invite_count = $invitation_details->invitee_can_invite_count;
+      }
+
+      $can_invite = ($result->event_can_invite === "CAN_INVITE" || ($result->event_can_invite === "CAN_INVITE_RESTRICTED" && $can_invite_count > 0)) ? true : false;
+
       $can_recall = ($result->event_can_recall == Constants::EVENT_CAN_RECALL_TICKET) ? true : false;
       $can_transfer = ($result->event_can_transfer_ticket == Constants::EVENT_CAN_TRANSFER_TICKET) ? true : false;
+
+      $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
 
       $tmp = [
         "event_ticket_user_id" => intval($result->event_ticket_user_id),
@@ -1005,6 +1020,11 @@ class EventMobileController extends BaseController {
         "event_year" => $year,
         "can_recall" => $can_recall,
         "can_transfer" => $can_transfer,
+        "event_lat" => is_null($result->location_lat) ? 1.111111 : doubleval($result->location_lat),
+        "event_long" => is_null($result->location_long) ? 1.11111 : doubleval($result->location_long),
+        "can_invite" => $can_invite,
+        "use_map" => $useMap,
+        "event_venue" => $result->event_venue,
       ];
 
       array_push($response_data,$tmp);

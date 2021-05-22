@@ -748,16 +748,10 @@ class EventMobileController extends BaseController {
     $user_phone_number = $user_details->user_phone;
     $user_pics = $user_details->user_picture;
 
-    $distinct_result = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_inviter_user_id",$user_id)
-    ->where("event_invitation_status",Constants::INVITATION_PENDING)->distinct("event_invitation.event_id")->count();
+    // get invitations invited for
+    $invited_for_results = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_invitee_user_phone", $user_phone_number)->where("event_invitation_status",Constants::INVITATION_PENDING)->get();
 
-    var_dump($distinct_result);
-    die;
-
-    $results = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_inviter_user_id",$user_id)
-    ->orWhere("event_invitee_user_phone", $user_phone_number)->where("event_invitation_status",Constants::INVITATION_PENDING)->get();
-
-    foreach($results as $result)
+    foreach($invited_for_results as $result)
     {
       $datetime = $result->event_date_time;
       $date = date('d',$datetime);
@@ -766,7 +760,6 @@ class EventMobileController extends BaseController {
       $year = date('Y',$datetime);
 
       $favourite_count = $favourite_db->where("event_id",$result->event_id)->where("user_id",$user_id)->count();
-      $invitee_count = $invitation_db->where("event_id",$result->event_id)->where("event_inviter_user_id",$user_id)->count();
 
       //get user details per result
       if($result->event_inviter_user_id !== null){
@@ -782,12 +775,7 @@ class EventMobileController extends BaseController {
       $invited_by_name = "Admin";
       $invited_by_pics = "https://s3.amazonaws.com/livvi.media/user.png";
 
-      if($result->event_inviter_user_id == $user_id){
-        $invited_by_name = "Me";
-        $invited_by_pics = $user_pics;
-      }
-
-      if($result->event_inviter_user_id !== null && $result->event_inviter_user_id != $user_id){
+      if($result->event_inviter_user_id !== null){
         $invited_by_name = $result_first_name;
         $invited_by_pics = $result_userpics;
       }
@@ -813,8 +801,55 @@ class EventMobileController extends BaseController {
         "is_favourite" => $isFavourite,
         "is_free" => $is_free,
         "use_map" => $useMap,
-        "invited_by_me" => ($result->event_inviter_user_id == $user_id) ? true : false,
-        "invitee_count" => ($result->event_inviter_user_id == $user_id) ? $invitee_count : 0,
+        "invited_by_me" => false,
+        "invitee_count" => 0,
+        "invitee_by_name" => $invited_by_name,
+        "invitee_by_pics" => $invited_by_pics,
+      ];
+
+      array_push($response_data,$tmp);
+    }
+
+    // get invitations you invited others for
+    $invited_others_result = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_inviter_user_id",$user_id)
+    ->where("event_invitation_status",Constants::INVITATION_PENDING)->distinct("event_invitation.event_id")->get();
+
+    foreach($invited_others_result as $result)
+    {
+      $datetime = $result->event_date_time;
+      $date = date('d',$datetime);
+      $month = date('M',$datetime);
+      $month_num = date('n',$datetime);
+      $year = date('Y',$datetime);
+
+      $favourite_count = $favourite_db->where("event_id",$result->event_id)->where("user_id",$user_id)->count();
+      $invitee_count = $invitation_db->where("event_id",$result->event_id)->where("event_inviter_user_id",$user_id)->count();
+
+      $invited_by_name = "Me";
+      $invited_by_pics = $user_pics;
+
+      $can_invite = false;
+      $is_free = ($result->event_payment_type === "FREE") ? true : false;
+      $isFavourite = ($favourite_count > 0) ? true : false;
+      $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
+
+      $tmp = [
+        "event_id" => intval($result->event_id),
+        "event_image" => $result->event_multimedia,
+        "event_title" => $result->event_name,
+        "event_date" => intval($date),
+        "event_month" => $month,
+        "event_month_num" => intval($month_num),
+        "event_year" => $year,
+        "event_venue" => $result->event_venue,
+        "event_lat" => is_null($result->location_lat) ? 1.111111 : doubleval($result->location_lat),
+        "event_long" => is_null($result->location_long) ? 1.11111 : doubleval($result->location_long),
+        "can_invite" => $can_invite,
+        "is_favourite" => $isFavourite,
+        "is_free" => $is_free,
+        "use_map" => $useMap,
+        "invited_by_me" =>  true,
+        "invitee_count" => $invitee_count,
         "invitee_by_name" => $invited_by_name,
         "invitee_by_pics" => $invited_by_pics,
       ];

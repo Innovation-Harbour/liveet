@@ -670,10 +670,12 @@ class EventMobileController extends BaseController {
     $invitation_details = $invitation_db->where("event_invitation_id",$invitation_id)->first();
     $event_id = $invitation_details->event_id;
     $user_id = $invitation_details->event_inviter_user_id;
-    $invite_count  = $invitation_details->invitee_can_invite_count;
 
     $user_details = $user_db->where("user_id",$user_id)->first();
     $inviter_phone = $user_details->user_phone;
+
+    $inviter_details = $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$inviter_phone)->first();
+    $invite_count = $inviter_details->invitee_can_invite_count;
 
     $control_details = $control_db->where("event_id",$event_id)->first();
     $can_invite = $control_details->event_can_invite;

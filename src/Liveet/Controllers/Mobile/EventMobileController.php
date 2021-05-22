@@ -948,7 +948,7 @@ class EventMobileController extends BaseController {
         "invitee_name" => ($userCount > 0) ? $user_name : $user_phone,
         "invitee_number" => $user_phone,
         "invitee_pics" => ($userCount > 0) ? $user_pics : null,
-        "invitee_shortname" => ($userCount > 0) ? "NN" : "",
+        "invitee_shortname" => ($userCount > 0) ? "" : "NN",
         "invitee_status" => strtolower($result->event_invitation_status),
         "can_close" => ($result->event_invitation_status === Constants::INVITATION_ACCEPT) ? false : true,
       ];

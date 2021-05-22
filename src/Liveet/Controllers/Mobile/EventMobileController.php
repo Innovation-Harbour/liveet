@@ -730,6 +730,11 @@ class EventMobileController extends BaseController {
       $invitation_details = $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$inviter_phone)->first();
       $invitation_count = $invitation_details->invitee_can_invite_count;
 
+      if($can_invite === Constants::EVENT_CAN_INVITE)
+      {
+        $invitation_count = 1;
+      }
+
       //process Phone Number
       if(((strlen($stripped_phone) === 13 && (substr($stripped_phone, 0, 3) === "234")) || (strlen($stripped_phone) === 11 && in_array(substr($stripped_phone, 0, 2), $eligible_phone_starting))) && $invitation_count > 0)
       {

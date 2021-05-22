@@ -748,6 +748,12 @@ class EventMobileController extends BaseController {
     $user_phone_number = $user_details->user_phone;
     $user_pics = $user_details->user_picture;
 
+    $distinct_result = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_inviter_user_id",$user_id)
+    ->where("event_invitation_status",Constants::INVITATION_PENDING)->unique("event_id")->get();
+
+    var_dump($distinct_result);
+    die;
+
     $results = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_inviter_user_id",$user_id)
     ->orWhere("event_invitee_user_phone", $user_phone_number)->where("event_invitation_status",Constants::INVITATION_PENDING)->get();
 

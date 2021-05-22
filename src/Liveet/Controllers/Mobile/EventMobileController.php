@@ -812,7 +812,7 @@ class EventMobileController extends BaseController {
 
     // get invitations you invited others for
     $invited_others_result = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_inviter_user_id",$user_id)
-    ->where("event_invitation_status",Constants::INVITATION_PENDING)->distinct("event_invitation.event_id")->get();
+    ->where("event_invitation_status",Constants::INVITATION_PENDING)->groupBy("event_invitation.event_id")->get();
 
     foreach($invited_others_result as $result)
     {

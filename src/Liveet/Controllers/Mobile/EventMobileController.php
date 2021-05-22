@@ -781,7 +781,7 @@ class EventMobileController extends BaseController {
         $invited_by_pics = $user_pics;
       }
 
-      if($result->event_inviter_user_id !== null && $result->event_inviter_user_id !== $user_id){
+      if($result->event_inviter_user_id !== null && $result->event_inviter_user_id != $user_id){
         $invited_by_name = $result_first_name;
         $invited_by_pics = $result_userpics;
       }

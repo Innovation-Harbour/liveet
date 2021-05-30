@@ -31,6 +31,11 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $authGroup->post(
+            "/dopasswordreset",
+            AuthController::class . ":doPasswordReset"
+        );
+
+        $authGroup->post(
             "/completeregistration",
             AuthController::class . ":CompleteRegistration"
         );

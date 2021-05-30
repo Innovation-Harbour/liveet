@@ -24,7 +24,7 @@ trait LiveetFunction
       "pin_time_to_live" =>  5,
       "pin_length" => 4,
       "pin_placeholder" => "< 1234 >",
-      "message_text" => "Your Liveet registration pin is < 1234 >",
+      "message_text" => "Your Liveet pin is < 1234 >",
       "pin_type" => "NUMERIC"
     );
 

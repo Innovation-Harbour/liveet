@@ -415,7 +415,7 @@ class AuthController extends BaseController {
 
 
       //remove record from temp db
-      $temp_db->where('temp_phone', $phone_clean)->delete();
+      $temp_db->where('temp_phone', $phone_clean)->forceDelete();
 
       $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname,"user_id" => $user_id,"user_pics" => $user_picture];
 

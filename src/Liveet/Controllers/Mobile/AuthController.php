@@ -30,7 +30,9 @@ class AuthController extends BaseController {
     $data = $request->getParsedBody();
 
     $phone = $data["phone"];
+    $resetpassword = $data["resetPassword"];
 
+    $for_password_reset = ($resetpassword === "true") ? true : false;
     $country_code = substr($phone, 0, 4);
 
     $rest_of_phone_number = substr($phone, 4);
@@ -60,11 +62,21 @@ class AuthController extends BaseController {
       $user_count = $user_db->where('user_phone', $phone_clean)->count();
       $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
 
-      if($user_count > 0)
-      {
-        $error = ["errorMessage" => "Phone Number Already Registered", "statusCode" => 400];
+      if($for_password_reset){
+        if($user_count < 1)
+        {
+          $error = ["errorMessage" => "No User Found with this Phone Number", "statusCode" => 400];
 
-        return $json->withJsonResponse($response, $error);
+          return $json->withJsonResponse($response, $error);
+        }
+      } else{
+        // registration
+        if($user_count > 0)
+        {
+          $error = ["errorMessage" => "Phone Number Already Registered", "statusCode" => 400];
+
+          return $json->withJsonResponse($response, $error);
+        }
       }
 
       // here we send sms
@@ -80,7 +92,7 @@ class AuthController extends BaseController {
 
       $sms_pin = $sms_response['pinId'];
 
-      if($temp_count < 1)
+      if($temp_count < 1 && !$for_password_reset)
       {
         $temp_db->create(["temp_phone" => $phone_clean]);
       }
@@ -161,12 +173,16 @@ class AuthController extends BaseController {
   {
     //declare needed class objects
     $json = new JSON();
+    $user_db = new UserModel();
 
     $data = $request->getParsedBody();
 
     $phone = $data["phone"];
     $sms_pin = $data["sms_pin"];
     $otp = $data["otp"];
+    $resetpassword = $data["password_reset"];
+
+    $for_password_reset = ($resetpassword === "true") ? true : false;
 
     //verify OTP with Termii
     $sms_response = json_decode($this->verifySMS($otp,$sms_pin),true);
@@ -177,7 +193,16 @@ class AuthController extends BaseController {
 
     if($is_accepted)
     {
-      $data_to_view = ["sent_otp" => $otp, "Phone Number" => $phone];
+      $phone_clean = substr($phone, 1);
+      if($for_password_reset) {
+        $user_details = $user_db->where("user_phone",$phone_clean)->first();
+        $user_email = $user_details->user_email;
+
+        $data_to_view = ["sent_otp" => $otp, "Phone Number" => $phone, "email" =>$user_email];
+      }
+      else {
+        $data_to_view = ["sent_otp" => $otp, "Phone Number" => $phone];
+      }
 
       $payload = ["statusCode" => 200, "data" => $data_to_view];
 
@@ -274,6 +299,59 @@ class AuthController extends BaseController {
     $temp_db->where('temp_phone', $phone_clean)->update(["temp_name" => $name, "temp_email" => $email, "temp_password" => $crypt_password]);
 
     $payload = ["statusCode" => 200, "successMessage" => "Temp Details Added"];
+
+    return $json->withJsonResponse($response, $payload);
+  }
+
+  public function doPasswordReset (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $json = new JSON();
+    $user_db = new UserModel();
+    $keymanager = new KeyManager();
+
+    $data = $request->getParsedBody();
+
+    $phone = $data["phone"];
+    $password = $data["password"];
+    $repeat_password = $data["repeat_password"];
+
+    $phone_clean = substr($phone, 1);
+
+
+    //checks
+
+    if ($password !== $repeat_password)
+    {
+      $error = ["errorMessage" => "Password & Repeat Password Do not match. Please Try Again", "statusCode" => 400];
+
+      return $json->withJsonResponse($response, $error);
+    }
+
+    //after checks passed, update temp table
+
+    $crypt_password = hash('sha256', $password);
+
+    $user_db->where('user_phone', $phone_clean)->update(["user_password" => $crypt_password]);
+
+    $user_details = $user_db->where("user_phone",$phone_clean)->first();
+    //get user data
+    $fullname = $user_details->user_fullname;
+    $user_id = $user_details->user_id;
+    $user_picture = $user_details->user_picture;
+    $user_email = $user_details->user_email;
+
+    $user_data_token = [
+      "email" => $user_email
+    ];
+
+    $token = $keymanager->createClaims($user_data_token);
+
+
+
+    $data_to_view = ["email" => $user_email, "token" => $token, "name" => $fullname,"user_id" => $user_id,"user_pics" => $user_picture];
+
+    $payload = ["statusCode" => 200, "data" => $data_to_view];
 
     return $json->withJsonResponse($response, $payload);
   }

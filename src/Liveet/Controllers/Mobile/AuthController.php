@@ -590,4 +590,21 @@ class AuthController extends BaseController {
     return $json->withJsonResponse($response, $payload);
   }
 
+  public function updateUserFcm (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $json = new JSON();
+    $user_db = new UserModel();
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $fcm_token = $data["fcm_token"];
+
+    $user_db->where("user_id",$user_id)->update(["fcm_token" => $fcm_token]);
+
+    $payload = ["statusCode" => 200, "successMessage" => "User FCM token Update Successful"];
+    return $json->withJsonResponse($response, $payload);
+  }
+
 }

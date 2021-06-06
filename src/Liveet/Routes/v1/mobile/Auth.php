@@ -51,6 +51,11 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $authGroup->post(
+            "/updatefcm",
+            AuthController::class . ":updateUserFcm"
+        );
+
+        $authGroup->post(
             "/changepassword",
             AuthController::class . ":changePassword"
         );

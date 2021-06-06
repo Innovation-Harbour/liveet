@@ -73,5 +73,9 @@ class Constants
   const EVENT_TICKET_RECALLED = "RECALLED";
   const EVENT_TICKET_ACTIVE = "ACTIVE";
 
+  const NOTIFICATION_ALL_USER = "ALL_USER";
+  const NOTIFICATION_ONE_USER = "ONE_USER";
+  const NOTIFICATION_USER_GROUP = "USER_GROUP";
+
   const MOBILE_APP_DOWNLOAD_URL = "https://bit.ly/liveet";
 }

@@ -158,12 +158,12 @@ trait LiveetFunction
       $notification
         ->addRecipient($user_tokens)
         ->setTitle($title)
+        ->setSound("default")
         ->setBody($message);
 
         try{
           $fcm_client->send($notification);
         } catch (\Exception $e) {
-          var_dump($e->getMessage());
           return false;
         }
     }

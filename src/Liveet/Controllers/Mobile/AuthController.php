@@ -25,7 +25,9 @@ class AuthController extends BaseController {
     //declare needed class objects
     $json = new JSON();
     $user_db = new UserModel();
-    $temp_db = new TempModel();
+    //$temp_db = new TempModel();
+
+    $temp_db = "hello";
 
     var_dump($temp_db);
     die;

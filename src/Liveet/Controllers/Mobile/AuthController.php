@@ -123,9 +123,6 @@ class AuthController extends BaseController {
     $email = $data["email"];
     $password = $data["password"];
 
-    var_dump($email);
-    die;
-
     $hashed_password = hash('sha256',$password);
 
 

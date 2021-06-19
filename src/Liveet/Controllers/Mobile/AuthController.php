@@ -25,7 +25,14 @@ class AuthController extends BaseController {
     //declare needed class objects
     $json = new JSON();
     $user_db = new UserModel();
-    $temp_db = new TempModel();
+    try{
+      $temp_db = new TempModel();
+    }catch (\Exception $e) {
+      var_dump($e->getMessage());
+      die;
+      return false;
+    }
+
 
     $data = $request->getParsedBody();
 

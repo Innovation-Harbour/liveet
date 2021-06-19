@@ -4,6 +4,12 @@ namespace Liveet\Controllers\Mobile\Helper;
 
 use Aws\Rekognition\RekognitionClient;
 use Rashtell\Domain\JSON;
+use Liveet\Domain\Constants;
+use GuzzleHttp\Client;
+use Fcm\FcmClient;
+use Fcm\Topic\Subscribe;
+use Fcm\Push\Notification;
+
 
 /**
  * helper functions for Liveet Mobile
@@ -131,5 +137,92 @@ trait LiveetFunction
       $latitude = null;
     }
     return [$address_found, $latitude, $longitude];
+  }
+
+  public function sendMobileNotification($notification_type, $title, $message, $user_tokens)
+  {
+    //initialize the necessary classes
+    $server_key = $_ENV["FCM_SERVER_KEY"];
+    $server_id = $_ENV["FCM_SENDER_ID"];
+
+    try{
+      $fcm_client = new FcmClient($server_key,$server_id);
+      $notification = new Notification();
+    } catch (\Exception $e) {
+      var_dump($e->getMessage());
+      return false;
+    }
+
+    if($notification_type === Constants::NOTIFICATION_ONE_USER)
+    {
+      $notification
+        ->addRecipient($user_tokens)
+        ->setTitle($title)
+        ->setBody($message);
+
+        try{
+          $fcm_client->send($notification);
+        } catch (\Exception $e) {
+          var_dump($e->getMessage());
+          return false;
+        }
+    }
+    else if ($notification_type === Constants::NOTIFICATION_USER_GROUP)
+    {
+      $topic = "/topics/".$user_tokens;
+      $notification
+        ->addRecipient($topic)
+        ->setTitle($title)
+        ->setBody($message);
+
+        try{
+          $fcm_client->send($notification);
+        } catch (\Exception $e) {
+          var_dump($e->getMessage());
+          return false;
+        }
+    }
+    else if ($notification_type === Constants::NOTIFICATION_ALL_USER)
+    {
+      $topic = "/topics/all";
+      $notification
+        ->addRecipient($topic)
+        ->setTitle($title)
+        ->setBody($message);
+
+        try{
+          $fcm_client->send($notification);
+        } catch (\Exception $e) {
+          var_dump($e->getMessage());
+          return false;
+        }
+    }
+    else{
+      return false;
+    }
+
+    return true;
+
+  }
+
+  public function subcribeUser($topic, $token)
+  {
+    $server_key = $_ENV["FCM_SERVER_KEY"];
+    $server_id = $_ENV["FCM_SENDER_ID"];
+
+    try{
+      $fcm_client = new FcmClient($server_key,$server_id);
+      $subscribe = new Subscribe($topic);
+
+      $subscribe->addDevice($token);
+
+      $fcm_client->send($subscribe);
+
+    } catch (\Exception $e) {
+      var_dump($e->getMessage());
+      return false;
+    }
+
+    return true;
   }
 }

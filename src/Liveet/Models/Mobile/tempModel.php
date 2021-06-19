@@ -13,4 +13,5 @@ class TempModel extends BaseModel
     protected $table = "temp_user";
     public $primaryKey = "temp_id";
     protected $guarded = [];
+    protected $fillable = ['temp_phone','temp_name','temp_email','temp_password'];
 }

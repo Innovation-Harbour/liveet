@@ -12,5 +12,4 @@ class TempModel extends BaseModel
     public $primaryKey = "temp_id";
     protected $guarded = [];
 
-    public $timestamps = false;
 }

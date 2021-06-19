@@ -527,9 +527,11 @@ class AuthController extends BaseController {
 
     $user_token = $user_details->fcm_token;
 
+    $group = "testers";
+
     //send NOTIFICATION
 
-    $sendNotification = $this->sendMobileNotification(Constants::NOTIFICATION_ALL_USER, $title, $message);
+    $sendNotification = $this->sendMobileNotification(Constants::NOTIFICATION_USER_GROUP, $title, $message,$group);
 
     if(!$sendNotification)
     {

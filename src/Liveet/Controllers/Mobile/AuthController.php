@@ -25,13 +25,7 @@ class AuthController extends BaseController {
     //declare needed class objects
     $json = new JSON();
     $user_db = new UserModel();
-    try{
-      $temp_db = new TempModel();
-    }catch (\Exception $e) {
-      var_dump($e->getMessage());
-      die;
-      return false;
-    }
+    //$temp_db = new TempModel();
 
 
     $data = $request->getParsedBody();
@@ -67,6 +61,8 @@ class AuthController extends BaseController {
       $phone_full = $country_code.$rest_of_phone_number;
 
       $user_count = $user_db->where('user_phone', $phone_clean)->count();
+      var_dump($user_count);
+      die;
       $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
 
       if($for_password_reset){

@@ -5,6 +5,7 @@ namespace Liveet\Controllers\Mobile;
 use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
 use Liveet\Models\Mobile\TempModel;
+use Liveet\Models\Mobile\FavouriteModel;
 use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\UserModel;
 use Liveet\Domain\MailHandler;
@@ -25,12 +26,7 @@ class AuthController extends BaseController {
     //declare needed class objects
     $json = new JSON();
     $user_db = new UserModel();
-    //$temp_db = new TempModel();
-
-    $temp_db = "hello";
-
-    var_dump($temp_db);
-    die;
+    $temp_db = new FavouriteModel();
 
 
     $data = $request->getParsedBody();
@@ -66,6 +62,10 @@ class AuthController extends BaseController {
       $phone_full = $country_code.$rest_of_phone_number;
 
       $user_count = $user_db->where('user_phone', $phone_clean)->count();
+      var_dump($user_count);
+      die;
+
+      
 
       $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
 

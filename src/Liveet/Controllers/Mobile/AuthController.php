@@ -26,7 +26,7 @@ class AuthController extends BaseController {
     //declare needed class objects
     $json = new JSON();
     $user_db = new UserModel();
-    $temp_db = new FavouriteModel();
+    $temp_db = new TempModel();
 
 
     $data = $request->getParsedBody();
@@ -65,7 +65,7 @@ class AuthController extends BaseController {
       var_dump($user_count);
       die;
 
-      
+
 
       $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
 

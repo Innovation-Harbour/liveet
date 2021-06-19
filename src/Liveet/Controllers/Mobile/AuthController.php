@@ -529,7 +529,7 @@ class AuthController extends BaseController {
 
     //send NOTIFICATION
 
-    $sendNotification = $this->sendMobileNotification(Constants::NOTIFICATION_ONE_USER, $title, $message, $user_token);
+    $sendNotification = $this->sendMobileNotification(Constants::NOTIFICATION_ALL_USER, $title, $message);
 
     if(!$sendNotification)
     {

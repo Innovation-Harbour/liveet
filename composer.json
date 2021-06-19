@@ -11,7 +11,8 @@
     "psr/log": "^1.1",
     "vlucas/phpdotenv": "^5.3",
     "aws/aws-sdk-php": "^3.176",
-    "guzzlehttp/guzzle": "^7.0"
+    "guzzlehttp/guzzle": "^7.0",
+    "edwinhoksberg/php-fcm": "^1.2"
   },
   "authors": [
     {

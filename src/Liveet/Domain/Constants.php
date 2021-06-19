@@ -4,7 +4,7 @@ namespace Liveet\Domain;
 
 class Constants
 {
-  const PRODUCTION_HOST = "liveet.co";
+  const PRODUCTION_HOST = "https://api.liveet.co";
   const DEVELOPMENT_HOST = "localhost";
   // const DEVELOPMENT_BASE_PATH = "/liveet/liveet-apis";
   // const PRODUCTION_BASE_PATH = "/liveet";

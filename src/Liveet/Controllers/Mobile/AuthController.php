@@ -116,8 +116,8 @@ class AuthController extends BaseController {
     //declare needed class objects
     $json = new JSON();
     $user_db = new UserModel();
-    $temp_db = new TempModel();
-    $keymanager = new KeyManager();
+    //$temp_db = new TempModel();
+    //$keymanager = new KeyManager();
 
     $data = $request->getParsedBody();
 

@@ -531,7 +531,7 @@ class AuthController extends BaseController {
 
     //send NOTIFICATION
 
-    $subscribe = $this->subcribeUser($group,$user_token);
+    $subscribe = $this->unSubcribeUser($group,$user_token);
 
     $sendNotification = $this->sendMobileNotification(Constants::NOTIFICATION_USER_GROUP, $title, $message,$group);
 

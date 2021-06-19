@@ -514,6 +514,31 @@ class AuthController extends BaseController {
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
+    $json = new JSON();
+    $user_db = new UserModel();
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $title = $data["title"];
+    $message = $data["message"];
+
+    $user_details = $user_db->where("user_id",$user_id)->first();
+
+    $user_token = $user_details->fcm_token;
+
+    //send NOTIFICATION
+
+    $sendNotification = $this->sendMobileNotification(Constants::NOTIFICATION_ONE_USER, $title, $message, $user_token);
+
+    if(!$sendNotification)
+    {
+      $error = ["errorMessage" => "Notification Not Sent", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    $payload = ["statusCode" => 200, "successMessage" => "Notification Sent"];
+    return $json->withJsonResponse($response, $payload);
 
   }
 

@@ -60,7 +60,7 @@ isset($mobileGroup) && $mobileGroup->group(
             AuthController::class . ":changePassword"
         );
 
-        $authGroup->get(
+        $authGroup->post(
             "/testaws",
             AuthController::class . ":AWSAddEvent"
         );

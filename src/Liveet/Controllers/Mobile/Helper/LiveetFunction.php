@@ -8,6 +8,7 @@ use Liveet\Domain\Constants;
 use GuzzleHttp\Client;
 use Fcm\FcmClient;
 use Fcm\Topic\Subscribe;
+use Fcm\Topic\Unsubscribe;
 use Fcm\Push\Notification;
 
 
@@ -178,7 +179,6 @@ trait LiveetFunction
         try{
           $fcm_client->send($notification);
         } catch (\Exception $e) {
-          var_dump($e->getMessage());
           return false;
         }
     }
@@ -193,7 +193,6 @@ trait LiveetFunction
         try{
           $fcm_client->send($notification);
         } catch (\Exception $e) {
-          var_dump($e->getMessage());
           return false;
         }
     }
@@ -219,7 +218,26 @@ trait LiveetFunction
       $fcm_client->send($subscribe);
 
     } catch (\Exception $e) {
-      var_dump($e->getMessage());
+      return false;
+    }
+
+    return true;
+  }
+
+  public function unSubcribeUser($topic, $token)
+  {
+    $server_key = $_ENV["FCM_SERVER_KEY"];
+    $server_id = $_ENV["FCM_SENDER_ID"];
+
+    try{
+      $fcm_client = new FcmClient($server_key,$server_id);
+      $unsubscribe = new Unsubscribe($topic);
+
+      $unsubscribe->addDevice($token);
+
+      $fcm_client->send($unsubscribe);
+
+    } catch (\Exception $e) {
       return false;
     }
 

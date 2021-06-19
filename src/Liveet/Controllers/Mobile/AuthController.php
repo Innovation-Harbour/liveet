@@ -27,6 +27,9 @@ class AuthController extends BaseController {
     $user_db = new UserModel();
     $temp_db = new TempModel();
 
+    var_dump($temp_db);
+    die;
+
 
     $data = $request->getParsedBody();
 
@@ -63,8 +66,7 @@ class AuthController extends BaseController {
       $user_count = $user_db->where('user_phone', $phone_clean)->count();
 
       $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
-      var_dump($temp_count);
-      die;
+
 
       if($for_password_reset){
         if($user_count < 1)

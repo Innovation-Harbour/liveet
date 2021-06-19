@@ -139,7 +139,7 @@ trait LiveetFunction
     return [$address_found, $latitude, $longitude];
   }
 
-  public function sendMobileNotification($notification_type, $title, $message, $user_tokens)
+  public function sendMobileNotification($notification_type, $title, $message, $user_tokens=false)
   {
     //initialize the necessary classes
     $server_key = $_ENV["FCM_SERVER_KEY"];

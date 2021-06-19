@@ -61,9 +61,10 @@ class AuthController extends BaseController {
       $phone_full = $country_code.$rest_of_phone_number;
 
       $user_count = $user_db->where('user_phone', $phone_clean)->count();
-      var_dump($user_count);
-      die;
+
       $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
+      var_dump($temp_count);
+      die;
 
       if($for_password_reset){
         if($user_count < 1)

@@ -219,6 +219,7 @@ class EventMobileController extends BaseController {
 
     $user_phone = $user_details->user_phone;
     $user_image_key = $user_details->image_key;
+    $fcm_token = $user_details->fcm_token;
 
     //get event details
     $event_query = $event_db->where("event_id",$event_id);
@@ -317,6 +318,11 @@ class EventMobileController extends BaseController {
     if($access_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->exists())
     {
       $access_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->update(["event_access_used_status" => Constants::EVENT_ACCESS_USED]);
+    }
+
+    //subcribe User for group NOTIFICATION
+    if(!is_null($fcm_token)){
+      $user_subscribe = $this->subcribeUser($eventCode, $fcm_token);
     }
 
     $payload = ["statusCode" => 200, "successMessage" => "Ticket Registered"];
@@ -772,6 +778,17 @@ class EventMobileController extends BaseController {
             $sms_message = "You have been invited to the event:".$event_name." by ".$user_name.". Please download the Liveet app at ".$appDownloadLink." to confirm your attendance";
             $send_sms = $this->termii->sendSMS($clean_phone, $sms_message);
           }
+          else{
+            $user_details_of_invitee = $user_db->where("user_phone",$clean_phone)->first();
+            $token = $user_details_of_invitee->fcm_token;
+
+            $title = "Event invitation";
+            $notification_message = "You have been invited to an event:".$event_name." by ".$user_name;
+
+            if(!is_null($token)){
+              $sendNotification = $this->sendMobileNotification(Constants::NOTIFICATION_ONE_USER, $title, $notification_message,$token);
+            }
+          }
         }
 
         $sent_counter++;
@@ -1068,11 +1085,13 @@ class EventMobileController extends BaseController {
     $user_data_clean = $user_data[0];
 
     $user_phone = $user_data_clean->user_phone;
+    $fcm_token = $user_data_clean->fcm_token;
 
     $event_details = $event_db->where("event_id",$event_id)->first();
 
     $event_name = $event_details->event_name;
-    $event_payment = $user_details->event_payment_type;
+    $event_payment = $event_details->event_payment_type;
+    $event_code = $event_details->event_code;
     $is_free = $event_payment === Constants::PAYMENT_TYPE_FREE ? true : false;
 
     //do SMS Logic
@@ -1089,6 +1108,12 @@ class EventMobileController extends BaseController {
 
 
     $db->where("event_ticket_user_id", $ticket_id)->update(["ownership_status" => Constants::EVENT_TICKET_RECALLED]);
+
+    //unsubcribe user from group NOTIFICATION
+
+    if(!is_null($fcm_token)){
+      $unsubscribe = $this->unSubcribeUser($event_code,$fcm_token);
+    }
 
     $payload = ["statusCode" => 200, "successMessage" => "Recall successful"];
 
@@ -1158,6 +1183,7 @@ class EventMobileController extends BaseController {
 
     $db_user_id = $user_data_clean->user_id;
     $user_image_key = $user_data_clean->image_key;
+    $receiver_fcm_token = $user_data_clean->fcm_token;
 
     if($db_user_id == $user_id)
     {
@@ -1180,6 +1206,7 @@ class EventMobileController extends BaseController {
 
     $user_details = $user_db->where("user_id",$user_id)->first();
     $username = $user_details->user_fullname;
+    $sender_fcm_token = $user_details->fcm_token;
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
@@ -1242,6 +1269,27 @@ class EventMobileController extends BaseController {
     //do SMS Logic here to inform recipient of the transfer
     $message = "Ticket for the event: ".$event_name. " was transferred to you by ".$username.". Please go to your history tab on the Liveet App to find details of the event.";
     $send_sms = $this->termii->sendSMS($phone_clean, $message);
+
+    //first unsubcribe old owner from Event group
+    if(!is_null($sender_fcm_token))
+    {
+      $this->unSubcribeUser($eventCode,$sender_fcm_token);
+    }
+
+
+    //second, subcribe new owner to Event group
+    if(!is_null($receiver_fcm_token))
+    {
+      $this->subcribeUser($eventCode, $receiver_fcm_token);
+
+      //finally, send new owner Notification about the new ticket
+
+      $notification_title = "Event Transfer";
+      $notification_message = "Ticket for the event: ".$event_name. " was transferred to you by ".$username;
+
+      $this->sendMobileNotification(Constants::NOTIFICATION_ONE_USER, $notification_title, $notification_message, $receiver_fcm_token);
+    }
+
 
     $payload = ["statusCode" => 200, "successMessage" => "Transfer successful"];
     return $this->json->withJsonResponse($response, $payload);

@@ -2,6 +2,7 @@
 
 namespace Liveet\Controllers;
 
+use Aws\S3\S3Client;
 use Liveet\Domain\MailHandler;
 use Rashtell\Domain\CodeLibrary;
 use Psr\Http\Message\ResponseInterface;
@@ -13,6 +14,7 @@ use Liveet\Models\BaseModel;
 use DateTime;
 use Illuminate\Database\Eloquent\Model;
 use Liveet\Domain\Constants;
+use Liveet\Models\EventModel;
 use Psr\Http\Message\UploadedFileInterface;
 
 class BaseController
@@ -223,23 +225,101 @@ class BaseController
 
                 $return = [];
 
+                $event_id = $data["event_id"] ?? "";
+
                 if (
                     (isset($imageOption["multiple"]) && $imageOption["multiple"] && gettype($data[$imageKey]) == "array")
                     || gettype($data[$imageKey]) == "array"
                 ) {
                     foreach ($data[$imageKey] as $imageKe) {
-                        $return[] = $this->handleParseImage($imageOption, $imageKe);
+                        $return[] = $this->handleLiveetParseImage($imageOption, $imageKe, $event_id);
                     }
 
                     $data[$imageKey] = $return;
                 } else {
-                    $return = $this->handleParseImage($imageOption, $data[$imageKey]);
+                    $return = $this->handleLiveetParseImage($imageOption, $data[$imageKey], $event_id);
 
                     $data[$imageKey] = $return["path"] ?? $return["url"] ?? "";
                     $data[$imageKey . "Type"] = $return["type"] ?? "";
                 }
             }
         }
+
+        return $data;
+    }
+
+    public function handleLiveetParseImage($imageOption, $image, $event_id)
+    {
+        if (strrpos($image, "data:image/") !== 0) {
+            $data["url"] = $image;
+            return $data;
+        }
+
+        $imagePrefix = isset($imageOption["imagePrefix"]) ? $imageOption["imagePrefix"] . " - " : "";
+
+        $imageName = $imagePrefix . bin2hex(random_bytes(8));
+        $imageName .=  (new DateTime())->getTimeStamp();
+
+        $event = EventModel::find($event_id); //get event code from event id
+        $event_code = "";
+        if ($event) {
+            $event_code = $event["event_code"] . "/";
+        }
+
+
+        //push image to s3
+        $key = $event_code . $imageName;
+        $imageKey = $imageOption["imageKey"];
+        $imagePath = "https://liveet-users.s3-us-west-2.amazonaws.com/liveet-media/" . $key;
+
+        $aws_key = $_ENV["AWS_KEY"];
+        $aws_secret = $_ENV["AWS_SECRET"];
+
+        $imageExtType = $this->getFileTypeOfBase64($image);
+        $imageExtType = strtolower($imageExtType);
+        $imageType = "";
+
+        if (!in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($imageExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
+            $imageExtError = "Unsupport media type. ";
+            $imageExtError .= $this->getSupportedMediaTypes();
+
+            $data["error"] = [$imageExtError];
+            return $data;
+        }
+
+        if (in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
+            $imageType = "image";
+        }
+
+        if (in_array($imageExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
+            $imageType = "video";
+        }
+
+
+        try {
+            $s3 = new S3Client([
+                'region'  => 'us-west-2',
+                'version' => 'latest',
+                'credentials' => [
+                    'key'    => $aws_key,
+                    'secret' => $aws_secret,
+                ]
+            ]);
+
+            $s3_result = $s3->putObject([
+                'Bucket' => 'liveet-media',
+                'Key'    => $key,
+                'Body'   => $image,
+                'ACL'    => 'public-read',
+                'ContentType'    => "$imageType/$imageExtType"
+            ]);
+        } catch (\Exception $e) {
+            $data["error"] = $e->getMessage();
+            return $data;
+        }
+
+        $data["type"] = $imageType;
+        $data["path"] = $imagePath;
 
         return $data;
     }
@@ -261,6 +341,7 @@ class BaseController
         $imageName .= $imagePrefix . (new DateTime())->getTimeStamp();
 
         $imageExtType = $this->getFileTypeOfBase64($image);
+        $imageExtType = strtolower($imageExtType);
         if (!in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
             $imageExtError = "Unsupport image type. Supported formats are ";
 
@@ -285,6 +366,23 @@ class BaseController
         $data["path"] = $newImagePath;
 
         return $data;
+    }
+
+    public function getSupportedMediaTypes()
+    {
+        $mediatypes = "Supported image types are ";
+        foreach (Constants::IMAGE_TYPES_ACCEPTED as $acceptedImageType) {
+            $appender = array_search($acceptedImageType, Constants::IMAGE_TYPES_ACCEPTED) === sizeof(Constants::IMAGE_TYPES_ACCEPTED) - 1 ? "." : ", ";
+            $mediatypes .= $acceptedImageType . $appender;
+        }
+
+        $mediatypes .= " And supported video types are ";
+        foreach (Constants::VIDEO_TYPES_ACCEPTED as $acceptedImageType) {
+            $appender = array_search($acceptedImageType, Constants::VIDEO_TYPES_ACCEPTED) === sizeof(Constants::VIDEO_TYPES_ACCEPTED) - 1 ? "." : ", ";
+            $mediatypes .= $acceptedImageType . $appender;
+        }
+
+        return $mediatypes;
     }
 
     public function getFileTypeOfBase64($data_image)
@@ -350,6 +448,8 @@ class BaseController
         // $directory = $this->get('upload_directory');
         $directory = "assets/medias";
         $uploadedFiles = $request->getUploadedFiles();
+        $event_id = $request->getParsedBody()["eventID"] ?? "";
+
         $outputs = [];
 
         // handle single input with multiple file uploads
@@ -359,11 +459,8 @@ class BaseController
                 $this->uploadFile(
                     $uploadedFile,
                     $directory,
-                    function ($output) use (&$outputs, $directory) {
-                        ["filename" => $filename, "filetype" => $filetype] = $output;
-                        $output["path"] = $directory . "/" . $filename;
-
-                        $outputs[] = $output;
+                    function ($output) use (&$outputs, $directory, $event_id) {
+                        $outputs[] = $this->uploadMediaCallback($output, $directory, $event_id);
                     }
                 );
             }
@@ -373,8 +470,8 @@ class BaseController
                     $this->uploadFile(
                         $uploadedFil,
                         $directory,
-                        function ($output) use (&$outputs) {
-                            $outputs[] = $output;
+                        function ($output) use (&$outputs, $directory, $event_id) {
+                            $outputs[] = $this->uploadMediaCallback($output, $directory, $event_id);
                         }
                     );
                 }
@@ -382,6 +479,15 @@ class BaseController
         }
 
         return $outputs;
+    }
+
+    function uploadFile($uploadedFile, $directory, $callback)
+    {
+        if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
+            $fileDetails = $this->moveUploadedFile($directory, $uploadedFile);
+
+            $callback($fileDetails);
+        }
     }
 
     function moveUploadedFile(string $directory, UploadedFileInterface $uploadedFile)
@@ -398,13 +504,73 @@ class BaseController
         return ["filename" => $filename, "filetype" => $extension];
     }
 
-    function uploadFile($uploadedFile, $directory, $callback)
+    function uploadMediaCallback($mediaDetails, $directory, $event_id = 0)
     {
-        if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
-            $fileDetails = $this->moveUploadedFile($directory, $uploadedFile);
+        ["filename" => $filename, "filetype" => $filetype] = $mediaDetails;
+        $filePath = $directory . "/" . $filename;
 
-            $callback($fileDetails);
+        $imageName = bin2hex(random_bytes(8));
+        $imageName .=  (new DateTime())->getTimeStamp();
+
+        $event = EventModel::find($event_id); //get event code from event id
+        $event_code = "";
+        if ($event) {
+            $event_code = $event["event_code"] . "/";
         }
+        $key = $event_code . $imageName;
+        $imagePath = "https://liveet-users.s3-us-west-2.amazonaws.com/liveet-media/" . $key;
+
+        $image = fopen($filePath, 'r');
+
+        $aws_key = $_ENV["AWS_KEY"];
+        $aws_secret = $_ENV["AWS_SECRET"];
+
+        $filetype = strtolower($filetype);
+
+        $imageType = "";
+        if (!in_array($filetype, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($filetype, Constants::VIDEO_TYPES_ACCEPTED)) {
+            $imageExtError = "Unsupport media type. ";
+            $imageExtError .= $this->getSupportedMediaTypes();
+
+            $data["error"] = [$imageExtError];
+            return $data;
+        }
+        if (in_array($filetype, Constants::IMAGE_TYPES_ACCEPTED)) {
+            $imageType = "image";
+        }
+        if (in_array($filetype, Constants::VIDEO_TYPES_ACCEPTED)) {
+            $imageType = "video";
+        }
+
+        try {
+            $s3 = new S3Client([
+                'region'  => 'us-west-2',
+                'version' => 'latest',
+                'credentials' => [
+                    'key'    => $aws_key,
+                    'secret' => $aws_secret,
+                ]
+            ]);
+
+            $s3_result = $s3->putObject([
+                'Bucket' => 'liveet-media',
+                'Key'    => $key,
+                'Body'   => $image,
+                'ACL'    => 'public-read',
+                'ContentType'    => "$imageType/$filetype"
+            ]);
+        } catch (\Exception $e) {
+            $data["error"] = $e->getMessage();
+            return $data;
+        }
+
+        fclose($image);
+        unlink($filePath);
+
+        $data["type"] = $imageType;
+        $data["path"] = $imagePath;
+
+        return $data;
     }
 
 

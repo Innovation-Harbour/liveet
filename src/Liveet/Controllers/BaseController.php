@@ -277,7 +277,6 @@ class BaseController
         $aws_secret = $_ENV["AWS_SECRET"];
 
         $mediaType = "";
-        if (!in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($imageExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
             $imageExtError = "Unsupport media type. ";
         if (in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
             $mediaType = "image";

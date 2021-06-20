@@ -3,10 +3,13 @@
 namespace Liveet\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Liveet\Controllers\Mobile\Helper\LiveetFunction;
+use Liveet\Domain\Constants;
 
 class EventTimelineModel extends BaseModel
 {
     use SoftDeletes;
+    use LiveetFunction;
 
     protected $table = "event_timeline";
     protected $dateFormat = "U";
@@ -33,6 +36,18 @@ class EventTimelineModel extends BaseModel
         $event_id = $details["event_id"];
         $timeline_desc = $details["timeline_desc"];
 
+        $eventModel = (new EventModel());
+        $event = $eventModel->find($event_id);
+        if (!$event) {
+            return ["error" => "Event not found", "data" => null];
+        }
+
+        $title = Constants::TIMELINE_NOTIFICATION_TITLE;
+        $message = Constants::TIMELINE_NOTIFICATION_MESSAGE;
+        $eventCode = $event["event_code"];
+        $sendNotification = $this->sendMobileNotification(Constants::NOTIFICATION_USER_GROUP, $title, $message, $eventCode);
+
+
         $eventTimeline = Parent::createSelf(["event_id" => $event_id, "timeline_desc" => $timeline_desc], $checks);
 
         if ($eventTimeline["error"]) {
@@ -54,7 +69,7 @@ class EventTimelineModel extends BaseModel
 
     public function deleteByPK($pk)
     {
-        TimelineMediaModel::where("timeline_id", $pk)->delete();   
+        TimelineMediaModel::where("timeline_id", $pk)->delete();
 
         return Parent::deleteByPK($pk);
     }

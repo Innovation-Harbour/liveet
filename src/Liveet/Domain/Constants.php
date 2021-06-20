@@ -37,7 +37,8 @@ class Constants
   const ERROR_EMPTY_DATA = "No more data";
 
   const IMAGE_PATH = "assets/images/";
-  const IMAGE_TYPES_ACCEPTED = ["jpg", "jpeg", "png", "svg"];
+  const IMAGE_TYPES_ACCEPTED = ["jpg", "png", "gif", "bmp","jpeg"];
+  const VIDEO_TYPES_ACCEPTED = ["mp4", "avi", "mpeg", "flv", "mov"];
 
   const EVENT_ACCESS_ASSIGNED = "ASSIGNED";
   const EVENT_ACCESS_UNASSIGNED = "UNASSIGNED";
@@ -81,4 +82,7 @@ class Constants
   const MEDIA_TYPE_VIDEO = "VIDEO";
 
   const MOBILE_APP_DOWNLOAD_URL = "https://bit.ly/liveet";
+
+  const TIMELINE_NOTIFICATION_TITLE = "Timeline";
+  const TIMELINE_NOTIFICATION_MESSAGE = "A new timeline was uploaded";
 }

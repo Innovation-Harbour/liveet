@@ -1349,16 +1349,6 @@ class EventMobileController extends BaseController {
 
     foreach($results as $result)
     {
-      $user_phone = $result->event_invitee_user_phone;
-
-      $userCount = $user_db->where("user_phone",$user_phone)->count();
-
-      if($userCount > 0){
-        $user_details = $user_db->where("user_phone",$user_phone)->first();
-        $user_pics = $user_details->user_picture;
-        $user_name = $user_details->user_fullname;
-      }
-
       $tmp = [
         "content_url" => $result->timeline_media,
         "event_image" => $result->event_multimedia,

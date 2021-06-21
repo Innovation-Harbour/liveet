@@ -13,6 +13,7 @@ use Liveet\Models\EventAccessModel;
 use Liveet\Models\EventModel;
 use Liveet\Models\EventControlModel;
 use Liveet\Models\PaymentModel;
+use Liveet\Models\TimelineMediaModel;
 use Liveet\Models\EventTicketUserModel;
 use Illuminate\Support\Facades\DB;
 use Liveet\Models\Mobile\FavouriteModel;
@@ -1329,6 +1330,55 @@ class EventMobileController extends BaseController {
 
     return $response_data;
 
+  }
+
+  public function getTimelines(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $timeline_db = new TimelineMediaModel();
+
+
+    $response_data = [];
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $offset = $data["offset"];
+    $limit = $data["limit"];
+
+    $results = $timeline_db->getMobileTimeline($user_id, $offset, $limit);
+
+    var_dump($results);
+    die;
+
+    foreach($results as $result)
+    {
+      $user_phone = $result->event_invitee_user_phone;
+
+      $userCount = $user_db->where("user_phone",$user_phone)->count();
+
+      if($userCount > 0){
+        $user_details = $user_db->where("user_phone",$user_phone)->first();
+        $user_pics = $user_details->user_picture;
+        $user_name = $user_details->user_fullname;
+      }
+
+      $tmp = [
+        "invitation_id" => intval($result->event_invitation_id),
+        "invitee_name" => ($userCount > 0) ? $user_name : $user_phone,
+        "invitee_number" => $user_phone,
+        "invitee_pics" => ($userCount > 0) ? $user_pics : null,
+        "invitee_shortname" => ($userCount > 0) ? "" : "NN",
+        "invitee_status" => strtolower($result->event_invitation_status),
+        "can_close" => ($result->event_invitation_status === Constants::INVITATION_ACCEPT) ? false : true,
+      ];
+
+      array_push($response_data,$tmp);
+    }
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+
+    return $this->json->withJsonResponse($response, $payload);
   }
 
 }

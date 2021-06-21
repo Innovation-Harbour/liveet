@@ -1336,7 +1336,7 @@ class EventMobileController extends BaseController {
   {
     //declare needed class objects
     $timeline_db = new TimelineMediaModel();
-
+    
     $response_data = [];
 
     $data = $request->getParsedBody();

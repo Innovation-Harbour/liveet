@@ -77,5 +77,8 @@ class Constants
   const NOTIFICATION_ONE_USER = "ONE_USER";
   const NOTIFICATION_USER_GROUP = "USER_GROUP";
 
+  const MEDIA_TYPE_IMAGE = "IMAGE";
+  const MEDIA_TYPE_VIDEO = "VIDEO";
+
   const MOBILE_APP_DOWNLOAD_URL = "https://bit.ly/liveet";
 }

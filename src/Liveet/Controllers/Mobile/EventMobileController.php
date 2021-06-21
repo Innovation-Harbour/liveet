@@ -1347,10 +1347,6 @@ class EventMobileController extends BaseController {
 
     $results = $timeline_db->getMobileTimeline($user_id, $offset, $limit);
 
-    var_dump($results);
-    die;
-    
-
     foreach($results as $result)
     {
       $user_phone = $result->event_invitee_user_phone;
@@ -1364,13 +1360,12 @@ class EventMobileController extends BaseController {
       }
 
       $tmp = [
-        "invitation_id" => intval($result->event_invitation_id),
-        "invitee_name" => ($userCount > 0) ? $user_name : $user_phone,
-        "invitee_number" => $user_phone,
-        "invitee_pics" => ($userCount > 0) ? $user_pics : null,
-        "invitee_shortname" => ($userCount > 0) ? "" : "NN",
-        "invitee_status" => strtolower($result->event_invitation_status),
-        "can_close" => ($result->event_invitation_status === Constants::INVITATION_ACCEPT) ? false : true,
+        "content_url" => $result->timeline_media,
+        "event_image" => $result->event_multimedia,
+        "event_title" => $result->event_name,
+        "is_video" => ($result->media_type === Constants::MEDIA_TYPE_VIDEO) ? true : false,
+        "is_image" => ($result->media_type === Constants::MEDIA_TYPE_IMAGE) ? true : false,
+        "timeline_desc" => $result->timeline_desc,
       ];
 
       array_push($response_data,$tmp);

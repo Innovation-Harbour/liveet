@@ -95,5 +95,10 @@ isset($mobileGroup) && $mobileGroup->group(
             "/doattendevent",
             EventMobileController::class . ":doAttentEvent"
         );
+
+        $mobileEventGroup->post(
+            "/gettimelines",
+            EventMobileController::class . ":getTimelines"
+        );
     }
 )->addMiddleware(new AuthenticationMiddleware((new UserModel())));

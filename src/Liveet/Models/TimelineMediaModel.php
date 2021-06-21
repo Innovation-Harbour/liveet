@@ -66,7 +66,7 @@ class TimelineMediaModel extends BaseModel
 
     public function getMobileTimeline($user_id, $offset, $limit){
       $sql = "
-              SELECT
+              SELECT  
               timeline_media,event_multimedia,event_name,media_type, timeline_desc
               FROM  timeline_media
               LEFT JOIN event_timeline ON timeline_media.timeline_id = event_timeline.timeline_id
@@ -75,7 +75,6 @@ class TimelineMediaModel extends BaseModel
               WHERE event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND X.user_id = ".$user_id.")
               ORDER BY media_datetime DESC LIMIT ".$offset.", ".$limit."
               ";
-
       $result = $this->getConnection()->select($sql);
       return $result;
     }

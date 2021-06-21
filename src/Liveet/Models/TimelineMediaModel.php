@@ -75,8 +75,8 @@ class TimelineMediaModel extends BaseModel
               WHERE event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND X.user_id = ".$user_id.")
               ORDER BY media_datetime DESC LIMIT ".$offset.", ".$limit."
               ";
-              
+
       $result = $this->getConnection()->select($sql);
-      return $sql;
+      return $result;
     }
 }

@@ -38,7 +38,7 @@ class Constants
 
   const IMAGE_PATH = "assets/images/";
   const IMAGE_TYPES_ACCEPTED = ["jpg", "png", "gif", "bmp","jpeg"];
-  const VIDEO_TYPES_ACCEPTED = ["mp4", "avi", "mpeg", "flv", "mov"];
+  const VIDEO_TYPES_ACCEPTED = ["mp4", "avi", "flv", "mov"];
 
   const EVENT_ACCESS_ASSIGNED = "ASSIGNED";
   const EVENT_ACCESS_UNASSIGNED = "UNASSIGNED";

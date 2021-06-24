@@ -232,12 +232,12 @@ class BaseController
                     || gettype($data[$mediaKey]) == "array"
                 ) {
                     foreach ($data[$mediaKey] as $mediaKeyy) {
-                        $return[] = $this->handleLiveetParseImage($mediaOption, $mediaKeyy, $event_id);
+                        $return[] = $this->handleParseImage($mediaOption, $mediaKeyy, $event_id);
                     }
 
                     $data[$mediaKey] = $return;
                 } else {
-                    $return = $this->handleLiveetParseImage($mediaOption, $data[$mediaKey], $event_id);
+                    $return = $this->handleParseImage($mediaOption, $data[$mediaKey], $event_id);
 
                     $data[$mediaKey] = $return["path"] ?? $return["url"] ?? "";
                     $data[$mediaKey . "Type"] = $return["type"] ?? "";
@@ -284,10 +284,10 @@ class BaseController
 
         $mediaType = "";
         if (!in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
-            $mediaExtError = "Unsupport media type. ";
+            $mediaExtError = "Unsupported media type. ";
             $mediaExtError .= $this->getSupportedMediaTypes();
 
-            $data["error"] = [$mediaExtError];
+            $data["error"] = $mediaExtError;
             return $data;
         }
         if (in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
@@ -297,12 +297,9 @@ class BaseController
             $mediaType = "video";
         }
 
-        $bucket = "liveet-media/$event_code";
-        if (!$event_code) {
-            $bucket = "liveet-media";
-        }
+        $bucket = "liveet-media";
+        $folder = isset($event_code) ? "$event_code/$key" : $key;
         $contentType = $this->getContentType($mediaExtType, $mediaType);
-
         try {
             $s3 = new S3Client([
                 'region'  => 'us-west-2',
@@ -315,7 +312,7 @@ class BaseController
 
             $s3_result = $s3->putObject([
                 'Bucket' => $bucket,
-                'Key'    => $key,
+                'Key'    => $folder,
                 'Body'   => $media,
                 'ACL'    => 'public-read',
                 'ContentType'    => $contentType
@@ -350,10 +347,10 @@ class BaseController
         $mediaExtType = $this->getFileTypeOfBase64($media);
         $mediaExtType = strtolower($mediaExtType);
         if (!in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
-            $mediaExtError = "Unsupport media type. ";
+            $mediaExtError = "Unsupported media type. ";
             $mediaExtError .= $this->getSupportedMediaTypes();
 
-            $data["error"] = [$mediaExtError];
+            $data["error"] = $mediaExtError;
             return $data;
         }
 
@@ -576,7 +573,7 @@ class BaseController
 
         $mediaType = "";
         if (!in_array($filetype, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($filetype, Constants::VIDEO_TYPES_ACCEPTED)) {
-            $mediaExtError = "Unsupport media type. ";
+            $mediaExtError = "Unsupported media type. ";
             $mediaExtError .= $this->getSupportedMediaTypes();
 
             $data["error"] = [$mediaExtError];
@@ -589,11 +586,8 @@ class BaseController
             $mediaType = "video";
         }
 
-        $bucket = "liveet-media/$event_code";
-        if (!$event_code) {
-            $bucket = "liveet-media";
-        }
-
+        $bucket = "liveet-media";
+        $folder = isset($event_code) ? "$event_code/$key" : $key;
         $contentType = $this->getContentType($filetype, $mediaType);
 
         try {
@@ -608,7 +602,7 @@ class BaseController
 
             $s3_result = $s3->putObject([
                 'Bucket' => $bucket,
-                'Key'    => $key,
+                'Key'    => $folder,
                 'Body'   => $media,
                 'ACL'    => 'public-read',
                 'ContentType'    => $contentType

@@ -198,8 +198,8 @@ class BaseController
     /**
      * Parses base64 images to url
      * 
-     * $accountOptions["imageOptions"=>[
-     *  ["imageKey"=>"", "imagePrefix"=>"", multiple=>false]
+     * $accountOptions["mediaOptions"=>[
+     *  ["mediaKey"=>"", "mediaPrefix"=>"", multiple=>false]
      * ]
      *
      * @param array $data
@@ -208,16 +208,16 @@ class BaseController
      */
     public function parseImage($data, $accountOptions = [])
     {
-        if (isset($accountOptions["imageOptions"])) {
-            foreach ($accountOptions["imageOptions"] as $imageOption) {
+        if (isset($accountOptions["mediaOptions"])) {
+            foreach ($accountOptions["mediaOptions"] as $mediaOption) {
 
-                $imageKey = $imageOption["imageKey"];
+                $mediaKey = $mediaOption["mediaKey"];
 
-                if (!isset($data[$imageKey])) {
+                if (!isset($data[$mediaKey])) {
 
-                    $imageExtError = ["errorMessage" => $imageKey . " not set", "errorStatus" => 1, "statusCode" => 400];
+                    $mediaExtError = ["errorMessage" => $mediaKey . " not set", "errorStatus" => 1, "statusCode" => 400];
 
-                    // $data["error"] = $imageExtError;
+                    // $data["error"] = $mediaExtError;
                     // break;
 
                     continue;
@@ -228,19 +228,19 @@ class BaseController
                 $event_id = $data["event_id"] ?? "";
 
                 if (
-                    (isset($imageOption["multiple"]) && $imageOption["multiple"] && gettype($data[$imageKey]) == "array")
-                    || gettype($data[$imageKey]) == "array"
+                    (isset($mediaOption["multiple"]) && $mediaOption["multiple"] && gettype($data[$mediaKey]) == "array")
+                    || gettype($data[$mediaKey]) == "array"
                 ) {
-                    foreach ($data[$imageKey] as $imageKe) {
-                        $return[] = $this->handleLiveetParseImage($imageOption, $imageKe, $event_id);
+                    foreach ($data[$mediaKey] as $mediaKeyy) {
+                        $return[] = $this->handleLiveetParseImage($mediaOption, $mediaKeyy, $event_id);
                     }
 
-                    $data[$imageKey] = $return;
+                    $data[$mediaKey] = $return;
                 } else {
-                    $return = $this->handleLiveetParseImage($imageOption, $data[$imageKey], $event_id);
+                    $return = $this->handleLiveetParseImage($mediaOption, $data[$mediaKey], $event_id);
 
-                    $data[$imageKey] = $return["path"] ?? $return["url"] ?? "";
-                    $data[$imageKey . "Type"] = $return["type"] ?? "";
+                    $data[$mediaKey] = $return["path"] ?? $return["url"] ?? "";
+                    $data[$mediaKey . "Type"] = $return["type"] ?? "";
                 }
             }
         }
@@ -248,18 +248,18 @@ class BaseController
         return $data;
     }
 
-    public function handleLiveetParseImage($imageOption, $image, $event_id)
+    public function handleLiveetParseImage($mediaOption, $media, $event_id)
     {
-        if (strrpos($image, "data:image/") !== 0) {
-            $data["url"] = $image;
+        if (strrpos($media, "data:image/") !== 0 && strrpos($media, "data:video/") !== 0) {
+            $data["url"] = $media;
             return $data;
         }
 
-        $imagePrefix = isset($imageOption["imagePrefix"]) ? $imageOption["imagePrefix"] . " - " : "";
+        $mediaPrefix = isset($mediaOption["mediaPrefix"]) ? $mediaOption["mediaPrefix"] . " - " : "";
 
-        // $imageName = $imagePrefix . bin2hex(random_bytes(8));
-        // $imageName .=  (new DateTime())->getTimeStamp();
-        $imageName =  rand(00000000, 99999999);
+        // $mediaName = $mediaPrefix . bin2hex(random_bytes(8));
+        // $mediaName .=  (new DateTime())->getTimeStamp();
+        $mediaName =  rand(00000000, 99999999);
 
         $event = EventModel::find($event_id); //get event code from event id
         $event_code = "";
@@ -267,32 +267,35 @@ class BaseController
             $event_code = $event["event_code"] . "/";
         }
 
-        $imageKey = $imageOption["imageKey"];
-        $imageExtType = $this->getFileTypeOfBase64($image);
-        $imageExtType = strtolower($imageExtType);
-        $key = "$event_code-$imageName.$imageExtType";
-        $imagePath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code" . $key;
+        $mediaKey = $mediaOption["mediaKey"];
+        $mediaExtType = $this->getFileTypeOfBase64($media);
+        $mediaExtType = strtolower($mediaExtType);
+        $key = "$mediaPrefix$event_code-$mediaName.$mediaExtType";
+        $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code" . $key;
 
         $aws_key = $_ENV["AWS_KEY"];
         $aws_secret = $_ENV["AWS_SECRET"];
 
         $mediaType = "";
-        if (!in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($imageExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
-            $imageExtError = "Unsupport media type. ";
-            $imageExtError .= $this->getSupportedMediaTypes();
+        if (!in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
+            $mediaExtError = "Unsupport media type. ";
+            $mediaExtError .= $this->getSupportedMediaTypes();
 
-            $data["error"] = [$imageExtError];
+            $data["error"] = [$mediaExtError];
             return $data;
         }
-        if (in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
+        if (in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
             $mediaType = "image";
         }
-        if (in_array($imageExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
+        if (in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
             $mediaType = "video";
         }
 
         $bucket = "liveet-media/$event_code";
-        $contentType = $this->getContentType($imageExtType, $mediaType);
+        if (!$event_code) {
+            $bucket = "liveet-media";
+        }
+        $contentType = $this->getContentType($mediaExtType, $mediaType);
 
         try {
             $s3 = new S3Client([
@@ -307,7 +310,7 @@ class BaseController
             $s3_result = $s3->putObject([
                 'Bucket' => $bucket,
                 'Key'    => $key,
-                'Body'   => $image,
+                'Body'   => $media,
                 'ACL'    => 'public-read',
                 'ContentType'    => $contentType
             ]);
@@ -317,9 +320,130 @@ class BaseController
         }
 
         $data["type"] = $mediaType;
-        $data["path"] = $imagePath;
+        $data["path"] = $mediaPath;
 
         return $data;
+    }
+
+    public function handleParseImage($mediaOption, $media)
+    {
+        $mediaKey = $mediaOption["mediaKey"];
+        $mediaPath = Constants::IMAGE_PATH;
+
+        if (strrpos($media, "data:image/") !== 0 || strrpos($media, "data:video/") !== 0) {
+            // continue;
+            $data["url"] = $media;
+            return $data;
+        }
+
+        $mediaPrefix = isset($mediaOption["mediaPrefix"]) ? $mediaOption["mediaPrefix"] . " - " : "";
+
+        $mediaName = bin2hex(random_bytes(8));
+        $mediaName .= $mediaPrefix . (new DateTime())->getTimeStamp();
+
+        $mediaExtType = $this->getFileTypeOfBase64($media);
+        $mediaExtType = strtolower($mediaExtType);
+        if (!in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
+            $mediaExtError = "Unsupport media type. ";
+            $mediaExtError .= $this->getSupportedMediaTypes();
+
+            $data["error"] = [$mediaExtError];
+            return $data;
+        }
+
+        $newImagePath = "$mediaPath$mediaName.$mediaExtType";
+
+        file_put_contents($newImagePath, file_get_contents($media));
+
+        $mediaTypeKey = $mediaKey . "_type";
+
+        $data["type"] = $mediaExtType;
+        $data["path"] = $newImagePath;
+
+        return $data;
+    }
+
+    public function getFileTypeOfBase64($data_media)
+    {
+        if (!empty($data_media) && strrpos($data_media, ";base64,") > 0) :
+            $string_pieces = explode(";base64,", $data_media);
+
+            $media_type_pieces = ["", ""];
+            if (strrpos($string_pieces[0], "image/") > 0) :
+                $media_type_pieces = explode("image/", $string_pieces[0]);
+            endif;
+            if (strrpos($string_pieces[0], "video/") > 0) :
+                $media_type_pieces = explode("video/", $string_pieces[0]);
+            endif;
+
+            return  $media_type_pieces[1];
+        endif;
+
+        if (!empty($data_media) && strrpos($data_media, ";charset=UTF-8,") > 0) :
+            $string_pieces = explode(";charset=UTF-8,", $data_media);
+
+            $media_type_pieces = ["", ""];
+            if (strrpos($string_pieces[0], "image/") > 0) :
+                $media_type_pieces = explode("image/", $string_pieces[0]);
+            endif;
+            if (strrpos($string_pieces[0], "video/") > 0) :
+                $media_type_pieces = explode("video/", $string_pieces[0]);
+            endif;
+
+            $media_type_pieces = $media_type_pieces[1];
+            $media_type_pieces = explode("+", $media_type_pieces);
+
+            return  $media_type_pieces[0];
+        endif;
+    }
+
+    public function convertBase64ToImage($base64_code, $path, $media_name = null)
+    {
+
+        if (!empty($base64_code) && !empty($path)) :
+
+            $string_pieces = explode(";base64,", $base64_code);
+
+            $media_type_pieces = ["", ""];
+            if (strrpos($string_pieces[0], "image/") > 0) :
+                $media_type_pieces = explode("image/", $string_pieces[0]);
+            endif;
+            if (strrpos($string_pieces[0], "video/") > 0) :
+                $media_type_pieces = explode("video/", $string_pieces[0]);
+            endif;
+
+            $media_type = $media_type_pieces[1];
+
+            /*@ Create full path with image name and extension */
+            $store_at = $path . md5(uniqid()) . "." . $media_type;
+
+            /*@ If image name available then use that  */
+            if (!empty($media_name)) :
+                $store_at = $path . $media_name . "." . $media_type;
+            endif;
+
+            $decoded_string = base64_decode($string_pieces[1]);
+
+            file_put_contents($store_at, $decoded_string);
+
+        endif;
+    }
+
+    public function getSupportedMediaTypes()
+    {
+        $mediatypes = "Supported image types are ";
+        foreach (Constants::IMAGE_TYPES_ACCEPTED as $acceptedImageType) {
+            $appender = array_search($acceptedImageType, Constants::IMAGE_TYPES_ACCEPTED) === sizeof(Constants::IMAGE_TYPES_ACCEPTED) - 1 ? "." : ", ";
+            $mediatypes .= $acceptedImageType . $appender;
+        }
+
+        $mediatypes .= " And supported video types are ";
+        foreach (Constants::VIDEO_TYPES_ACCEPTED as $acceptedVideoType) {
+            $appender = array_search($acceptedVideoType, Constants::VIDEO_TYPES_ACCEPTED) === sizeof(Constants::VIDEO_TYPES_ACCEPTED) - 1 ? "." : ", ";
+            $mediatypes .= $acceptedVideoType . $appender;
+        }
+
+        return $mediatypes;
     }
 
     public function getContentType($filetype, $mediaType)
@@ -340,114 +464,6 @@ class BaseController
         }
 
         return $return;
-    }
-
-    public function handleParseImage($imageOption, $image)
-    {
-        $imageKey = $imageOption["imageKey"];
-        $imagePath = Constants::IMAGE_PATH;
-
-        if (strrpos($image, "data:image/") !== 0) {
-            // continue;
-            $data["url"] = $image;
-            return $data;
-        }
-
-        $imagePrefix = isset($imageOption["imagePrefix"]) ? $imageOption["imagePrefix"] . " - " : "";
-
-        $imageName = bin2hex(random_bytes(8));
-        $imageName .= $imagePrefix . (new DateTime())->getTimeStamp();
-
-        $imageExtType = $this->getFileTypeOfBase64($image);
-        $imageExtType = strtolower($imageExtType);
-        if (!in_array($imageExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
-            $imageExtError = "Unsupport image type. Supported formats are ";
-
-            foreach (Constants::IMAGE_TYPES_ACCEPTED as $acceptedImageType) {
-                $appender = array_search($acceptedImageType, Constants::IMAGE_TYPES_ACCEPTED) === sizeof(Constants::IMAGE_TYPES_ACCEPTED) - 1 ? "." : ", ";
-                $imageExtError .= $acceptedImageType . $appender;
-            }
-
-            // $imageExtError = array("errorMessage" => $imageExtError, "errorStatus" => 1, "statusCode" => 400);
-
-            $data["error"] = [$imageExtError];
-            return $data;
-        }
-
-        $newImagePath = "$imagePath$imageName.$imageExtType";
-
-        file_put_contents($newImagePath, file_get_contents($image));
-
-        $imageTypeKey = $imageKey . "_type";
-
-        $data["type"] = $imageExtType;
-        $data["path"] = $newImagePath;
-
-        return $data;
-    }
-
-    public function getSupportedMediaTypes()
-    {
-        $mediatypes = "Supported image types are ";
-        foreach (Constants::IMAGE_TYPES_ACCEPTED as $acceptedImageType) {
-            $appender = array_search($acceptedImageType, Constants::IMAGE_TYPES_ACCEPTED) === sizeof(Constants::IMAGE_TYPES_ACCEPTED) - 1 ? "." : ", ";
-            $mediatypes .= $acceptedImageType . $appender;
-        }
-
-        $mediatypes .= " And supported video types are ";
-        foreach (Constants::VIDEO_TYPES_ACCEPTED as $acceptedVideoType) {
-            $appender = array_search($acceptedVideoType, Constants::VIDEO_TYPES_ACCEPTED) === sizeof(Constants::VIDEO_TYPES_ACCEPTED) - 1 ? "." : ", ";
-            $mediatypes .= $acceptedVideoType . $appender;
-        }
-
-        return $mediatypes;
-    }
-
-    public function getFileTypeOfBase64($data_image)
-    {
-        if (!empty($data_image) && strrpos($data_image, ";base64,") > 0) :
-            $string_pieces = explode(";base64,", $data_image);
-
-            $image_type_pieces = explode("image/", $string_pieces[0]);
-
-            return  $image_type_pieces[1];
-        endif;
-
-        if (!empty($data_image) && strrpos($data_image, ";charset=UTF-8,") > 0) :
-            $string_pieces = explode(";charset=UTF-8,", $data_image);
-
-            $image_type_pieces = explode("image/", $string_pieces[0]);
-            $image_type_pieces = $image_type_pieces[1];
-            $image_type_pieces = explode("+", $image_type_pieces);
-
-            return  $image_type_pieces[0];
-        endif;
-    }
-
-    public function convertBase64ToImage($base64_code, $path, $image_name = null)
-    {
-
-        if (!empty($base64_code) && !empty($path)) :
-
-            $string_pieces = explode(";base64,", $base64_code);
-
-            $image_type_pieces = explode("image/", $string_pieces[0]);
-
-            $image_type = $image_type_pieces[1];
-
-            /*@ Create full path with image name and extension */
-            $store_at = $path . md5(uniqid()) . "." . $image_type;
-
-            /*@ If image name available then use that  */
-            if (!empty($image_name)) :
-                $store_at = $path . $image_name . "." . $image_type;
-            endif;
-
-            $decoded_string = base64_decode($string_pieces[1]);
-
-            file_put_contents($store_at, $decoded_string);
-
-        endif;
     }
 
 
@@ -527,31 +543,34 @@ class BaseController
         ["filename" => $filename, "filetype" => $filetype] = $mediaDetails;
         $filePath = $directory . "/" . $filename;
 
-        // $imageName = bin2hex(random_bytes(8));
-        // $imageName .=  (new DateTime())->getTimeStamp();
-        $imageName =  rand(00000000, 99999999);
+        // $mediaName = bin2hex(random_bytes(8));
+        // $mediaName .=  (new DateTime())->getTimeStamp();
+        $mediaName =  rand(00000000, 99999999);
 
-        $event = EventModel::find($event_id); //get event code from event id
+        $event_id = (int)$event_id;
+        $event = (new EventModel)->find($event_id); //get event code from event id
         $event_code = "";
         if ($event) {
-            $event_code = $event["event_code"] . "/";
+            $event_code = $event["event_code"];
+        } else {
+            $data["error"] = "not found";
         }
 
         $filetype = strtolower($filetype);
-        $key = "$event_code-$imageName.$filetype";
-        $imagePath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code" . $key;
+        $key = "$event_code-$mediaName.$filetype";
+        $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code/" . $key;
 
-        $image = fopen($filePath, 'r');
+        $media = fopen($filePath, 'r');
 
         $aws_key = $_ENV["AWS_KEY"];
         $aws_secret = $_ENV["AWS_SECRET"];
 
         $mediaType = "";
         if (!in_array($filetype, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($filetype, Constants::VIDEO_TYPES_ACCEPTED)) {
-            $imageExtError = "Unsupport media type. ";
-            $imageExtError .= $this->getSupportedMediaTypes();
+            $mediaExtError = "Unsupport media type. ";
+            $mediaExtError .= $this->getSupportedMediaTypes();
 
-            $data["error"] = [$imageExtError];
+            $data["error"] = [$mediaExtError];
             return $data;
         }
         if (in_array($filetype, Constants::IMAGE_TYPES_ACCEPTED)) {
@@ -562,6 +581,10 @@ class BaseController
         }
 
         $bucket = "liveet-media/$event_code";
+        if (!$event_code) {
+            $bucket = "liveet-media";
+        }
+
         $contentType = $this->getContentType($filetype, $mediaType);
 
         try {
@@ -577,7 +600,7 @@ class BaseController
             $s3_result = $s3->putObject([
                 'Bucket' => $bucket,
                 'Key'    => $key,
-                'Body'   => $image,
+                'Body'   => $media,
                 'ACL'    => 'public-read',
                 'ContentType'    => $contentType
             ]);
@@ -586,11 +609,11 @@ class BaseController
             return $data;
         }
 
-        fclose($image);
+        fclose($media);
         unlink($filePath);
 
         $data["type"] = $mediaType;
-        $data["path"] = $imagePath;
+        $data["path"] = $mediaPath;
 
         return $data;
     }

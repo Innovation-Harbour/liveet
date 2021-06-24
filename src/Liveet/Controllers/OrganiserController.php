@@ -52,9 +52,9 @@ class OrganiserController extends HelperController
                         "emailKey" => "organiser_email", "nameKey" => "organiser_name", "usertype" => MailHandler::USERTYPE_ORGANISER_STAFF, "mailtype" => MailHandler::TEMPLATE_CONFIRM_EMAIL
                     ],
                 ],
-                "imageOptions" => [
+                "mediaOptions" => [
                     [
-                        "imageKey" => "organiser_profile_picture"
+                        "mediaKey" => "organiser_profile_picture"
                     ]
                 ]
             ]

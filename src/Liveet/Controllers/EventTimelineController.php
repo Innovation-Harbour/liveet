@@ -44,8 +44,8 @@ class EventTimelineController extends HelperController
                 ],
             ],
             [
-                "imageOptions" => [
-                    ["imageKey" => "timeline_media", "multiple" => true]
+                "mediaOptions" => [
+                    ["mediaKey" => "timeline_media", "multiple" => true]
                 ]
             ],
         );

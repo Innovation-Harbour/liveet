@@ -116,9 +116,9 @@ class OrganiserStaffController extends HelperController
             ],
             [
 
-                "imageOptions" => [
+                "mediaOptions" => [
                     [
-                        "imageKey" => "organiser_profile_picture"
+                        "mediaKey" => "organiser_profile_picture"
                     ]
                 ]
             ],
@@ -179,9 +179,9 @@ class OrganiserStaffController extends HelperController
                         "emailKey" => "organiser_staff_email", "nameKey" => "organiser_staff_name", "usertype" => MailHandler::USERTYPE_ORGANISER_STAFF, "mailtype" => MailHandler::TEMPLATE_CONFIRM_EMAIL
                     ],
                 ],
-                "imageOptions" => [
+                "mediaOptions" => [
                     [
-                        "imageKey" => "organiser_staff_profile_picture"
+                        "mediaKey" => "organiser_staff_profile_picture"
                     ]
                 ]
             ],
@@ -263,9 +263,9 @@ class OrganiserStaffController extends HelperController
             ],
             ["organiser_staff_id" => $organiser_staff_id],
             [
-                "imageOptions" => [
+                "mediaOptions" => [
                     [
-                        "imageKey" => "organiser_staff_profile_picture"
+                        "mediaKey" => "organiser_staff_profile_picture"
                     ]
                 ]
             ],
@@ -349,9 +349,9 @@ class OrganiserStaffController extends HelperController
                 ],
             ],
             [
-                "imageOptions" => [
+                "mediaOptions" => [
                     [
-                        "imageKey" => "organiser_staff_profile_picture"
+                        "mediaKey" => "organiser_staff_profile_picture"
                     ]
                 ]
             ],
@@ -411,9 +411,9 @@ class OrganiserStaffController extends HelperController
             ],
             ["organiser_id" => $organiser_id, "organiser_staff_id" => $organiser_staff_id],
             [
-                "imageOptions" => [
+                "mediaOptions" => [
                     [
-                        "imageKey" => "organiser_staff_profile_picture"
+                        "mediaKey" => "organiser_staff_profile_picture"
                     ]
                 ]
             ]

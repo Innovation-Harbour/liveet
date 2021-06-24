@@ -49,8 +49,8 @@ class EventController extends HelperController
                 ],
             ],
             [
-                "imageOptions" => [
-                    ["imageKey" => "event_multimedia"]
+                "mediaOptions" => [
+                    ["mediaKey" => "event_multimedia"]
                 ]
             ],
         );

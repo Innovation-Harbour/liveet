@@ -62,9 +62,9 @@ class AdminUserController extends HelperController
                         "emailKey" => "admin_email", "nameKey" => "admin_fullname", "usertype" => MailHandler::USER_TYPE_ADMIN, "mailtype" => MailHandler::TEMPLATE_CONFIRM_EMAIL
                     ],
                 ],
-                "imageOptions" => [
+                "mediaOptions" => [
                     [
-                        "imageKey" => "admin_profile_picture"
+                        "mediaKey" => "admin_profile_picture"
                     ]
                 ]
             ]
@@ -117,9 +117,9 @@ class AdminUserController extends HelperController
             ],
             [
 
-                "imageOptions" => [
+                "mediaOptions" => [
                     [
-                        "imageKey" => "admin_profile_picture"
+                        "mediaKey" => "admin_profile_picture"
                     ]
                 ]
             ],
@@ -184,9 +184,9 @@ class AdminUserController extends HelperController
                 ],
             ],
             [
-                "imageOptions" => [
+                "mediaOptions" => [
                     [
-                        "imageKey" => "admin_profile_picture"
+                        "mediaKey" => "admin_profile_picture"
                     ]
                 ]
             ],

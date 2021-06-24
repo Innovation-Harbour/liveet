@@ -31,8 +31,8 @@ class TimelineMediaController extends HelperController
                 ],
             ],
             [
-                "imageOptions" => [
-                    ["imageKey" => "timeline_media", "multiple" => true]
+                "mediaOptions" => [
+                    ["mediaKey" => "timeline_media", "multiple" => true]
                 ]
             ],
         );
@@ -88,8 +88,8 @@ class TimelineMediaController extends HelperController
                 ]
             ],
             [
-                "imageOptions" => [
-                    ["imageKey" => "timeline_media"]
+                "mediaOptions" => [
+                    ["mediaKey" => "timeline_media"]
                 ]
             ]
         );

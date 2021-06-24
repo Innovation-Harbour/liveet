@@ -20,8 +20,8 @@ if (!isset($_ENV["ENVIRONMENT"]) || $_ENV["ENVIRONMENT"] != Constants::ENVIRONME
     error_reporting(0);
 }
 
+ini_set('memory_limit', '2048M');
 set_time_limit(0);
-ini_set('memory_limit', '64M');
 
 $app = AppFactory::create();
 

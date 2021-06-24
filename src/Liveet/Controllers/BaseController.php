@@ -261,17 +261,23 @@ class BaseController
         // $mediaName .=  (new DateTime())->getTimeStamp();
         $mediaName =  rand(00000000, 99999999);
 
-        $event = EventModel::find($event_id); //get event code from event id
+        $event_id = (int)$event_id;
+        $event = (new EventModel)->find($event_id); //get event code from event id
         $event_code = "";
         if ($event) {
-            $event_code = $event["event_code"] . "/";
+            $event_code = $event["event_code"];
+        } else {
+            $data["error"] = "not found";
         }
+
+        $event_code_dir = $event_code ? "$event_code/" : "";
+        $event_code_key = $event_code ? "$event_code-" : "";
 
         $mediaKey = $mediaOption["mediaKey"];
         $mediaExtType = $this->getFileTypeOfBase64($media);
         $mediaExtType = strtolower($mediaExtType);
-        $key = "$mediaPrefix$event_code-$mediaName.$mediaExtType";
-        $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code" . $key;
+        $key = "$mediaPrefix$event_code_key$mediaName.$mediaExtType";
+        $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code_dir" . $key;
 
         $aws_key = $_ENV["AWS_KEY"];
         $aws_secret = $_ENV["AWS_SECRET"];
@@ -556,9 +562,12 @@ class BaseController
             $data["error"] = "not found";
         }
 
+        $event_code_dir = $event_code ? "$event_code/" : "";
+        $event_code_key = $event_code ? "$event_code-" : "";
+
         $filetype = strtolower($filetype);
-        $key = "$event_code-$mediaName.$filetype";
-        $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code/" . $key;
+        $key = "$event_code_key$mediaName.$filetype";
+        $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code_dir" . $key;
 
         $media = fopen($filePath, 'r');
 

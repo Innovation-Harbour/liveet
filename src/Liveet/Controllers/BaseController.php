@@ -232,12 +232,12 @@ class BaseController
                     || gettype($data[$mediaKey]) == "array"
                 ) {
                     foreach ($data[$mediaKey] as $mediaKeyy) {
-                        $return[] = $this->handleParseImage($mediaOption, $mediaKeyy, $event_id);
+                        $return[] = $this->handleLiveetParseImage($mediaOption, $mediaKeyy, $event_id);
                     }
 
                     $data[$mediaKey] = $return;
                 } else {
-                    $return = $this->handleParseImage($mediaOption, $data[$mediaKey], $event_id);
+                    $return = $this->handleLiveetParseImage($mediaOption, $data[$mediaKey], $event_id);
 
                     $data[$mediaKey] = $return["path"] ?? $return["url"] ?? "";
                     $data[$mediaKey . "Type"] = $return["type"] ?? "";
@@ -267,7 +267,7 @@ class BaseController
         if ($event) {
             $event_code = $event["event_code"];
         } else {
-            $data["error"] = "not found";
+            $data["error"] = "event not found";
         }
 
         $event_code_dir = $event_code ? "$event_code/" : "";
@@ -277,7 +277,7 @@ class BaseController
         $mediaExtType = $this->getFileTypeOfBase64($media);
         $mediaExtType = strtolower($mediaExtType);
         $key = "$mediaPrefix$event_code_key$mediaName.$mediaExtType";
-        $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code_dir" . $key;
+        $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code_dir$key";
 
         $aws_key = $_ENV["AWS_KEY"];
         $aws_secret = $_ENV["AWS_SECRET"];
@@ -310,7 +310,7 @@ class BaseController
                 ]
             ]);
 
-            $s3_result = $s3->putObject([
+            $s3->putObject([
                 'Bucket' => $bucket,
                 'Key'    => $folder,
                 'Body'   => $media,
@@ -332,7 +332,10 @@ class BaseController
     {
         $mediaKey = $mediaOption["mediaKey"];
         $mediaPath = Constants::IMAGE_PATH;
-
+        if (!is_dir($mediaPath)) {
+            mkdir($mediaPath, 0777, true);
+        }
+        
         if (strrpos($media, "data:image/") !== 0 || strrpos($media, "data:video/") !== 0) {
             //it means its a url or a path
             //if path first folder name is >10, ki olohun so e
@@ -488,6 +491,10 @@ class BaseController
     {
         // $directory = $this->get('upload_directory');
         $directory = "assets/medias";
+        if (!is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
         $uploadedFiles = $request->getUploadedFiles();
         $event_id = $request->getParsedBody()["eventID"] ?? "";
 
@@ -560,7 +567,7 @@ class BaseController
         if ($event) {
             $event_code = $event["event_code"];
         } else {
-            $data["error"] = "not found";
+            $data["error"] = "event not found";
         }
 
         $event_code_dir = $event_code ? "$event_code/" : "";
@@ -604,7 +611,7 @@ class BaseController
                 ]
             ]);
 
-            $s3_result = $s3->putObject([
+            $s3->putObject([
                 'Bucket' => $bucket,
                 'Key'    => $folder,
                 'Body'   => $media,

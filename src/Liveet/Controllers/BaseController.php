@@ -297,6 +297,14 @@ class BaseController
             $mediaType = "video";
         }
 
+        $mediaPath = Constants::IMAGE_PATH . $event_code_dir;
+        if (!is_dir($mediaPath)) {
+            mkdir($mediaPath, 0777, true);
+        }
+        $tempImagePath = "$mediaPath$key";
+        file_put_contents($tempImagePath, file_get_contents($media));
+
+
         $bucket = "liveet-media";
         $folder = isset($event_code) ? "$event_code/$key" : $key;
         $contentType = $this->getContentType($mediaExtType, $mediaType);
@@ -313,7 +321,7 @@ class BaseController
             $s3->putObject([
                 'Bucket' => $bucket,
                 'Key'    => $folder,
-                'Body'   => $media,
+                'Body'   => fopen($tempImagePath, 'r'),
                 'ACL'    => 'public-read',
                 'ContentType'    => $contentType
             ]);
@@ -321,6 +329,8 @@ class BaseController
             $data["error"] = $e->getMessage();
             return $data;
         }
+
+        unlink($tempImagePath);
 
         $data["type"] = $mediaType;
         $data["path"] = $mediaPath;
@@ -335,7 +345,7 @@ class BaseController
         if (!is_dir($mediaPath)) {
             mkdir($mediaPath, 0777, true);
         }
-        
+
         if (strrpos($media, "data:image/") !== 0 || strrpos($media, "data:video/") !== 0) {
             //it means its a url or a path
             //if path first folder name is >10, ki olohun so e

@@ -127,6 +127,10 @@ class EventModel extends BaseModel
         // $eventReturn["event_tickets"] = (new EventTicketModel())->where("event_id", $event_id)->get();
         // +$eventReturn["event_controls"] = $eventControls;
 
+        if (!$address_found) {
+            $eventReturn["error"] = "The address wasn’t found. Please kindly note that the map services for directing users to the event location won’t work.";
+        }
+
         return ["data" => $eventReturn, "error" => null];
     }
 
@@ -201,6 +205,10 @@ class EventModel extends BaseModel
         // $eventControls = $eventControlModel->getStruct()->where("event_id", $event_id)->latest($eventControlModel->primaryKey)->first();
         // $eventReturn["event_tickets"] = (new EventTicketModel())->where("event_id", $event_id)->get();
         // $eventReturn["event_controls"] = $eventControls;
+
+        if (!$address_found) {
+            $eventReturn["error"] = "The address wasn’t found. Please kindly note that the map services for directing users to the event location won’t work.";
+        }
 
         return ["data" => $eventReturn, "error" => null];
     }

@@ -291,10 +291,10 @@ class BaseController
             return $data;
         }
         if (in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
-            $mediaType = "image";
+            $mediaType = "IMAGE";
         }
         if (in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
-            $mediaType = "video";
+            $mediaType = "VIDEO";
         }
 
         $tempMediaPath = Constants::IMAGE_PATH . $event_code_dir;
@@ -603,10 +603,10 @@ class BaseController
             return $data;
         }
         if (in_array($filetype, Constants::IMAGE_TYPES_ACCEPTED)) {
-            $mediaType = "image";
+            $mediaType = "IMAGE";
         }
         if (in_array($filetype, Constants::VIDEO_TYPES_ACCEPTED)) {
-            $mediaType = "video";
+            $mediaType = "VIDEO";
         }
 
         $bucket = "liveet-media";

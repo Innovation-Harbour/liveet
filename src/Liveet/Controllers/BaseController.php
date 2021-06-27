@@ -297,13 +297,14 @@ class BaseController
             $mediaType = "video";
         }
 
-        $mediaPath = Constants::IMAGE_PATH . $event_code_dir;
-        if (!is_dir($mediaPath)) {
-            mkdir($mediaPath, 0777, true);
+        $tempMediaPath = Constants::IMAGE_PATH . $event_code_dir;
+        if (!is_dir($tempMediaPath)) {
+            mkdir($tempMediaPath, 0777, true);
         }
-        $tempImagePath = "$mediaPath$key";
-        file_put_contents($tempImagePath, file_get_contents($media));
+        $tempMediaPath = "$tempMediaPath$key";
+        file_put_contents($tempMediaPath, file_get_contents($media));
 
+        $newMedia = fopen($tempMediaPath, 'r');
 
         $bucket = "liveet-media";
         $folder = isset($event_code) ? "$event_code/$key" : $key;
@@ -321,7 +322,7 @@ class BaseController
             $s3->putObject([
                 'Bucket' => $bucket,
                 'Key'    => $folder,
-                'Body'   => fopen($tempImagePath, 'r'),
+                'Body'   => $newMedia,
                 'ACL'    => 'public-read',
                 'ContentType'    => $contentType
             ]);
@@ -330,7 +331,8 @@ class BaseController
             return $data;
         }
 
-        unlink($tempImagePath);
+        fclose($newMedia);
+        unlink($tempMediaPath);
 
         $data["type"] = $mediaType;
         $data["path"] = $mediaPath;

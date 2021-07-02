@@ -95,11 +95,12 @@ class EventModel extends BaseModel
             return ["data" => null, "error" => "An error occured while creating aws event"];
         }
 
-        $cordinates = $this->getCoordinates($event_venue);
-        ["address_found" => $address_found, "longitude" => $longitude, "latitude" => $latitude] = $cordinates;
+        [$address_found,$latitude,$longitude] = $this->getCoordinates($event_venue);
+        //["address_found" => $address_found, "longitude" => $longitude, "latitude" => $latitude] = $cordinates;
 
-        //create event 
-        $this->create(["organiser_id" => $organiser_id, "event_name" => $event_name, "event_code" => $event_code, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type, "location_lat" => $latitude, "location_long" => $longitude]);
+        //create event
+        $this->create(["organiser_id" => $organiser_id, "event_name" => $event_name, "event_code" => $event_code, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type
+        , "location_lat" => $latitude, "location_long" => $longitude]);
 
         //Get event id
         $event_id = $this->select($this->primaryKey)->where("event_code", $event_code)->latest($this->primaryKey)->first()[$this->primaryKey];
@@ -159,7 +160,7 @@ class EventModel extends BaseModel
         $cordinates = $this->getCoordinates($event_venue);
         ["address_found" => $address_found, "longitude" => $longitude, "latitude" => $latitude] = $cordinates;
 
-        //create event 
+        //create event
         $this->find($pk)->update(["event_name" => $event_name, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type, "location_lat" => $latitude, "location_long" => $longitude]);
 
         //Get event id

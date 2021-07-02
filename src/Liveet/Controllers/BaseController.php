@@ -270,7 +270,7 @@ class BaseController
             $data["error"] = "event not found";
         }
 
-        $event_code_dir = $event_code ? "$event_code/" : "event-pics/";
+        $event_code_dir = $event_code ? "$event_code/" : "/";
         $event_code_key = $event_code ? "$event_code-" : "";
 
         $mediaKey = $mediaOption["mediaKey"];
@@ -307,7 +307,7 @@ class BaseController
         $newMedia = fopen($tempMediaPath, 'r');
 
         $bucket = "liveet-media";
-        $folder = isset($event_code) ? "$event_code/$key" : "event-pics/$key";
+        $folder = isset($event_code) ? "$event_code/$key" : $key;
         $contentType = $this->getContentType($mediaExtType, $mediaType);
         try {
             $s3 = new S3Client([
@@ -582,7 +582,7 @@ class BaseController
             $data["error"] = "event not found";
         }
 
-        $event_code_dir = $event_code ? "$event_code/" : "";
+        $event_code_dir = $event_code ? "$event_code/" : "/";
         $event_code_key = $event_code ? "$event_code-" : "";
 
         $filetype = strtolower($filetype);

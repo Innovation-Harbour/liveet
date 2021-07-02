@@ -197,7 +197,7 @@ class BaseController
 
     /**
      * Parses base64 images to url
-     * 
+     *
      * $accountOptions["mediaOptions"=>[
      *  ["mediaKey"=>"", "mediaPrefix"=>"", multiple=>false]
      * ]
@@ -270,7 +270,7 @@ class BaseController
             $data["error"] = "event not found";
         }
 
-        $event_code_dir = $event_code ? "$event_code/" : "";
+        $event_code_dir = $event_code ? "$event_code/" : "event-pics/";
         $event_code_key = $event_code ? "$event_code-" : "";
 
         $mediaKey = $mediaOption["mediaKey"];
@@ -307,7 +307,7 @@ class BaseController
         $newMedia = fopen($tempMediaPath, 'r');
 
         $bucket = "liveet-media";
-        $folder = isset($event_code) ? "$event_code/$key" : $key;
+        $folder = isset($event_code) ? "$event_code/$key" : "event-pics/$key";
         $contentType = $this->getContentType($mediaExtType, $mediaType);
         try {
             $s3 = new S3Client([
@@ -759,7 +759,7 @@ class BaseController
      * @param Model $model
      * @param Array $inputs
      * @param Arrat $accountOptions = []
-     * 
+     *
      */
 
     public function createSelf(Request $request, ResponseInterface $response, $model, array $inputs = ["required" => [], "expected" => []], array $accountOptions = [], array $override = [], array $checks = []): ResponseInterface

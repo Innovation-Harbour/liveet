@@ -514,10 +514,10 @@ class AuthController extends BaseController {
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
-    $address = "Eko Hotel & Suite, Victoria Island Lagos";
+    $address = "Eko Hotel & Suite, Victoria Island,Lagos Nigeria";
 
-    $coods = $this->getCoordinates($address);
-    var_dump($coods);
+    [$address_found, $latitude, $longitude] = $this->getCoordinates($address);
+    var_dump($address_found, $latitude, $longitude);
     die;
   }
 

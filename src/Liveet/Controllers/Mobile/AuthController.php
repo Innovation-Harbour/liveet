@@ -450,7 +450,7 @@ class AuthController extends BaseController {
     $confidence = $result["FaceDetails"][0]["Gender"]["Confidence"];
 
 
-    if($confidence > 50)
+    if($confidence > 95)
     {
       //get temp data and delete temp data from db
       $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();

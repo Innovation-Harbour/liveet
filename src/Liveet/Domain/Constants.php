@@ -80,6 +80,7 @@ class Constants
 
   const MEDIA_TYPE_IMAGE = "IMAGE";
   const MEDIA_TYPE_VIDEO = "VIDEO";
+  const MEDIA_TYPE_PDF = "PDF";
 
   const MOBILE_APP_DOWNLOAD_URL = "https://bit.ly/liveet";
 

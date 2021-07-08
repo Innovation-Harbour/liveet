@@ -582,7 +582,6 @@ class EventMobileController extends BaseController {
 
   public function getEventMetrics(Request $request, ResponseInterface $response): ResponseInterface
   {
-    $ticket_db = new EventTicketUserModel();
     $invitation_db = new InvitationModel();
     $user_db = new UserModel();
 
@@ -595,14 +594,11 @@ class EventMobileController extends BaseController {
     $user_phone = $user_details->user_phone;
 
     $invitation_count = 0;
-    $history_count = 0;
 
-    $history_count = $ticket_db->where("user_id",$user_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE)->count();
     $invitation_count = $invitation_db->where("event_invitee_user_phone",$user_phone)->where("event_invitation_status", Constants::INVITATION_PENDING)->count();
 
     $response_data = [
-      "invitation_count" => intval($invitation_count),
-      "history_count" => intval($history_count),
+      "invitation_count" => intval($invitation_count)
     ];
 
     $payload = ["statusCode" => 200, "data" => $response_data];

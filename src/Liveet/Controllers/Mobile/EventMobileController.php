@@ -1355,6 +1355,7 @@ class EventMobileController extends BaseController {
         "event_title" => $result->event_name,
         "is_video" => ($result->media_type === Constants::MEDIA_TYPE_VIDEO) ? true : false,
         "is_image" => ($result->media_type === Constants::MEDIA_TYPE_IMAGE) ? true : false,
+        "is_pdf" => ($result->media_type === Constants::MEDIA_TYPE_PDF) ? true : false,
         "timeline_desc" => $result->timeline_desc
       ];
 

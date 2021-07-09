@@ -663,6 +663,9 @@ class EventMobileController extends BaseController {
     $invitation_db = new InvitationModel();
     $user_db = new UserModel();
     $control_db = new EventControlModel();
+    $event_db = new EventModel();
+    $ticket_db = new EventTicketModel();
+    $ticket_user_db = new EventTicketUserModel();
 
     $data = $request->getParsedBody();
 
@@ -673,15 +676,49 @@ class EventMobileController extends BaseController {
     $invitation_details = $invitation_db->where("event_invitation_id",$invitation_id)->first();
     $event_id = $invitation_details->event_id;
     $user_id = $invitation_details->event_inviter_user_id;
+    $invited_phone = $invitation_details->event_invitee_user_phone;
 
     $user_details = $user_db->where("user_id",$user_id)->first();
     $inviter_phone = $user_details->user_phone;
+    $inviter_name = $user_details->user_fullname;
+
+    $invited_details = $user_db->where("user_phone",$invited_phone)->first();
+    $invited_user_id = $invited_details->user_id;
 
     $inviter_details = $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$inviter_phone)->first();
     $invite_count = $inviter_details->invitee_can_invite_count;
 
     $control_details = $control_db->where("event_id",$event_id)->first();
     $can_invite = $control_details->event_can_invite;
+
+    $accepted_invitation = $ticket_db->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
+    ->where([
+      "event_ticket.event_id" => $event_id,
+      "event_ticket_users.user_id" => $invited_user_id,
+      "event_ticket_users.ownership_status" => Constants::EVENT_TICKET_ACTIVE
+    ]);
+
+    if($accepted_invitation->exists())
+    {
+      $accepted_details = $accepted_invitation->select('event_ticket_users.event_ticket_user_id','event_ticket_users.status')->first();
+      $ticket_user_id = $accepted_details->event_ticket_user_id;
+      $ticket_status = $accepted_details->status;
+
+      if($ticket_status === Constants::EVENT_TICKET_USED)
+      {
+        $error = ["errorMessage" => "Accepted Invitation has been used and can't be Recalled Again", "statusCode" => 400];
+        return $this->json->withJsonResponse($response, $error);
+      }
+
+      $ticket_user_db->where("event_ticket_user_id",$ticket_user_id)->update(["ownership_status" => Constants::EVENT_TICKET_RECALLED]);
+
+      $event_details = $event_db->where("event_id",$event_id)->first();
+      $event_name = $event_details->event_name;
+
+      $message = "Your Invitation for the event: ".$event_name." has been recalled by ".$inviter_name;
+
+      $send_sms = $this->termii->sendSMS($invited_phone, $message);
+    }
 
     $invitation_db->where("event_invitation_id",$invitation_id)->forceDelete();
 
@@ -971,7 +1008,7 @@ class EventMobileController extends BaseController {
         "invitee_pics" => ($userCount > 0) ? $user_pics : null,
         "invitee_shortname" => ($userCount > 0) ? "" : "NN",
         "invitee_status" => strtolower($result->event_invitation_status),
-        "can_close" => ($result->event_invitation_status === Constants::INVITATION_ACCEPT) ? false : true,
+        "can_close" => true,
       ];
 
       array_push($response_data,$tmp);

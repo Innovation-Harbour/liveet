@@ -22,7 +22,6 @@ class OrganiserController extends BaseController {
     $this->json = new JSON();
   }
 
-  /*
   public function Login (Request $request, ResponseInterface $response): ResponseInterface
   {
 
@@ -33,19 +32,16 @@ class OrganiserController extends BaseController {
     $email = $data["email"];
     $password = $data["password"];
 
-    $hashed_password = hash('sha256',$password);
-
+    $kmg = new KeyManager();
+    $hashed_password = $kmg->getDigest($password);
 
     $user_count = $organiser_db->where('organiser_email', $email)->count();
 
     if($user_count < 1)
     {
       $error = ["errorMessage" => "Email Not Registered. Please Try Again", "statusCode" => 400];
-
       return $this->json->withJsonResponse($response, $error);
     }
-
-    return $this->login($request, $response, new OrganiserModel(), ["organiser_username", "organiser_password"], ["publicKeyKey" => "public_key", "passwordKey" => "organiser_password"]);
 
     $organiser_data = $organiser_db->where('organiser_email', $email)->first();
 
@@ -54,7 +50,6 @@ class OrganiserController extends BaseController {
     if($hashed_password !== $db_password)
     {
       $error = ["errorMessage" => "Password Not Correct. Please Try Again", "statusCode" => 400];
-
       return $this->json->withJsonResponse($response, $error);
     }
 
@@ -67,14 +62,6 @@ class OrganiserController extends BaseController {
     $payload = ["statusCode" => 200, "data" => $data_to_view];
 
     return $this->json->withJsonResponse($response, $payload);
-
-  }
-
-  */
-
-  public function Login(Request $request, ResponseInterface $response): ResponseInterface
-  {
-      return $this->login($request, $response, new OrganiserModel(), ["organiser_username", "organiser_password"], ["publicKeyKey" => "public_key", "passwordKey" => "organiser_password"]);
   }
 
   public function VerifyOTP (Request $request, ResponseInterface $response): ResponseInterface

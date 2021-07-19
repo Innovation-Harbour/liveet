@@ -4,9 +4,9 @@ namespace Liveet\Controllers\Mobile;
 
 use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
-use Liveet\Models\Mobile\TempsModel;
 use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\UserModel;
+use Liveet\Models\OrganiserModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
@@ -18,110 +18,15 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class OrganiserController extends BaseController {
   use LiveetFunction;
 
-  public function Register (Request $request, ResponseInterface $response): ResponseInterface
-  {
-    $eligible_phone_starting = array("6","7","8","9");
-
-    //declare needed class objects
-    $json = new JSON();
-    $user_db = new UserModel();
-    $temp_db = new TempsModel();
-
-
-    $data = $request->getParsedBody();
-
-    $phone = $data["phone"];
-    $resetpassword = $data["resetPassword"];
-
-    $for_password_reset = ($resetpassword === "true") ? true : false;
-    $country_code = substr($phone, 0, 4);
-
-    $rest_of_phone_number = substr($phone, 4);
-
-    if(strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0")
-    {
-      $rest_of_phone_number = substr($rest_of_phone_number, 1);
-    }
-
-    $phone_count = strlen($rest_of_phone_number);
-
-    if ($country_code !=="+234")
-    {
-      $error = ["errorMessage" => "Selected Country not supported at the moment for now", "statusCode" => 400];
-
-      return $json->withJsonResponse($response, $error);
-    }
-
-    if($phone_count == 10 && in_array($rest_of_phone_number[0], $eligible_phone_starting))
-    {
-      $country_code_clean = substr($country_code, 1);
-
-      $phone_clean = $country_code_clean.$rest_of_phone_number;
-
-      $phone_full = $country_code.$rest_of_phone_number;
-
-      $user_count = $user_db->where('user_phone', $phone_clean)->count();
-
-
-      $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
-
-
-      if($for_password_reset){
-        if($user_count < 1)
-        {
-          $error = ["errorMessage" => "No User Found with this Phone Number", "statusCode" => 400];
-
-          return $json->withJsonResponse($response, $error);
-        }
-      } else{
-        // registration
-        if($user_count > 0)
-        {
-          $error = ["errorMessage" => "Phone Number Already Registered", "statusCode" => 400];
-
-          return $json->withJsonResponse($response, $error);
-        }
-      }
-
-      // here we send sms
-      $sms_response = json_decode($this->sendSMS($phone_clean),true);
-
-      $sms_status = $sms_response['smsStatus'];
-
-      if($sms_status !== "Message Sent")
-      {
-        $error = ["errorMessage" => "Error sending SMS. Please Register Again", "statusCode" => 400];
-        return $json->withJsonResponse($response, $error);
-      }
-
-      $sms_pin = $sms_response['pinId'];
-
-      if($temp_count < 1 && !$for_password_reset)
-      {
-        $temp_db->create(["temp_phone" => $phone_clean]);
-      }
-
-      $data_to_view = ["country_code" => $country_code, "Phone_Number" => $phone_full, "sms_pin" => $sms_pin];
-
-      $payload = ["statusCode" => 200, "data" => $data_to_view];
-
-      return $json->withJsonResponse($response, $payload);
-    }
-    else{
-      $error = ["errorMessage" => "Phone Number Does Not Match The Number Format for Selected Country", "statusCode" => 400];
-
-      return $json->withJsonResponse($response, $error);
-    }
+  public function __construct (){
+    $this->json = new JSON();
   }
 
   public function Login (Request $request, ResponseInterface $response): ResponseInterface
   {
 
     //declare needed class objects
-    $json = new JSON();
-    $user_db = new UserModel();
-    $keymanager = new KeyManager();
-
+    $organiser_db = new OrganiserModel();
     $data = $request->getParsedBody();
 
     $email = $data["email"];
@@ -130,45 +35,35 @@ class OrganiserController extends BaseController {
     $hashed_password = hash('sha256',$password);
 
 
-    $user_count = $user_db->where('user_email', $email)->count();
+    $user_count = $organiser_db->where('organiser_email', $email)->count();
 
     if($user_count < 1)
     {
       $error = ["errorMessage" => "Email Not Registered. Please Try Again", "statusCode" => 400];
 
-      return $json->withJsonResponse($response, $error);
+      return $this->json->withJsonResponse($response, $error);
     }
 
-    $user_data = $user_db->where('user_email', $email)->take(1)->get();
-    $user_data_clean = $user_data[0];
+    $organiser_data = $organiser_db->where('organiser_email', $email)->first();
 
-    $db_password = $user_data_clean->user_password;
+    $db_password = $organiser_data->organiser_password;
 
     if($hashed_password !== $db_password)
     {
       $error = ["errorMessage" => "Password Not Correct. Please Try Again", "statusCode" => 400];
 
-      return $json->withJsonResponse($response, $error);
+      return $this->json->withJsonResponse($response, $error);
     }
 
-    //create user auth token
-
-    $user_data_token = [
-      "email" => $email
-    ];
-
-    $token = $keymanager->createClaims($user_data_token);
-
     //get user data
-    $fullname = $user_data_clean->user_fullname;
-    $user_id = $user_data_clean->user_id;
-    $user_picture = $user_data_clean->user_picture;
+    $fullname = $organiser_data->organiser_name;
+    $organiser_id = $organiser_data->organiser_id;
 
-    $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname,"user_id" => $user_id,"user_pics" => $user_picture];
+    $data_to_view = ["email" => $email,"name" => $fullname,"id" => $organiser_id];
 
     $payload = ["statusCode" => 200, "data" => $data_to_view];
 
-    return $json->withJsonResponse($response, $payload);
+    return $this->json->withJsonResponse($response, $payload);
 
   }
 

@@ -2,7 +2,7 @@
 
 use Slim\Routing\RouteCollectorProxy;
 
-use Liveet\Controllers\Mobile\OrganiserController;
+use Liveet\Controllers\OrganiserController;
 
 
 isset($mobileGroup) && $mobileGroup->group(
@@ -11,7 +11,7 @@ isset($mobileGroup) && $mobileGroup->group(
 
         $organiserGroup->post(
             "/login",
-            OrganiserController::class . ":Login"
+            OrganiserController::class . ":loginOrganiser"
         );
 
         $organiserGroup->post(

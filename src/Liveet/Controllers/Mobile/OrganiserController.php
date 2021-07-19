@@ -22,6 +22,7 @@ class OrganiserController extends BaseController {
     $this->json = new JSON();
   }
 
+  /*
   public function Login (Request $request, ResponseInterface $response): ResponseInterface
   {
 
@@ -44,6 +45,8 @@ class OrganiserController extends BaseController {
       return $this->json->withJsonResponse($response, $error);
     }
 
+    return $this->login($request, $response, new OrganiserModel(), ["organiser_username", "organiser_password"], ["publicKeyKey" => "public_key", "passwordKey" => "organiser_password"]);
+
     $organiser_data = $organiser_db->where('organiser_email', $email)->first();
 
     $db_password = $organiser_data->organiser_password;
@@ -65,6 +68,13 @@ class OrganiserController extends BaseController {
 
     return $this->json->withJsonResponse($response, $payload);
 
+  }
+
+  */
+
+  public function Login(Request $request, ResponseInterface $response): ResponseInterface
+  {
+      return $this->login($request, $response, new OrganiserModel(), ["organiser_username", "organiser_password"], ["publicKeyKey" => "public_key", "passwordKey" => "organiser_password"]);
   }
 
   public function VerifyOTP (Request $request, ResponseInterface $response): ResponseInterface

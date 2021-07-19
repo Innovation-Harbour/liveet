@@ -8,5 +8,6 @@ isset($v1Group) && $v1Group->group(
 
         require "src/Liveet/Routes/v1/mobile/Auth.php";
         require "src/Liveet/Routes/v1/mobile/Event.php";
+        require "src/Liveet/Routes/v1/mobile/Organiser.php";
     }
 );

@@ -75,6 +75,9 @@ class OrganiserController extends BaseController {
 
     $organiser_id = $args["organiser_id"];
 
+    var_dump($organiser_id);
+    die;
+
     $invited_for_results = $db->where("organiser_id", $organiser_id)->get();
 
     foreach($invited_for_results as $result)

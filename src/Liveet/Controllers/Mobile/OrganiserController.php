@@ -74,8 +74,10 @@ class OrganiserController extends BaseController {
     $response_data = [];
 
     $organiser_id = $args["organiser_id"];
+    $offset = $args["offset"];
+    $limit = $args["limit"];
 
-    $invited_for_results = $db->where("organiser_id", $organiser_id)->get();
+    $invited_for_results = $db->where("organiser_id", $organiser_id)->offset($offset)->limit($limit)->get();
 
     foreach($invited_for_results as $result)
     {

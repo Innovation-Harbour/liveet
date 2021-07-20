@@ -21,7 +21,7 @@ isset($mobileGroup) && $mobileGroup->group(
 
         $organiserGroup->get(
             "/getevents/{organiser_id}",
-            AuthController::class . ":getOrganiserEvent"
+            OrganiserController::class . ":getOrganiserEvent"
         );
     }
 );

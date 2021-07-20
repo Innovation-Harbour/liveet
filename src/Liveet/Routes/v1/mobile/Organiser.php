@@ -20,7 +20,7 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $organiserGroup->get(
-            "/getevents/{organiser_id}",
+            "/getevents/{organiser_id}/{offset}/{limit}",
             OrganiserController::class . ":getOrganiserEvent"
         );
     }

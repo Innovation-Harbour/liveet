@@ -19,6 +19,11 @@ isset($mobileGroup) && $mobileGroup->group(
             OrganiserController::class . ":verifyUser"
         );
 
+        $organiserGroup->post(
+            "/manualverify/{event_id}",
+            OrganiserController::class . ":manualVerifyUser"
+        );
+
         $organiserGroup->get(
             "/getevents/{organiser_id}/{offset}/{limit}",
             OrganiserController::class . ":getOrganiserEvent"

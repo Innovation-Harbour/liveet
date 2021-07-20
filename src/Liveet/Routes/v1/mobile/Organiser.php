@@ -20,7 +20,7 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $organiserGroup->get(
-            "/getevents",
+            "/getevents/{organiser_id}",
             AuthController::class . ":getOrganiserEvent"
         );
     }

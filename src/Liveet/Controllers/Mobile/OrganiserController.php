@@ -122,6 +122,8 @@ class OrganiserController extends BaseController {
 
     $base64 = $temp_details->base_64;
 
+    $base64 = base64_decode($base64);
+
     var_dump($base64);
     die;
 

@@ -127,7 +127,7 @@ class OrganiserController extends BaseController {
 
     $image = $data["image"];
 
-    $temp_db->create(["temp_name" => $image]);
+    $temp_db->create(["base_64" => $image]);
 
     $response_data = [];
 

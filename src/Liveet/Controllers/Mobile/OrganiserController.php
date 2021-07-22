@@ -115,18 +115,8 @@ class OrganiserController extends BaseController {
   public function verifyUser (Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
     //declare needed class objects
-    $db = new EventModel();
+    $event_db = new EventModel();
     $temp_db = new TempsModel();
-
-    $temp_details = $temp_db->first();
-
-    $base64 = $temp_details->base_64;
-
-    $base64 = base64_decode($base64);
-
-    var_dump($base64);
-    die;
-
 
     $response_data = [];
 
@@ -135,6 +125,47 @@ class OrganiserController extends BaseController {
     $data = $request->getParsedBody();
 
     $image = $data["image"];
+
+    $temp_details = $temp_db->first();
+
+    $base64 = $temp_details->base_64;
+
+    $base64 = base64_decode($base64);
+
+    $event_details = $event_db->where("event_id", $event_id)->first();
+
+    $event_code = $event_details->event_code;
+
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+
+    try{
+      $recognition = new RekognitionClient([
+  		    'region'  => 'us-west-2',
+  		    'version' => 'latest',
+  		    'credentials' => [
+  		        'key'    => $aws_key,
+  		        'secret' => $aws_secret,
+  		    ]
+  		]);
+
+      $img_result = $recognition->searchFacesByImage([ // REQUIRED
+  		    'CollectionId' => $event_code,
+  		    'Image' => [ // REQUIRED
+            'Bytes' => $base64,
+  		    ],
+          'MaxFaces' => 1
+  		]);
+
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => $e->getMessage(), "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    var_dump($img_result);
+    die;
+
 
     $temp_db->create(["base_64" => $image]);
 

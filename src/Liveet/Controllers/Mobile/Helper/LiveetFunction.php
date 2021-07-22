@@ -251,6 +251,7 @@ trait LiveetFunction
   {
     $is_approved = false;
     $ticket_name  = false;
+    $user_id = false;
     $event_db = new EventModel();
     $ticket_db = new EventTicketModel();
     $event_user_db = new EventTicketUserModel();
@@ -285,7 +286,7 @@ trait LiveetFunction
 
     }
     catch (\Exception $e){
-      return [$is_approved,$ticket_name];
+      return [$is_approved,$ticket_name,$user_id];
     }
 
     if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
@@ -298,6 +299,7 @@ trait LiveetFunction
       {
         $user_details =  $event_user->first();
         $ticket_id = $user_details->event_ticket_id;
+        $user_id = $user_details->user_id;
 
         $ticket_details = $ticket_db->where("event_ticket_id", $ticket_id)->first();
         $ticket_name = $ticket_details->ticket_name;
@@ -307,6 +309,6 @@ trait LiveetFunction
         $is_approved = true;
       }
     }
-     return [$is_approved,$ticket_name];
+     return [$is_approved,$ticket_name,$user_id];
   }
 }

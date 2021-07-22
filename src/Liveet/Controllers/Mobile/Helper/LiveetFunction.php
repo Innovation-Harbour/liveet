@@ -292,10 +292,12 @@ trait LiveetFunction
     {
       $face_id = $img_result["FaceMatches"][0]["Face"]["FaceId"];
 
-      var_dump($face_id);
-      die;
+
 
       $event_user = $event_user_db->where("user_face_id",$face_id)->where("ownership_status",EVENT_TICKET_ACTIVE);
+
+      var_dump($event_user);
+      die;
 
       if($event_user->count() == 1)
       {

@@ -118,6 +118,13 @@ class OrganiserController extends BaseController {
     $db = new EventModel();
     $temp_db = new TempsModel();
 
+    $temp_details = $temp_db->first();
+
+    $base64 = $temp_details->base_64;
+
+    var_dump($base64);
+    die;
+
 
     $response_data = [];
 

@@ -8,6 +8,7 @@ use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\UserModel;
 use Liveet\Models\OrganiserModel;
 use Liveet\Models\EventModel;
+use Liveet\Models\Mobile\TempsModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
@@ -105,6 +106,30 @@ class OrganiserController extends BaseController {
         array_push($response_data,$tmp);
       }
     }
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function verifyUser (Request $request, ResponseInterface $response, array $args): ResponseInterface
+  {
+    //declare needed class objects
+    $db = new EventModel();
+    $temp_db = new TempsModel();
+
+
+    $response_data = [];
+
+    $event_id = $args["event_id"];
+
+    $data = $request->getParsedBody();
+
+    $image = $data["image"];
+
+    $temp_db->create(["temp_name" => $image]);
+
+    $response_data = [];
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 

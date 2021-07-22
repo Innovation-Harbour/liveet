@@ -161,6 +161,9 @@ class OrganiserController extends BaseController {
 
     $phone = $data["phone"];
 
+    var_dump($phone);
+    die;
+
     $country_code = substr($phone, 0, 4);
 
     $rest_of_phone_number = substr($phone, 4);
@@ -174,8 +177,7 @@ class OrganiserController extends BaseController {
 
     $phone_clean = $country_code_clean.$rest_of_phone_number;
 
-    var_dump($phone_clean);
-    die;
+
 
     $user = $user_db->where("user_phone",$phone_clean);
 

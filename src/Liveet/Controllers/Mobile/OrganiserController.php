@@ -118,8 +118,6 @@ class OrganiserController extends BaseController {
     $event_db = new EventModel();
     $temp_db = new TempsModel();
 
-    $response_data = [];
-
     $event_id = $args["event_id"];
 
     $data = $request->getParsedBody();
@@ -130,61 +128,21 @@ class OrganiserController extends BaseController {
 
     $base64 = $temp_details->base_64;
 
-    $base64 = base64_decode($base64);
+    [$is_approved,$ticketname] = $this->checkFaceMatchForEvent($base64,$event_id);
 
-    $event_details = $event_db->where("event_id", $event_id)->first();
-
-    $event_code = $event_details->event_code;
-
-    $aws_key = $_ENV["AWS_KEY"];
-    $aws_secret = $_ENV["AWS_SECRET"];
-
-    try{
-      $recognition = new RekognitionClient([
-  		    'region'  => 'us-west-2',
-  		    'version' => 'latest',
-  		    'credentials' => [
-  		        'key'    => $aws_key,
-  		        'secret' => $aws_secret,
-  		    ]
-  		]);
-
-      $img_result = $recognition->searchFacesByImage([ // REQUIRED
-  		    'CollectionId' => $event_code,
-  		    'Image' => [ // REQUIRED
-            'Bytes' => $base64,
-  		    ],
-          'MaxFaces' => 1
-  		]);
-
-    }
-    catch (\Exception $e){
-      $error = ["errorMessage" => $e->getMessage(), "statusCode" => 400];
-      return $this->json->withJsonResponse($response, $error);
-    }
-
-    if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
+    if($is_approved)
     {
-      $face_id = $img_result["FaceMatches"][0]["Face"]["FaceId"];
+      $response_data = [
+        "ticket_name" => $ticketname
+      ];
 
-      var_dump($face_id);
-      die;
+      $payload = ["statusCode" => 200, "data" => $response_data];
+      return $this->json->withJsonResponse($response, $payload);
     }
     else {
-      var_dump("Face Id not Set");
-      die;
+      $error = ["errorMessage" => "Face Not allowed access for this event", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
     }
-
-
-
-
-    $temp_db->create(["base_64" => $image]);
-
-    $response_data = [];
-
-    $payload = ["statusCode" => 200, "data" => $response_data];
-
-    return $this->json->withJsonResponse($response, $payload);
   }
 
 }

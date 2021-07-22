@@ -8,12 +8,12 @@ use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\UserModel;
 use Liveet\Models\OrganiserModel;
 use Liveet\Models\EventModel;
-use Liveet\Models\Mobile\TempsModel;
+use Liveet\Models\EventTicketModel;
+use Liveet\Models\EventTicketUserModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
 use Aws\Rekognition\RekognitionClient;
-use Aws\S3\S3Client;
 use Rashtell\Domain\KeyManager;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -145,6 +145,73 @@ class OrganiserController extends BaseController {
       $error = ["errorMessage" => "Face Not allowed access for this event", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
+  }
+
+  public function manualVerifyUser (Request $request, ResponseInterface $response, array $args): ResponseInterface
+  {
+    //declare needed class objects
+    $event_db = new EventModel();
+    $user_db = new UserModel();
+    $ticket_db = new EventTicketModel();
+    $event_user_db = new EventTicketUserModel();
+
+    $event_id = $args["event_id"];
+
+    $data = $request->getParsedBody();
+
+    $phone = $data["phone"];
+
+    $country_code = substr($phone, 0, 4);
+
+    $rest_of_phone_number = substr($phone, 4);
+
+    if(strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0")
+    {
+      $rest_of_phone_number = substr($rest_of_phone_number, 1);
+    }
+
+    $country_code_clean = substr($country_code, 1);
+
+    $phone_clean = $country_code_clean.$rest_of_phone_number;
+
+    $user = $user_db->where("user_phone",$phone_clean);
+
+    if($user->count() < 1)
+    {
+      $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    $user_details = $user-first();
+    $user_id = $user_details->user_id;
+    $user_fullname = $user_details->user_fullname;
+    $user_pics = $user_details->user_picture;
+
+    $attendee_query = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
+    ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
+    ->select('event_ticket_users.event_ticket_user_id','event_ticket.ticket_name')
+    ->where("event_ticket_users.user_id",$user_id)->where("event_ticket.event_id",$event_id)->where("event_ticket_users.ownership_status",Constants::EVENT_TICKET_ACTIVE);
+
+    if($attendee_query->count() < 1)
+    {
+      $error = ["errorMessage" => "User Not registered for event", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
+    $attendee_details = $attendee_query->first();
+    $ticket_name = $attendee_details->ticket_name;
+    $event_ticket_id = $attendee_details->event_ticket_user_id;
+
+    $event_user_db->where("event_ticket_user_id",$event_ticket_id)->update(["status" => Constants::EVENT_TICKET_USED]);
+
+    $response_data = [
+      "ticket_name" => $ticket_name,
+      "fullname" => $user_fullname,
+      "user_pics" => $user_pics
+    ];
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+    return $this->json->withJsonResponse($response, $payload);
   }
 
 }

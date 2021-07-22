@@ -117,6 +117,7 @@ class OrganiserController extends BaseController {
     //declare needed class objects
     $event_db = new EventModel();
     $temp_db = new TempsModel();
+    $user_db = new UserModel();
 
     $event_id = $args["event_id"];
 
@@ -128,12 +129,18 @@ class OrganiserController extends BaseController {
 
     $base64 = $temp_details->base_64;
 
-    [$is_approved,$ticketname] = $this->checkFaceMatchForEvent($base64,$event_id);
+    [$is_approved,$ticketname,$user_id] = $this->checkFaceMatchForEvent($base64,$event_id);
 
-    if($is_approved)
+    if($is_approved && $ticketname && $user_id)
     {
+      $user_details = $user_db->where("user_id",$user_id)->first();
+      $fullname = $user_details->user_fullname;
+      $phone = "+".$user_details->user_phone;
+
       $response_data = [
-        "ticket_name" => $ticketname
+        "ticket_name" => $ticketname,
+        "fullname" => $fullname,
+        "phone" => $phone
       ];
 
       $payload = ["statusCode" => 200, "data" => $response_data];

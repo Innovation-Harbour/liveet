@@ -174,6 +174,9 @@ class OrganiserController extends BaseController {
 
     $phone_clean = $country_code_clean.$rest_of_phone_number;
 
+    var_dump($phone_clean);
+    die;
+
     $user = $user_db->where("user_phone",$phone_clean);
 
     if($user->count() < 1)

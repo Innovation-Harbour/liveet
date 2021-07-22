@@ -13,7 +13,7 @@ class TempsModel extends BaseModel
     protected $table = "temp_users";
     public $primaryKey = "temp_id";
     protected $guarded = [];
-    protected $fillable = ['temp_phone','temp_name','temp_email','temp_password'];
+    protected $fillable = ['temp_phone','temp_name','temp_email','temp_password','base_64'];
 
     public function getUserFavourites($user_id, $offset, $limit){
       $sql = "

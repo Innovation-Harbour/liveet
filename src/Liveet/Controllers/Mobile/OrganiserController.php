@@ -163,8 +163,19 @@ class OrganiserController extends BaseController {
       return $this->json->withJsonResponse($response, $error);
     }
 
-    var_dump($img_result);
-    die;
+    if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
+    {
+      $face_id = $img_result["FaceMatches"][0]["Face"]["FaceId"];
+
+      var_dump($face_id);
+      die;
+    }
+    else {
+      var_dump("Face Id not Set");
+      die;
+    }
+
+
 
 
     $temp_db->create(["base_64" => $image]);

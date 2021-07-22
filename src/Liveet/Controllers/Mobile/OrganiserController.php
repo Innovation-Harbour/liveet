@@ -180,16 +180,13 @@ class OrganiserController extends BaseController {
 
     $user = $user_db->where("user_phone",$phone_clean);
 
-    var_dump($user->count());
-    die;
-
     if($user->count() < 1)
     {
       $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
 
-    $user_details = $user-first();
+    $user_details = $user->first();
     $user_id = $user_details->user_id;
     $user_fullname = $user_details->user_fullname;
     $user_pics = $user_details->user_picture;

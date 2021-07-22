@@ -294,9 +294,6 @@ trait LiveetFunction
 
       $event_user = $event_user_db->where("user_face_id",$face_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
 
-      var_dump($event_user->count());
-      die;
-
       if($event_user->count() == 1)
       {
         $user_details =  $event_user->first();

@@ -10,6 +10,9 @@ use Fcm\FcmClient;
 use Fcm\Topic\Subscribe;
 use Fcm\Topic\Unsubscribe;
 use Fcm\Push\Notification;
+use Liveet\Models\EventModel;
+use Liveet\Models\EventTicketModel;
+use Liveet\Models\EventTicketUserModel;
 
 
 /**
@@ -242,5 +245,68 @@ trait LiveetFunction
     }
 
     return true;
+  }
+
+  public function checkFaceMatchForEvent($base64,$event_identifier,$from_mqtt = false)
+  {
+    $is_approved = false;
+    $ticket_name  = false;
+    $event_db = new EventModel();
+    $ticket_db = new EventTicketModel();
+    $event_user_db = new EventTicketUserModel();
+
+    $event_id = $event_identifier;
+
+    $byte_image = base64_decode($base64);
+
+    $event_details = $event_db->where("event_id", $event_id)->first();
+    $event_code = $event_details->event_code;
+
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+
+    try{
+      $recognition = new RekognitionClient([
+  		    'region'  => 'us-west-2',
+  		    'version' => 'latest',
+  		    'credentials' => [
+  		        'key'    => $aws_key,
+  		        'secret' => $aws_secret,
+  		    ]
+  		]);
+
+      $img_result = $recognition->searchFacesByImage([ // REQUIRED
+  		    'CollectionId' => $event_code,
+  		    'Image' => [ // REQUIRED
+            'Bytes' => $byte_image,
+  		    ],
+          'MaxFaces' => 1
+  		]);
+
+    }
+    catch (\Exception $e){
+      return [$is_approved,$ticket_name];
+    }
+
+    if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
+    {
+      $face_id = $img_result["FaceMatches"][0]["Face"]["FaceId"];
+
+      $event_user = $event_user_db->where("user_face_id",$face_id)->where("ownership_status",EVENT_TICKET_ACTIVE);
+
+      if($event_user->count() == 1)
+      {
+        $user_details =  $event_user->first();
+        $ticket_id = $user_details->event_ticket_id;
+
+        $ticket_details = $ticket_db->where("event_ticket_id", $ticket_id)->first();
+        $ticket_name = $ticket_details->ticket_name;
+
+        //update the ticket as used
+        $event_user->update(["status" => Constants::EVENT_TICKET_USED]);
+        $is_approved = true;
+      }
+    }
+     return [$is_approved,$ticket_name];
   }
 }

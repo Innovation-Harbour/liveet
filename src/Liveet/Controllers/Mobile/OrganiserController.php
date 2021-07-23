@@ -31,21 +31,21 @@ class OrganiserController extends BaseController {
     $organiser_db = new OrganiserModel();
     $data = $request->getParsedBody();
 
-    $username = $data["username"];
+    $email = $data["email"];
     $password = $data["password"];
 
     $kmg = new KeyManager();
     $hashed_password = $kmg->getDigest($password);
 
-    $user_count = $organiser_db->where('organiser_username', $username)->count();
+    $user_count = $organiser_db->where('organiser_email', $email)->count();
 
     if($user_count < 1)
     {
-      $error = ["errorMessage" => "Username Not Registered. Please Try Again", "statusCode" => 400];
+      $error = ["errorMessage" => "Email Not Registered. Please Try Again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
 
-    $organiser_data = $organiser_db->where('organiser_username', $username)->first();
+    $organiser_data = $organiser_db->where('organiser_email', $email)->first();
 
     $db_password = $organiser_data->organiser_password;
 

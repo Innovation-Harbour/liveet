@@ -149,7 +149,9 @@ class OrganiserController extends BaseController {
           'MaxFaces' => 1
   		]);
 
-      var_dump($img_result);
+      $similarity = round($img_result["FaceMatches"][0]["Similarity"]);
+
+      var_dump($similarity);
       die;
 
     }

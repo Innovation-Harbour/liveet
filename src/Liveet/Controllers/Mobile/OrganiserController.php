@@ -143,24 +143,12 @@ class OrganiserController extends BaseController {
   		    'Image' => [ // REQUIRED
             'S3Object' => [
             'Bucket' => 'liveet-users',
-            'Name' => 'dayo_image.jpeg',
+            'Name' => 'damilare-2.jpeg',
             ]
   		    ],
           'MaxFaces' => 1
   		]);
-
-      $similarity = round($img_result["FaceMatches"][0]["Similarity"]);
-
-      if($similarity > 95)
-      {
-        var_dump("similarity passed");
-        die;
-      } else {
-        var_dump("similarity failed");
-        die;
-      }
-
-      var_dump($similarity);
+      var_dump($img_result);
       die;
 
     }

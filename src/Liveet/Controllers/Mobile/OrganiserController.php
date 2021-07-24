@@ -142,7 +142,7 @@ class OrganiserController extends BaseController {
   		    'Image' => [ // REQUIRED
             'S3Object' => [
             'Bucket' => 'liveet-users',
-            'Name' => 'damilare-1.jpeg',
+            'Name' => 'dayo_image.jpeg',
             ]
   		    ],
           'MaxFaces' => 1

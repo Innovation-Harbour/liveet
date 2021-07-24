@@ -139,11 +139,11 @@ class OrganiserController extends BaseController {
 
       $img_result = $recognition->searchFacesByImage([ // REQUIRED
   		    'CollectionId' => $event_code,
-          'FaceMatchThreshold' => 99.0,
+          'FaceMatchThreshold' => 95.0,
   		    'Image' => [ // REQUIRED
             'S3Object' => [
             'Bucket' => 'liveet-users',
-            'Name' => 'user-67614587-image.png',
+            'Name' => 'dayo_image.jpeg',
             ]
   		    ],
           'MaxFaces' => 1

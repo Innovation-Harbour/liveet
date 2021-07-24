@@ -120,43 +120,6 @@ class OrganiserController extends BaseController {
 
     $event_id = $args["event_id"];
 
-
-    $event_details = $event_db->where("event_id", $event_id)->first();
-    $event_code = $event_details->event_code;
-
-    $aws_key = $_ENV["AWS_KEY"];
-    $aws_secret = $_ENV["AWS_SECRET"];
-
-    try{
-      $recognition = new RekognitionClient([
-  		    'region'  => 'us-west-2',
-  		    'version' => 'latest',
-  		    'credentials' => [
-  		        'key'    => $aws_key,
-  		        'secret' => $aws_secret,
-  		    ]
-  		]);
-
-      $img_result = $recognition->searchFacesByImage([ // REQUIRED
-  		    'CollectionId' => $event_code,
-          'FaceMatchThreshold' => 95.0,
-  		    'Image' => [ // REQUIRED
-            'S3Object' => [
-            'Bucket' => 'liveet-users',
-            'Name' => 'damilare-3.jpeg',
-            ]
-  		    ],
-          'MaxFaces' => 1
-  		]);
-      var_dump($img_result);
-      die;
-
-    }
-    catch (\Exception $e){
-      var_dump($e);
-      die;
-    }
-
     $data = $request->getParsedBody();
 
     $image = $data["image"];

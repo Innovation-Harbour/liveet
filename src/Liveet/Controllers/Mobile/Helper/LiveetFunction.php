@@ -278,6 +278,7 @@ trait LiveetFunction
 
       $img_result = $recognition->searchFacesByImage([ // REQUIRED
   		    'CollectionId' => $event_code,
+          'FaceMatchThreshold' => 95.0,
   		    'Image' => [ // REQUIRED
             'Bytes' => $byte_image,
   		    ],

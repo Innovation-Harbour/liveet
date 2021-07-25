@@ -8,39 +8,38 @@ use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 Class MqttSubscribe {
   use LiveetFunction;
 
-
-  public function __construct (){
-    $this->server = $_ENV["MQTT_SERVER"];
-    $this->port = $_ENV["MQTT_PORT"];
-    $this->username = $_ENV["MQTT_USER"];
-    $this->password = $_ENV["MQTT_PASSWORD"];
-    $this->client_id = $_ENV["MQTT_CLIENT"];
-
-    $this->mqtt = new phpMQTT($this->server, $this->port, $this->client_id);
-
-    if(!$this->mqtt->connect(true, NULL, $this->username, $this->password)) {
-    	exit(1);
-    }
-  }
-
   public function runSubscription() {
 
-    $this->mqtt->debug = true;
+    return "world";
+    /*
+    $server = $_ENV["MQTT_SERVER"];
+    $port = $_ENV["MQTT_PORT"];
+    $username = $_ENV["MQTT_USER"];
+    $password = $_ENV["MQTT_PASSWORD"];
+    $client_id = $_ENV["MQTT_CLIENT"];
+
+    $mqtt = new phpMQTT($server, $port, $client_id);
+
+    if(!$mqtt->connect(true, NULL, $username, $password)) {
+    	exit(1);
+    }
+
+    $mqtt->debug = true;
 
     $topics['liveet/mqtt/housekeeping'] = array('qos' => 0, 'function' => 'procMsg');
-    $this->mqtt->subscribe($topics, 0);
+    $mqtt->subscribe($topics, 0);
 
-    while($this->mqtt->proc()) {
+    while($mqtt->proc()) {
 
     }
 
-    $this->mqtt->close();
+    $mqtt->close();
 
     function procMsg($topic, $msg){
       if ($topic === "liveet/mqtt/housekeeping")
       {
         $newtopic[$msg] = array('qos' => 0, 'function' => 'procMsg');
-        $this->mqtt->subscribe($newtopic, 0);
+        $mqtt->subscribe($newtopic, 0);
         echo "liveet housekeeping started";
       }
       else {
@@ -62,11 +61,12 @@ Class MqttSubscribe {
           ];
 
           $payload = json_encode($payload);
-          $this->mqtt->publish($publishtopic,$payload, 0, false);
+          $mqtt->publish($publishtopic,$payload, 0, false);
         }
         echo "MQTT face process finished";
       }
     }
+    */
   }
 }
 

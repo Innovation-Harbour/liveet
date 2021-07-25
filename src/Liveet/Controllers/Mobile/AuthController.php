@@ -532,6 +532,7 @@ class AuthController extends BaseController {
     	$mqtt->close();
     } else {
       var_dump("error sending MQTT");
+      die;
     }
 
     $payload = ["statusCode" => 200, "successMessage" => "MQTT publish Successfully"];

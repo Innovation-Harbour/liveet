@@ -519,12 +519,11 @@ class AuthController extends BaseController {
     $port = $_ENV["MQTT_PORT"];
     $username = $_ENV["MQTT_USER"];
     $password = $_ENV["MQTT_PASSWORD"];
-    $client_id = $_ENV["MQTT_CLIENT"];
-
-    var_dump($server,$port,$username,$password,$client_id);
-    die;
+    $client_id = 'liveet_mqtt_subscriber_2';
 
     $mqtt = new phpMQTT($server, $port, $client_id);
+    var_dump($mqtt);
+    die;
 
     $topic = 'liveet/mqtt/housekeeping';
 

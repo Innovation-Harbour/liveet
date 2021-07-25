@@ -71,5 +71,5 @@ Class MqttSubscribe {
 }
 
 $obj = new MqttSubscribe();
-$obj->runSubscription();
+echo $obj->runSubscription();
 ?>

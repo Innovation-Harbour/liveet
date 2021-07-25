@@ -251,7 +251,14 @@ class BaseController
     public function handleLiveetParseImage($mediaOption, $media, $event_id)
     {
         if (strrpos($media, "data:image/") !== 0 && strrpos($media, "data:video/") !== 0) {
-            $data["url"] = $media;
+           //it means its a url or a path
+            //if path first folder name is >10, ki olohun so e
+            if (strrpos($media, "/") < 10) {
+                $data["url"] = $media;
+                return $data;
+            }
+
+            $data["error"] = "Unacceptable picture format";
             return $data;
         }
 
@@ -353,8 +360,10 @@ class BaseController
             //if path first folder name is >10, ki olohun so e
             if (strrpos($media, "/") < 10) {
                 $data["url"] = $media;
+                return $data;
             }
 
+            $data["error"] = "Unacceptable picture format";
             return $data;
         }
 

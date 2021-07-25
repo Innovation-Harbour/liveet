@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "88b4ffb8c4d5400d36c16c9f3ca4bc1a",
+    "content-hash": "29adbf4ac6480dbf06ac56ba03c1c35d",
     "packages": [
         {
             "name": "aws/aws-sdk-php",
@@ -95,6 +95,47 @@
                 "source": "https://github.com/aws/aws-sdk-php/tree/3.178.9"
             },
             "time": "2021-04-23T18:28:02+00:00"
+        },
+        {
+            "name": "bluerhinos/phpmqtt",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bluerhinos/phpMQTT.git",
+                "reference": "7a9d6b26f19e0298e0bef8f873038ab823fb79af"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bluerhinos/phpMQTT/zipball/7a9d6b26f19e0298e0bef8f873038ab823fb79af",
+                "reference": "7a9d6b26f19e0298e0bef8f873038ab823fb79af",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Bluerhinos\\": "./"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD"
+            ],
+            "authors": [
+                {
+                    "name": "Andrew Milsted",
+                    "email": "andrew@bluerhinos.co.uk"
+                }
+            ],
+            "description": "Simple MQTT Class",
+            "support": {
+                "issues": "https://github.com/bluerhinos/phpMQTT/issues",
+                "source": "https://github.com/bluerhinos/phpMQTT/tree/1.0.0"
+            },
+            "time": "2020-04-19T17:42:58+00:00"
         },
         {
             "name": "doctrine/inflector",
@@ -2970,7 +3011,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "bluerhinos/phpmqtt": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

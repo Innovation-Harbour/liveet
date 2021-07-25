@@ -12,7 +12,8 @@
     "vlucas/phpdotenv": "^5.3",
     "aws/aws-sdk-php": "^3.176",
     "guzzlehttp/guzzle": "^7.0",
-    "edwinhoksberg/php-fcm": "^1.2"
+    "edwinhoksberg/php-fcm": "^1.2",
+    "bluerhinos/phpmqtt": "@dev"
   },
   "authors": [
     {

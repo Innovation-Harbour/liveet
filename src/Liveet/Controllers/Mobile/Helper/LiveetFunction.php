@@ -13,6 +13,7 @@ use Fcm\Push\Notification;
 use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketModel;
 use Liveet\Models\EventTicketUserModel;
+use Liveet\Models\TurnstileEventModel;
 
 
 /**
@@ -255,8 +256,30 @@ trait LiveetFunction
     $event_db = new EventModel();
     $ticket_db = new EventTicketModel();
     $event_user_db = new EventTicketUserModel();
+    $turnstile_db = new TurnstileEventModel();
+    $ticket_id = false;
 
-    $event_id = $event_identifier;
+    if($from_mqtt)
+    {
+      $turnstile_id = $event_identifier;
+
+      $turnstile_query = $turnstile_db->join('turnstile', 'turnstile_event.turnstile_id', '=', 'turnstile.turnstile_id')
+      ->join('event_ticket', 'turnstile_event.event_ticket_id', '=', 'event_ticket.event_ticket_id')
+      ->select('event_ticket.event_ticket_id','event_ticket.event_id')
+      ->where("turnstile.turnstile_name",$turnstile_id);
+
+      if($turnstile_query->count() < 1)
+      {
+        return [$is_approved,$ticket_name,$user_id];
+      }
+
+      $turnstile_details = $turnstile_query->first();
+      $event_id = $turnstile_details->event_id;
+      $ticket_id = $turnstile_details->event_ticket_id;
+    }
+    else{
+      $event_id = $event_identifier;
+    }
 
     $byte_image = base64_decode($base64);
 
@@ -298,7 +321,13 @@ trait LiveetFunction
       {
         $face_id = $img_result["FaceMatches"][0]["Face"]["FaceId"];
 
-        $event_user = $event_user_db->where("user_face_id",$face_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
+        if($from_mqtt)
+        {
+          $event_user = $event_user_db->where("user_face_id",$face_id)->where("event_ticket_id",$ticket_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
+        }
+        else {
+          $event_user = $event_user_db->where("user_face_id",$face_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
+        }
 
         if($event_user->count() == 1)
         {
@@ -317,5 +346,34 @@ trait LiveetFunction
 
     }
      return [$is_approved,$ticket_name,$user_id];
+  }
+
+  public function verifyuserFromTurnStile($topic,$msg)
+  {
+    $is_approved = false;
+    $from_turnstile = false;
+    $ticket_name = false;
+    $user_id = false;
+    $turnstile_id = false;
+    //first, get turnstil ID from topic
+    $topics = explode("/",$topic);
+    $from_turnstile = (isset($topics[0]) && $topics[0] === "mqtt") ? true : false;
+
+    //process the message gotten from the turnstile
+    $message = json_decode($msg, true);
+
+    if(isset($message['operator']))
+    {
+      $operator = $message['operator'];
+
+      if($operator === "StrSnapPush")
+      {
+        $turnstile_id = $message['info']['facesluiceId'];
+        $image = $message['info']['pic'];
+
+        [$is_approved,$ticket_name,$user_id] = $this->checkFaceMatchForEvent($image,$turnstile_id,true);
+      }
+    }
+    return [$is_approved,$from_turnstile,$turnstile_id];
   }
 }

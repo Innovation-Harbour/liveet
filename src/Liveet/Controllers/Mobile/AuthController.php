@@ -525,10 +525,8 @@ class AuthController extends BaseController {
 
     $topic = 'liveet/mqtt/housekeeping';
 
-    $payload = 'mqtt/face/1768583/Snap';
-
     if ($mqtt->connect(true, NULL, $username, $password)) {
-    	$mqtt->publish($topic,$payload, 0, false);
+    	$mqtt->publish($topic,'mqtt/face/1768583/Snap', 0, false);
     	$mqtt->close();
     } else {
       var_dump("error sending MQTT");

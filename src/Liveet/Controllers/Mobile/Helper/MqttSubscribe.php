@@ -10,6 +10,8 @@ Class MqttSubscribe {
 
 
   public function __construct (){
+    var_dump("I am here");
+    die;
     $this->server = $_ENV["MQTT_SERVER"];
     $this->port = $_ENV["MQTT_PORT"];
     $this->username = $_ENV["MQTT_USER"];

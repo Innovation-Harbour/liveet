@@ -13,6 +13,7 @@ use Psr\Http\Message\ResponseInterface;
 use Aws\Rekognition\RekognitionClient;
 use Aws\S3\S3Client;
 use Rashtell\Domain\KeyManager;
+use Bluerhinos\phpMQTT;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AuthController extends BaseController {
@@ -514,11 +515,37 @@ class AuthController extends BaseController {
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
-    $address = "Eko Hotel & Suite, Victoria Island,Lagos Nigeria";
+    $server = $_ENV["MQTT_SERVER"];
+    $port = $_ENV["MQTT_PORT"];
+    $username = $_ENV["MQTT_USER"];
+    $password = $_ENV["MQTT_PASSWORD"];
+    $client_id = $_ENV["MQTT_CLIENT"];
 
-    [$address_found, $latitude, $longitude] = $this->getCoordinates($address);
-    var_dump($address_found, $latitude, $longitude);
-    die;
+    $mqtt = new phpMQTT($server, $port, $client_id);
+
+    $topic = 'mqtt/face/1768583';
+
+    $payload = [
+      "operator" => "Unlock",
+      "messageId" => "test567457",
+      "info" => [
+        "facesluiceId" => "1768583",
+        "openDoor" => 1,
+        "showInfo" => "please Open"
+      ]
+    ];
+
+    $payload = json_encode($payload);
+
+    if ($mqtt->connect(true, NULL, $username, $password)) {
+    	$mqtt->publish($topic,$payload, 0, false);
+    	$mqtt->close();
+    } else {
+      var_dump("error sending MQTT");
+    }
+
+    $payload = ["statusCode" => 200, "successMessage" => "MQTT publish Successfully"];
+    return $json->withJsonResponse($response, $payload);
   }
 
   public function changeUsername(Request $request, ResponseInterface $response): ResponseInterface

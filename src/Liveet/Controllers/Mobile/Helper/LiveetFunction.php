@@ -14,6 +14,7 @@ use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketModel;
 use Liveet\Models\EventTicketUserModel;
 use Liveet\Models\TurnstileEventModel;
+use Liveet\Models\Mobile\TempsModel;
 
 
 /**
@@ -375,5 +376,12 @@ trait LiveetFunction
       }
     }
     return [$is_approved,$from_turnstile,$turnstile_id];
+  }
+
+  public function testfunctioncall()
+  {
+    $temp_db = new TempsModel();
+    $temp_db->create(["temp_name" => "Hello From MQTT"]);
+    return "hello World";
   }
 }

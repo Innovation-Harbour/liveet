@@ -8,6 +8,7 @@ use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 Class MqttSubscribe {
   use LiveetFunction;
 
+
   public function __construct (){
     $this->server = $_ENV["MQTT_SERVER"];
     $this->port = $_ENV["MQTT_PORT"];

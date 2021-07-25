@@ -530,7 +530,7 @@ class AuthController extends BaseController {
       "messageId" => "test567457",
       "info" => [
         "facesluiceId" => "1768583",
-        "openDoor" => 1,
+        "openDoor" => 0,
         "showInfo" => "please Open"
       ]
     ];

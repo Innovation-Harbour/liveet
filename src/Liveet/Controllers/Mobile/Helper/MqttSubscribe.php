@@ -5,7 +5,7 @@ namespace Liveet\Controllers\Mobile\Helper;
 use Bluerhinos\phpMQTT;
 use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 
-Class MqttSubscriber {
+Class MqttSubscribe {
   use LiveetFunction;
 
   public function __construct (){

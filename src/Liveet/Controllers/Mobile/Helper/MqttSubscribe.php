@@ -10,8 +10,6 @@ Class MqttSubscribe {
 
 
   public function __construct (){
-    var_dump("I am here");
-    die;
     $this->server = $_ENV["MQTT_SERVER"];
     $this->port = $_ENV["MQTT_PORT"];
     $this->username = $_ENV["MQTT_USER"];
@@ -23,9 +21,6 @@ Class MqttSubscribe {
     if(!$this->mqtt->connect(true, NULL, $this->username, $this->password)) {
     	exit(1);
     }
-
-    //run subscription long running Logic
-    $this->runSubscription();
   }
 
   public function runSubscription() {
@@ -74,3 +69,7 @@ Class MqttSubscribe {
     }
   }
 }
+
+$obj = new MqttSubscribe();
+$obj->runSubscription();
+?>

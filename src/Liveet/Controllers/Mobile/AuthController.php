@@ -522,12 +522,12 @@ class AuthController extends BaseController {
     $client_id = 'liveet_mqtt_subscriber_2';
 
     $mqtt = new phpMQTT($server, $port, $client_id);
-    var_dump($mqtt);
-    die;
 
     $topic = 'liveet/mqtt/housekeeping';
 
     if ($mqtt->connect(true, NULL, $username, $password)) {
+      var_dump("i am here");
+      die;
     	$mqtt->publish($topic,'mqtt/face/1768583/Snap', 0, false);
     	$mqtt->close();
     } else {

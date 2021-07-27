@@ -155,7 +155,6 @@ trait LiveetFunction
       $fcm_client = new FcmClient($server_key,$server_id);
       $notification = new Notification();
     } catch (\Exception $e) {
-      var_dump($e->getMessage());
       return false;
     }
 
@@ -316,13 +315,8 @@ trait LiveetFunction
 
     }
     catch (\Exception $e){
-      var_dump($e->getMessage());
-      die;
       return [$is_approved,$ticket_name,$user_id];
     }
-
-    var_dump($img_result);
-    die;
 
     if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
     {

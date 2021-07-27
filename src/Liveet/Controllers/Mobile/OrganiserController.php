@@ -15,6 +15,7 @@ use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
 use Aws\Rekognition\RekognitionClient;
 use Rashtell\Domain\KeyManager;
+use Bluerhinos\phpMQTT;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class OrganiserController extends BaseController {
@@ -145,6 +146,69 @@ class OrganiserController extends BaseController {
       $error = ["errorMessage" => "Face Not allowed access for this event", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
+  }
+
+  public function turnstileVerifyUser (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $event_db = new EventModel();
+    $user_db = new UserModel();
+
+    $data = $request->getParsedBody();
+
+    $image = $data["image"];
+    $turnstile_id = $data["id"];
+
+    [$is_approved,$ticketname,$user_id] = $this->checkFaceMatchForEvent($image,$turnstile_id,true);
+
+    $server = $_ENV["MQTT_SERVER"];
+    $port = $_ENV["MQTT_PORT"];
+    $username = $_ENV["MQTT_USER"];
+    $password = $_ENV["MQTT_PASSWORD"];
+    $client_id = 'liveet_mqtt_subscriber_2';
+
+    $mqtt = new phpMQTT($server, $port, $client_id);
+
+    $topic = 'mqtt/face/'.$turnstile_id;
+
+    if($is_approved && $ticketname && $user_id)
+    {
+      $message = [
+        "operator" => "Unlock",
+        "messageId" => time(),
+        "info" => [
+          "facesluiceId" => $turnstile_id,
+          "openDoor" => 1,
+          "showInfo" => "Verified",
+          "result" => "ok"
+        ]
+      ];
+    }
+    else {
+      $message = [
+        "operator" => "Unlock",
+        "messageId" => time(),
+        "info" => [
+          "facesluiceId" => $turnstile_id,
+          "openDoor" => 0,
+          "showInfo" => "Not Verified",
+          "result" => "ok"
+        ]
+      ];
+    }
+
+    $message = json_encode($message);
+
+    if ($mqtt->connect(true, NULL, $username, $password)) {
+      $mqtt->publish($topic,$message, 0, false);
+      $mqtt->close();
+    } else {
+      var_dump("error sending MQTT");
+      die;
+    }
+
+    $payload = ["statusCode" => 200, "successMessage" => "MQTT publish Successfully"];
+    return $this->json->withJsonResponse($response, $payload);
   }
 
   public function manualVerifyUser (Request $request, ResponseInterface $response, array $args): ResponseInterface

@@ -316,9 +316,14 @@ trait LiveetFunction
 
     }
     catch (\Exception $e){
+      var_dump($e->getMessage());
+      die;
       return [$is_approved,$ticket_name,$user_id];
     }
-    
+
+    var_dump($img_result);
+    die;
+
     if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
     {
       $similarity = round($img_result["FaceMatches"][0]["Similarity"]);

@@ -348,40 +348,4 @@ trait LiveetFunction
     }
      return [$is_approved,$ticket_name,$user_id];
   }
-
-  public function verifyuserFromTurnStile($topic,$msg)
-  {
-    $is_approved = false;
-    $from_turnstile = false;
-    $ticket_name = false;
-    $user_id = false;
-    $turnstile_id = false;
-    //first, get turnstil ID from topic
-    $topics = explode("/",$topic);
-    $from_turnstile = (isset($topics[0]) && $topics[0] === "mqtt") ? true : false;
-
-    //process the message gotten from the turnstile
-    $message = json_decode($msg, true);
-
-    if(isset($message['operator']))
-    {
-      $operator = $message['operator'];
-
-      if($operator === "StrSnapPush")
-      {
-        $turnstile_id = $message['info']['facesluiceId'];
-        $image = $message['info']['pic'];
-
-        [$is_approved,$ticket_name,$user_id] = $this->checkFaceMatchForEvent($image,$turnstile_id,true);
-      }
-    }
-    return [$is_approved,$from_turnstile,$turnstile_id];
-  }
-
-  public function testfunctioncall()
-  {
-    $temp_db = new TempsModel();
-    $temp_db->create(["temp_name" => "Hello From MQTT"]);
-    return "hello World";
-  }
 }

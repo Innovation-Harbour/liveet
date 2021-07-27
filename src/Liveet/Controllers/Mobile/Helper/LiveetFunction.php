@@ -260,6 +260,7 @@ trait LiveetFunction
     $turnstile_db = new TurnstileEventModel();
     $ticket_id = false;
 
+
     if($from_mqtt)
     {
       $turnstile_id = $event_identifier;
@@ -268,6 +269,9 @@ trait LiveetFunction
       ->join('event_ticket', 'turnstile_event.event_ticket_id', '=', 'event_ticket.event_ticket_id')
       ->select('event_ticket.event_ticket_id','event_ticket.event_id')
       ->where("turnstile.turnstile_name",$turnstile_id);
+
+      var_dump($turnstile_query);
+      die;
 
       if($turnstile_query->count() < 1)
       {
@@ -286,6 +290,8 @@ trait LiveetFunction
 
     $event_details = $event_db->where("event_id", $event_id)->first();
     $event_code = $event_details->event_code;
+
+
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
@@ -313,9 +319,6 @@ trait LiveetFunction
     catch (\Exception $e){
       return [$is_approved,$ticket_name,$user_id];
     }
-
-    var_dump($img_result);
-    die;
 
     if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
     {

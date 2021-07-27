@@ -270,8 +270,7 @@ trait LiveetFunction
       ->select('event_ticket.event_ticket_id','event_ticket.event_id')
       ->where("turnstile.turnstile_name",$turnstile_id);
 
-      var_dump($turnstile_query->count());
-      die;
+
 
       if($turnstile_query->count() < 1)
       {
@@ -291,7 +290,8 @@ trait LiveetFunction
     $event_details = $event_db->where("event_id", $event_id)->first();
     $event_code = $event_details->event_code;
 
-
+    var_dump($event_code);
+    die;
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];

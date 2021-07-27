@@ -270,7 +270,7 @@ trait LiveetFunction
       ->select('event_ticket.event_ticket_id','event_ticket.event_id')
       ->where("turnstile.turnstile_name",$turnstile_id);
 
-      var_dump($turnstile_query);
+      var_dump($turnstile_query->count());
       die;
 
       if($turnstile_query->count() < 1)

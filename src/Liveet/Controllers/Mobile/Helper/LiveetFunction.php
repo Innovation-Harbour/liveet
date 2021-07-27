@@ -290,8 +290,7 @@ trait LiveetFunction
     $event_details = $event_db->where("event_id", $event_id)->first();
     $event_code = $event_details->event_code;
 
-    var_dump($event_code);
-    die;
+
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
@@ -317,8 +316,13 @@ trait LiveetFunction
 
     }
     catch (\Exception $e){
+      var_dump($e->getMessage());
+      die;
       return [$is_approved,$ticket_name,$user_id];
     }
+
+    var_dump($img_result);
+    die;
 
     if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
     {

@@ -164,12 +164,12 @@ class OrganiserController extends BaseController {
 
     $img_file = '/files/images/filename.png';
     $newimage = imagepng($im);
-    //imagedestroy($im);
+    imagedestroy($im);
 
     var_dump(base64_encode($newimage));
     die;
 
-    
+
 
     [$is_approved,$ticketname,$user_id] = $this->checkFaceMatchForEvent($image,$turnstile_id,true);
 

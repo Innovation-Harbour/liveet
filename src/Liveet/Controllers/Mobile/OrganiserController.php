@@ -165,7 +165,9 @@ class OrganiserController extends BaseController {
     header('Content-Type: image/png');
     $test_image = imagepng($im);
 
-    var_dump($test_image);
+    $test_encoded = base64_encode($test_image);
+
+    var_dump($test_encoded);
     die;
 
     [$is_approved,$ticketname,$user_id] = $this->checkFaceMatchForEvent($image,$turnstile_id,true);

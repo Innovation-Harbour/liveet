@@ -308,15 +308,23 @@ trait LiveetFunction
   		    'CollectionId' => $event_code,
           'FaceMatchThreshold' => 95.0,
   		    'Image' => [ // REQUIRED
-            'Bytes' => $byte_image,
+            'S3Object' => [
+            'Bucket' => 'liveet-users',
+            'Name' => "kop.png",
+            ]
   		    ],
           'MaxFaces' => 1
   		]);
 
     }
     catch (\Exception $e){
+      var_dump($e->getMessage());
+      die;
       return [$is_approved,$ticket_name,$user_id];
     }
+
+    var_dump($img_result);
+    die;
 
     if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
     {

@@ -163,8 +163,8 @@ class OrganiserController extends BaseController {
     $im = imagecreatefromstring($data);
 
     $img_file = '/files/images/filename.png';
-    header('Content-Type: image/png');
     imagepng($im, $img_file, 0);
+    imagedestroy($im);
 
     var_dump($img_file);
     die;

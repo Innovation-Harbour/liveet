@@ -162,8 +162,8 @@ class OrganiserController extends BaseController {
     $data = base64_decode($image);
     $im = imagecreatefromstring($data);
 
-    header('Content-Type: image/png');
-    $test_image = imagepng($im);
+    //header('Content-Type: image/png');
+    //$test_image = imagepng($im);
 
     $test_encoded = base64_encode($im);
 

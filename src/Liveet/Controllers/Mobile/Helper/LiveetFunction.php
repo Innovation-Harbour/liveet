@@ -315,7 +315,7 @@ trait LiveetFunction
 
     }
     catch (\Exception $e){
-      var_dump($e);
+      var_dump($e->getMessage());
       die;
       return [$is_approved,$ticket_name,$user_id];
     }

@@ -166,7 +166,7 @@ class OrganiserController extends BaseController {
     $newimage = imagepng($im);
     imagedestroy($im);
 
-    var_dump(base64_encode($newimage));
+    var_dump(base64_encode($img_file));
     die;
 
 

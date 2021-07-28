@@ -304,6 +304,17 @@ trait LiveetFunction
   		    ]
   		]);
 
+      $result = $recognition->detectFaces([ // REQUIRED
+  		    'Attributes' => ['ALL'],
+  		    'Image' => [ // REQUIRED
+            'S3Object' => [
+            'Bucket' => 'liveet-users',
+            'Name' => "kop.png",
+            ],
+  		    ]
+  		]);
+
+      /*
       $img_result = $recognition->searchFacesByImage([ // REQUIRED
   		    'CollectionId' => $event_code,
           'FaceMatchThreshold' => 95.0,
@@ -315,6 +326,7 @@ trait LiveetFunction
   		    ],
           'MaxFaces' => 1
   		]);
+      */
 
     }
     catch (\Exception $e){
@@ -323,7 +335,7 @@ trait LiveetFunction
       return [$is_approved,$ticket_name,$user_id];
     }
 
-    var_dump($img_result);
+    var_dump($result);
     die;
 
     if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))

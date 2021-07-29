@@ -290,7 +290,7 @@ class OrganiserController extends BaseController {
   public function testFaceMachine (Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
-    $temps_db = new TempsModel();
+    $temp_db = new TempsModel();
 
     $data = $request->getParsedBody();
 

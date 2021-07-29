@@ -164,9 +164,10 @@ class OrganiserController extends BaseController {
 
     $im = imagecreatefromstring($data);
 
-    $img_file = 'https://api.liveet.co/filename.png';
+    $img_file = 'filename.png';
+    header('Content-Disposition: Attachment;filename=kopimage.png');
     header ('Content-Type: image/jpeg');
-    $newimage = imagepng($im,$img_file);
+    $newimage = imagepng($im);
     imagedestroy($im);
 
     echo base64_decode($newimage);

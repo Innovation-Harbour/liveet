@@ -14,6 +14,7 @@ use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
 use Aws\Rekognition\RekognitionClient;
+use Aws\S3\S3Client;
 use Rashtell\Domain\KeyManager;
 use Bluerhinos\phpMQTT;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -166,7 +167,35 @@ class OrganiserController extends BaseController {
     $newimage = imagepng($im);
     imagedestroy($im);
 
-    var_dump(base64_encode($newimage));
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+
+    try{
+      $s3 = new S3Client([
+  		    'region'  => 'us-west-2',
+  		    'version' => 'latest',
+  		    'credentials' => [
+  		        'key'    => $aws_key,
+  		        'secret' => $aws_secret,
+  		    ]
+  		]);
+
+      $s3_result = $s3->putObject([
+          'Bucket' => 'liveet-users',
+          'Key'    => 'kop_test-filename.png',
+          'Body'   => $newimage,
+          'ACL'    => 'public-read',
+          'ContentType'    => 'image/png'
+      ]);
+
+    }
+    catch (\Exception $e){
+      var_dump($e->getMessage());
+      die;
+      return [$is_approved,$ticket_name,$user_id];
+    }
+
+    var_dump($s3_result);
     die;
 
 

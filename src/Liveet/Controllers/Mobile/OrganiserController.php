@@ -160,9 +160,6 @@ class OrganiserController extends BaseController {
     $image = $data["image"];
     $turnstile_id = $data["id"];
 
-    var_dump($image);
-    die;
-
     //$exploded_image = explode(",",$image);
 
 

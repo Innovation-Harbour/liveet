@@ -289,8 +289,6 @@ trait LiveetFunction
     $event_details = $event_db->where("event_id", $event_id)->first();
     $event_code = $event_details->event_code;
 
-
-
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
 

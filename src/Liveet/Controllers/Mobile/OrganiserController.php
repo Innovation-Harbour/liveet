@@ -161,43 +161,15 @@ class OrganiserController extends BaseController {
     $turnstile_id = $data["id"];
 
     $data = base64_decode($image);
-    /*
+
     $im = imagecreatefromstring($data);
 
     $img_file = '/files/images/filename.png';
+    header ('Content-Type: image/jpeg');
     $newimage = imagepng($im);
     imagedestroy($im);
-    */
 
-    $aws_key = $_ENV["AWS_KEY"];
-    $aws_secret = $_ENV["AWS_SECRET"];
-
-    try{
-      $s3 = new S3Client([
-  		    'region'  => 'us-west-2',
-  		    'version' => 'latest',
-  		    'credentials' => [
-  		        'key'    => $aws_key,
-  		        'secret' => $aws_secret,
-  		    ]
-  		]);
-
-      $s3_result = $s3->putObject([
-          'Bucket' => 'liveet-users',
-          'Key'    => 'kop_test-filename.png',
-          'Body'   => $data,
-          'ACL'    => 'public-read',
-          'ContentType'    => 'image/png'
-      ]);
-
-    }
-    catch (\Exception $e){
-      var_dump($e->getMessage());
-      die;
-      return [$is_approved,$ticket_name,$user_id];
-    }
-
-    var_dump($s3_result);
+    var_dump($newimage);
     die;
 
 

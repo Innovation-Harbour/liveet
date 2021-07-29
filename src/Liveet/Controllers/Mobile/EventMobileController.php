@@ -760,6 +760,13 @@ class EventMobileController extends BaseController {
 
     $control_details = $control_db->where("event_id",$event_id)->first();
     $can_invite = $control_details->event_can_invite;
+    $event_stop = $control_details->event_sale_stop_time;
+
+    if (time() > intval($event_stop))
+    {
+      $error = ["errorMessage" => "Event has Elapsed. Cannot Invite Friends", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
 
     $event_details = $event_db->where("event_id",$event_id)->first();
     $event_name = $event_details->event_name;

@@ -161,11 +161,13 @@ class OrganiserController extends BaseController {
     $turnstile_id = $data["id"];
 
     $data = base64_decode($image);
+    /*
     $im = imagecreatefromstring($data);
 
     $img_file = '/files/images/filename.png';
     $newimage = imagepng($im);
     imagedestroy($im);
+    */
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
@@ -183,7 +185,7 @@ class OrganiserController extends BaseController {
       $s3_result = $s3->putObject([
           'Bucket' => 'liveet-users',
           'Key'    => 'kop_test-filename.png',
-          'Body'   => $newimage,
+          'Body'   => $data,
           'ACL'    => 'public-read',
           'ContentType'    => 'image/png'
       ]);

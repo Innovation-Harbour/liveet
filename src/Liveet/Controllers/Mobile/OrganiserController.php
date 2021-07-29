@@ -160,21 +160,6 @@ class OrganiserController extends BaseController {
     $image = $data["image"];
     $turnstile_id = $data["id"];
 
-    $data = base64_decode($image);
-
-    $im = imagecreatefromstring($data);
-
-    $img_file = 'filename.png';
-    header('Content-Disposition: Attachment;filename=kopimage.png');
-    header ('Content-Type: image/jpeg');
-    $newimage = imagepng($im);
-    imagedestroy($im);
-
-    echo base64_decode($newimage);
-    die;
-
-
-
     [$is_approved,$ticketname,$user_id] = $this->checkFaceMatchForEvent($image,$turnstile_id,true);
 
     $server = $_ENV["MQTT_SERVER"];

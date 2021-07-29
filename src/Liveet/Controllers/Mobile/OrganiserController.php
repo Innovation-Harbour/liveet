@@ -169,7 +169,7 @@ class OrganiserController extends BaseController {
     $newimage = imagepng($im);
     imagedestroy($im);
 
-    var_dump($newimage);
+    echo base64_decode($newimage);
     die;
 
 

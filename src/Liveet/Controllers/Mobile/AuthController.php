@@ -125,25 +125,40 @@ class AuthController extends BaseController {
 
     $data = $request->getParsedBody();
 
-    $email = $data["email"];
+    $phone = $data["phone"];
     $password = $data["password"];
+
+    $country_code = substr($phone, 0, 4);
+
+    $rest_of_phone_number = substr($phone, 4);
+
+    if(strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0")
+    {
+      $rest_of_phone_number = substr($rest_of_phone_number, 1);
+    }
+
+    $country_code_clean = substr($country_code, 1);
+
+    $phone_clean = $country_code_clean.$rest_of_phone_number;
+
 
     $hashed_password = hash('sha256',$password);
 
 
-    $user_count = $user_db->where('user_email', $email)->count();
+    $user_count = $user_db->where('user_phone', $phone_clean)->count();
 
     if($user_count < 1)
     {
-      $error = ["errorMessage" => "Email Not Registered. Please Try Again", "statusCode" => 400];
+      $error = ["errorMessage" => "User Not Registered. Please Try Again", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
     }
 
-    $user_data = $user_db->where('user_email', $email)->take(1)->get();
+    $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
     $user_data_clean = $user_data[0];
 
     $db_password = $user_data_clean->user_password;
+    $email = $user_data_clean->user_email;
 
     if($hashed_password !== $db_password)
     {
@@ -263,9 +278,12 @@ class AuthController extends BaseController {
 
     $phone = $data["phone"];
     $name = $data["name"];
+    $last_name = $data["last_name"];
     $email = $data["email"];
     $password = $data["password"];
     $repeat_password = $data["repeat_password"];
+
+    $fullname = $name." ".$last_name;
 
     $phone_clean = substr($phone, 1);
 
@@ -300,7 +318,7 @@ class AuthController extends BaseController {
 
     $crypt_password = hash('sha256', $password);
 
-    $temp_db->where('temp_phone', $phone_clean)->update(["temp_name" => $name, "temp_email" => $email, "temp_password" => $crypt_password]);
+    $temp_db->where('temp_phone', $phone_clean)->update(["temp_name" => $fullname, "temp_email" => $email, "temp_password" => $crypt_password]);
 
     $payload = ["statusCode" => 200, "successMessage" => "Temp Details Added"];
 
@@ -456,8 +474,6 @@ class AuthController extends BaseController {
       //get temp data and delete temp data from db
       $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
       $temp_data_clean = $temp_data[0];
-      //var_dump($temp_data[0]->temp_phone);
-      //die();
 
       $fullname = $temp_data_clean->temp_name;
       $email = $temp_data_clean->temp_email;

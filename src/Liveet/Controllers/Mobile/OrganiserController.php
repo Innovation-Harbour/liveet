@@ -16,6 +16,7 @@ use Psr\Http\Message\ResponseInterface;
 use Aws\Rekognition\RekognitionClient;
 use Aws\S3\S3Client;
 use Rashtell\Domain\KeyManager;
+use Liveet\Models\Mobile\TempsModel;
 use Bluerhinos\phpMQTT;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -283,6 +284,65 @@ class OrganiserController extends BaseController {
     ];
 
     $payload = ["statusCode" => 200, "data" => $response_data];
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function testFaceMachine (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $temps_db = new TempsModel();
+
+    $data = $request->getParsedBody();
+
+    $image = $data["imgBase64"];
+    $turnstile_id = $data["deviceKey"];
+
+
+    $temp_db->create([
+      "temp_name" => $turnstile_id,
+      "base_64" => $image
+    ]);
+
+    $byte_image = base64_decode($image);
+  	$code = rand(00000000, 99999999);
+
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+
+    //push image to s3
+    $key = 'user-'.$code.'-image.png';
+
+    try{
+      $s3 = new S3Client([
+  		    'region'  => 'us-west-2',
+  		    'version' => 'latest',
+  		    'credentials' => [
+  		        'key'    => $aws_key,
+  		        'secret' => $aws_secret,
+  		    ]
+  		]);
+
+      $s3_result = $s3->putObject([
+          'Bucket' => 'liveet-test-facemachine',
+          'Key'    => $key,
+          'Body'   => $byte_image,
+          'ACL'    => 'public-read',
+          'ContentType'  => 'image/png'
+      ]);
+
+    }
+    catch (\Exception $e){
+      $error = ["errorMessage" => "Error Occured During Test", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    $response_data = [
+      "data" => "https://api.liveet.co",
+      "result" => 1,
+      "success" => true
+    ];
+
+    $payload = ["statusCode" => 200, "data" => $response_data, "successMessage" => "Test Successfully"];
     return $this->json->withJsonResponse($response, $payload);
   }
 

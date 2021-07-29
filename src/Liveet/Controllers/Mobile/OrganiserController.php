@@ -161,6 +161,7 @@ class OrganiserController extends BaseController {
     $turnstile_id = $data["id"];
 
     //$exploded_image = explode(",",$image);
+    
 
     [$is_approved,$ticketname,$user_id] = $this->checkFaceMatchForEvent($image,$turnstile_id,true);
 

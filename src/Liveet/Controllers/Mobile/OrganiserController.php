@@ -160,10 +160,10 @@ class OrganiserController extends BaseController {
     $image = $data["image"];
     $turnstile_id = $data["id"];
 
-    //$exploded_image = explode(",",$image);
+    $exploded_image = explode(",",$image);
 
 
-    [$is_approved,$ticketname,$user_id] = $this->checkFaceMatchForEvent($image,$turnstile_id,true);
+    [$is_approved,$ticketname,$user_id] = $this->checkFaceMatchForEvent($exploded_image[1],$turnstile_id,true);
 
     $server = $_ENV["MQTT_SERVER"];
     $port = $_ENV["MQTT_PORT"];

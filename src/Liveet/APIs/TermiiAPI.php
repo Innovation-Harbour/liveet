@@ -73,10 +73,10 @@ class TermiiAPI
     return $this->setupRequest("/sms/send", "POST", [
         "api_key" => $_ENV["TERMII_KEY"],
         "to" => $phone,
-        "from" => "Liveet",
+        "from" => "N-Alert",
         "sms" => $message,
         "type" => "plain",
-        "channel" => "generic"
+        "channel" => "dnd"
     ]);
   }
 }

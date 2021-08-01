@@ -308,6 +308,7 @@ trait LiveetFunction
   		    'Image' => [ // REQUIRED
             'Bytes' => $byte_image,
   		    ],
+          'MaxFaces' => 5
   		]);
 
 
@@ -316,13 +317,13 @@ trait LiveetFunction
       return [$is_approved,$ticket_name,$user_id];
     }
 
-    var_dump($img_result);
-    die;
+    var_dump($img_result["FaceMatches"]);
+    die
 
     foreach ($img_result["FaceMatches"] as $facematch)
     {
 
-      if($facematch["Face"]["FaceId"]))
+      if($facematch["Face"]["FaceId"])
       {
         $similarity = round($facematch["Similarity"]);
 

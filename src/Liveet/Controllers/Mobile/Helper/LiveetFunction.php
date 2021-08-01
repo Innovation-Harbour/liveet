@@ -308,7 +308,6 @@ trait LiveetFunction
   		    'Image' => [ // REQUIRED
             'Bytes' => $byte_image,
   		    ],
-          'MaxFaces' => 5
   		]);
 
 

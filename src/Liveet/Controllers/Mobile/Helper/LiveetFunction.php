@@ -308,21 +308,13 @@ trait LiveetFunction
   		    'Image' => [ // REQUIRED
             'Bytes' => $byte_image,
   		    ],
-          'MaxFaces' => 5
+          'MaxFaces' => 1
   		]);
-
-
     }
     catch (\Exception $e){
-      var_dump($e->getMessage());
-      die;
       return [$is_approved,$ticket_name,$user_id];
     }
 
-    var_dump($img_result["FaceMatches"]);
-    die;
-
-    //foreach ($img_result["FaceMatches"] as $facematch)
 
     if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
     {

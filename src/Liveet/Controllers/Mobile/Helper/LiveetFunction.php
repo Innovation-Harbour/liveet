@@ -302,13 +302,22 @@ trait LiveetFunction
   		    ]
   		]);
 
+      $result = $recognition->detectFaces([ // REQUIRED
+  		    'Attributes' => ['ALL'],
+  		    'Image' => [ // REQUIRED
+            'Bytes' => $byte_image
+  		    ]
+  		]);
+
+      /*
       $img_result = $recognition->searchFacesByImage([ // REQUIRED
   		    'CollectionId' => $event_code,
-          'FaceMatchThreshold' => 80.0,
+          'FaceMatchThreshold' => 90.0,
   		    'Image' => [ // REQUIRED
             'Bytes' => $byte_image,
   		    ],
   		]);
+      */
 
     }
     catch (\Exception $e){
@@ -317,7 +326,7 @@ trait LiveetFunction
       return [$is_approved,$ticket_name,$user_id];
     }
 
-    var_dump($img_result);
+    var_dump($result);
     die;
 
     if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))

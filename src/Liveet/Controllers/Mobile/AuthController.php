@@ -429,39 +429,29 @@ class AuthController extends BaseController {
       return $json->withJsonResponse($response, $error);
     }
 
-    //push image to s3
-    $key = 'user-'.$code.'-image.png';
-
-    try{
-      $s3_result = $s3->putObject([
-          'Bucket' => 'liveet-users',
-          'Key'    => $key,
-          'Body'   => $byte_image,
-          'ACL'    => 'public-read',
-          'ContentType'    => 'image/png'
-      ]);
-    }
-    catch (\Exception $e){
-      $error = ["errorMessage" => "Error posting image to S3. Please try Registering again", "statusCode" => 400];
-      return $json->withJsonResponse($response, $error);
-    }
-
-    $picture_url = "https://liveet-users.s3-us-west-2.amazonaws.com/".$key;
-
     //check if image is good and usable
     try{
       $result = $recognition->detectFaces([ // REQUIRED
   		    'Attributes' => ['ALL'],
-  		    'Image' => [ // REQUIRED
-            'S3Object' => [
-            'Bucket' => 'liveet-users',
-            'Name' => $key,
-            ],
+          'Image' => [ // REQUIRED
+            'Bytes' => $byte_image
   		    ]
   		]);
     }
     catch(\Exception $e){
       $error = ["errorMessage" => "Error getting face recognition. Please try Registering again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    if(count($result["FaceDetails"]) < 1)
+    {
+      $error = ["errorMessage" => "No Faces Detected. Please take a clear Selfie Again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    if(count($result["FaceDetails"]) > 1)
+    {
+      $error = ["errorMessage" => "Multiple Faces Detected. Please take a clear Selfie with just your face", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
@@ -478,6 +468,25 @@ class AuthController extends BaseController {
       $fullname = $temp_data_clean->temp_name;
       $email = $temp_data_clean->temp_email;
       $password = $temp_data_clean->temp_password;
+
+      //push image to s3
+      $key = 'user-'.$code.'-image.png';
+
+      try{
+        $s3_result = $s3->putObject([
+            'Bucket' => 'liveet-users',
+            'Key'    => $key,
+            'Body'   => $byte_image,
+            'ACL'    => 'public-read',
+            'ContentType'    => 'image/png'
+        ]);
+      }
+      catch (\Exception $e){
+        $error = ["errorMessage" => "Error posting image to S3. Please try Registering again", "statusCode" => 400];
+        return $json->withJsonResponse($response, $error);
+      }
+
+      $picture_url = "https://liveet-users.s3-us-west-2.amazonaws.com/".$key;
 
 
 

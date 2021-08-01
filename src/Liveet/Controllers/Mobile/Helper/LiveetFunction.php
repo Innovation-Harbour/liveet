@@ -326,7 +326,8 @@ trait LiveetFunction
       return [$is_approved,$ticket_name,$user_id];
     }
 
-    var_dump($result);
+
+    var_dump(count($result["FaceDetails"]));
     die;
 
     if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))

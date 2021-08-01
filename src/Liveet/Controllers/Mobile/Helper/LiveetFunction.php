@@ -317,7 +317,7 @@ trait LiveetFunction
       return [$is_approved,$ticket_name,$user_id];
     }
 
-    var_dump($img_result["FaceMatches"]);
+    var_dump($img_result);
     die;
 
     foreach ($img_result["FaceMatches"] as $facematch)

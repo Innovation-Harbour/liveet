@@ -308,50 +308,50 @@ trait LiveetFunction
   		    'Image' => [ // REQUIRED
             'Bytes' => $byte_image,
   		    ],
+          'MaxFaces' => 5
   		]);
 
 
     }
     catch (\Exception $e){
-      var_dump($e->getMessage());
-      die;
       return [$is_approved,$ticket_name,$user_id];
     }
 
-    var_dump($img_result);
-    die;
-
-    if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
+    foreach ($img_result["FaceMatches"] as $facematch)
     {
-      $similarity = round($img_result["FaceMatches"][0]["Similarity"]);
 
-      if($similarity > 95)
+      if($facematch["Face"]["FaceId"]))
       {
-        $face_id = $img_result["FaceMatches"][0]["Face"]["FaceId"];
+        $similarity = round($facematch["Similarity"]);
 
-        if($from_mqtt)
+        if($similarity > 90)
         {
-          $event_user = $event_user_db->where("user_face_id",$face_id)->where("event_ticket_id",$ticket_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
-        }
-        else {
-          $event_user = $event_user_db->where("user_face_id",$face_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
+          $face_id = $facematch["Face"]["FaceId"];
+
+          if($from_mqtt)
+          {
+            $event_user = $event_user_db->where("user_face_id",$face_id)->where("event_ticket_id",$ticket_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
+          }
+          else {
+            $event_user = $event_user_db->where("user_face_id",$face_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
+          }
+
+          if($event_user->count() == 1)
+          {
+            $user_details =  $event_user->first();
+            $ticket_id = $user_details->event_ticket_id;
+            $user_id = $user_details->user_id;
+
+            $ticket_details = $ticket_db->where("event_ticket_id", $ticket_id)->first();
+            $ticket_name = $ticket_details->ticket_name;
+
+            //update the ticket as used
+            $event_user->update(["status" => Constants::EVENT_TICKET_USED]);
+            $is_approved = true;
+          }
         }
 
-        if($event_user->count() == 1)
-        {
-          $user_details =  $event_user->first();
-          $ticket_id = $user_details->event_ticket_id;
-          $user_id = $user_details->user_id;
-
-          $ticket_details = $ticket_db->where("event_ticket_id", $ticket_id)->first();
-          $ticket_name = $ticket_details->ticket_name;
-
-          //update the ticket as used
-          $event_user->update(["status" => Constants::EVENT_TICKET_USED]);
-          $is_approved = true;
-        }
       }
-
     }
      return [$is_approved,$ticket_name,$user_id];
   }

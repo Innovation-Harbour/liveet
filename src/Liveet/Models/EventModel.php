@@ -213,4 +213,17 @@ class EventModel extends BaseModel
 
         return ["data" => $eventReturn, "error" => null];
     }
+
+    public function getMobileEvents($user_id, $offset, $limit){
+      $sql = "
+                SELECT * FROM event
+                LEFT JOIN
+                  (SELECT event_id AS invitation_event_id,invitee_can_invite_count,event_invitation_status,user_id FROM event_invitation INNER JOIN user ON event_invitation.event_invitee_user_phone = user.user_phone WHERE user.user_id = ".$user_id.") X ON event.event_id = X.invitation_event_id
+                WHERE event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND user_id = ".$user_id.")
+                ORDER BY event.event_date_time DESC, event.event_id DESC
+                LIMIT ".$offset.", ".$limit."
+              ";
+      $result = $this->getConnection()->select($sql);
+      return $result;
+    }
 }

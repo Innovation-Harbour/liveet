@@ -67,7 +67,7 @@ class TimelineMediaModel extends BaseModel
     public function getMobileTimeline($user_id, $offset, $limit){
       $sql = "
               SELECT
-              timeline_media,event_multimedia,event_name,media_type, timeline_desc
+               DISTINCT timeline_media,event_multimedia,event_name,media_type, timeline_desc
               FROM  timeline_media
               LEFT JOIN event_timeline ON timeline_media.timeline_id = event_timeline.timeline_id
               LEFT JOIN event on event_timeline.event_id = event.event_id

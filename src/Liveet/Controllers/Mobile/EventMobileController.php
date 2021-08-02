@@ -34,8 +34,10 @@ class EventMobileController extends BaseController {
   public function GetEvents (Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
     //declare needed class objects
-    $db = new InvitationModel();
+    $favourite_db = new FavouriteModel();
     $ticket_db = new EventTicketModel();
+    $event_db = new EventModel();
+    $event_control_db = new EventControlModel();
 
 
     $response_data = [];
@@ -44,7 +46,7 @@ class EventMobileController extends BaseController {
     $offset = $args["offset"];
     $limit = $args["limit"];
 
-    $results = $db->getMobileEvents($user_id, $offset, $limit);
+    $results = $event_db->getMobileEvents($user_id, $offset, $limit);
 
     foreach($results as $result)
     {
@@ -54,13 +56,23 @@ class EventMobileController extends BaseController {
       $month_num = date('n',$datetime);
       $year = date('Y',$datetime);
 
+      $control_details = $event_control_db->where("event_id",$result->event_id)->first();
+      $event_can_invite = $control_details->event_can_invite;
+
+      $favourite_count = $favourite_db->where(
+        [
+          "event_id" => $result->event_id,
+          "user_id" => $user_id
+        ])
+        ->count();
+
       $can_invite_count = intval($result->invitee_can_invite_count);
 
       $add_to_timeline = ($result->event_invitation_status == null || $result->event_invitation_status === Constants::INVITATION_PENDING) ? true : false;
 
-      $can_invite = ($result->event_can_invite === "CAN_INVITE" || ($result->event_can_invite === "CAN_INVITE_RESTRICTED" && $can_invite_count > 0)) ? true : false;
+      $can_invite = ($event_can_invite === "CAN_INVITE" || ($event_can_invite === "CAN_INVITE_RESTRICTED" && $can_invite_count > 0)) ? true : false;
       $is_free = ($result->event_payment_type === "FREE") ? true : false;
-      $isFavourite = ($result->event_favourite_id !== null) ? true : false;
+      $isFavourite = ($favourite_count > 0) ? true : false;
       $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
 
       $tmp = [

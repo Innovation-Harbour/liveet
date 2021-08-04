@@ -107,6 +107,8 @@ class EventMobileController extends BaseController {
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 
+    var_dump($this->log);
+    die;
     $this->log->create([
         "user_id" => $user_id,
         "activity_type" => Constants::LOG_GET_EVENTS

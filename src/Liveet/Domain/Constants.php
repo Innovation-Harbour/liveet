@@ -86,4 +86,7 @@ class Constants
 
   const TIMELINE_NOTIFICATION_TITLE = "Timeline";
   const TIMELINE_NOTIFICATION_MESSAGE = "A new timeline was uploaded";
+
+  //User Activity Types
+  const LOG_GET_EVENTS = "GET EVENTS";
 }

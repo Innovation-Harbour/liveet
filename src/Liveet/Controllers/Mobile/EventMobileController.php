@@ -8,6 +8,7 @@ use Liveet\APIs\TermiiAPI;
 use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\InvitationModel;
 use Liveet\Models\EventTicketModel;
+use Liveet\Models\UserActivityModel;
 use Liveet\Models\UserModel;
 use Liveet\Models\EventAccessModel;
 use Liveet\Models\EventModel;
@@ -29,6 +30,7 @@ class EventMobileController extends BaseController {
   public function __construct (){
     $this->json = new JSON();
     $this->termii = new TermiiAPI();
+    $this->log = new UserActivityModel();
   }
 
   public function GetEvents (Request $request, ResponseInterface $response, array $args): ResponseInterface
@@ -104,6 +106,11 @@ class EventMobileController extends BaseController {
     }
 
     $payload = ["statusCode" => 200, "data" => $response_data];
+
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_GET_EVENTS
+      ]);
 
     return $this->json->withJsonResponse($response, $payload);
   }

@@ -2,18 +2,16 @@
 
 namespace Liveet\Models;
 
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Liveet\Controllers\HelperController;
-use Liveet\Domain\Constants;
+use Liveet\Models\BaseModel;
 
-class TurnstileEventModel extends HelperModel
+class TurnstileEventModel extends BaseModel
 {
     use SoftDeletes;
 
     protected $table = "turnstile_event";
-    public $incrementing = true;
-    protected $dateFormat = "U";
+    protected $guarded = [];
     public $primaryKey = "turnstile_event_id";
     protected $fillable = ["turnstile_id,event_ticket_id"];
 

@@ -14,7 +14,7 @@ use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketModel;
 use Liveet\Models\EventTicketUserModel;
 use Liveet\Models\TurnstileEventModel;
-use Liveet\Models\Mobile\TempsModel;
+use Liveet\Models\VerificationLogModel;
 
 
 /**
@@ -257,6 +257,7 @@ trait LiveetFunction
     $ticket_db = new EventTicketModel();
     $event_user_db = new EventTicketUserModel();
     $turnstile_db = new TurnstileEventModel();
+    $log = new VerificationLogModel();
     $ticket_id = false;
 
 
@@ -312,6 +313,10 @@ trait LiveetFunction
   		]);
     }
     catch (\Exception $e){
+      $log->create([
+        "event_id" => $event_id,
+        "verification_status" => Constants::VERIFICATION_FAILED
+      ]);
       return [$is_approved,$ticket_name,$user_id];
     }
 
@@ -344,9 +349,26 @@ trait LiveetFunction
           //update the ticket as used
           $event_user->update(["status" => Constants::EVENT_TICKET_USED]);
           $is_approved = true;
+
+          $log->create([
+            "event_id" => $event_id,
+            "user_id" => $user_id,
+            "verification_status" => Constants::VERIFICATION_VERIFIED
+          ]);
         }
+      } else {
+        $log->create([
+          "event_id" => $event_id,
+          "verification_status" => Constants::VERIFICATION_FAILED
+        ]);
       }
 
+    }
+    else {
+      $log->create([
+        "event_id" => $event_id,
+        "verification_status" => Constants::VERIFICATION_FAILED
+      ]);
     }
      return [$is_approved,$ticket_name,$user_id];
   }

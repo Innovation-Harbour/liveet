@@ -2,19 +2,17 @@
 
 namespace Liveet\Models;
 
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Liveet\Controllers\HelperController;
-use Liveet\Domain\Constants;
+use Liveet\Models\BaseModel;
 
-class VerificationLogModel extends HelperModel
+class VerificationLogModel extends BaseModel
 {
     use SoftDeletes;
 
     protected $table = "face_verification_log";
-    public $incrementing = true;
-    protected $dateFormat = "U";
     public $primaryKey = "verification_log_id";
+    protected $guarded = [];
     protected $fillable = ["event_id","user_id","verification_status","activity_type"];
 
 }

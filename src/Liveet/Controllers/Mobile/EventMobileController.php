@@ -148,6 +148,11 @@ class EventMobileController extends BaseController {
       $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Deleted"];
     }
 
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_SET_FAVOURITE
+      ]);
+
     return $this->json->withJsonResponse($response, $payload);
   }
 
@@ -192,6 +197,11 @@ class EventMobileController extends BaseController {
     }
 
     $payload = ["statusCode" => 200, "data" => $response_data];
+
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_GET_TICKET
+      ]);
 
     return $this->json->withJsonResponse($response, $payload);
   }
@@ -345,6 +355,11 @@ class EventMobileController extends BaseController {
       $user_subscribe = $this->subcribeUser($eventCode, $fcm_token);
     }
 
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_ATTEND_EVENT
+      ]);
+
     $payload = ["statusCode" => 200, "successMessage" => "Ticket Registered"];
     return $this->json->withJsonResponse($response, $payload);
 
@@ -458,6 +473,11 @@ class EventMobileController extends BaseController {
     ];
 
     $payload = ["statusCode" => 200, "data" => $payment_data];
+
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_CHECK_PAYMENT
+      ]);
     return $this->json->withJsonResponse($response, $payload);
   }
 
@@ -520,6 +540,10 @@ class EventMobileController extends BaseController {
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_GET_FAVOURITE
+      ]);
     return $this->json->withJsonResponse($response, $payload);
   }
 
@@ -594,6 +618,11 @@ class EventMobileController extends BaseController {
           "event_invitee_user_phone" => $user_phone,
       ]);
     }
+
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_GET_EVENTS_ACCESS
+      ]);
 
     $payload = ["statusCode" => 200, "data" => $geteventDetails];
     return $this->json->withJsonResponse($response, $payload);
@@ -746,6 +775,11 @@ class EventMobileController extends BaseController {
       $invitation_db->where("event_id",$event_id)->where("event_invitee_user_phone",$inviter_phone)->update(["invitee_can_invite_count" => $invite_count]);
     }
 
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_DELETE_INVITATION
+      ]);
+
     $payload = ["statusCode" => 200, "successMessage" => "Event Deleted"];
     return $this->json->withJsonResponse($response, $payload);
   }
@@ -857,6 +891,11 @@ class EventMobileController extends BaseController {
         $failed_counter++;
       }
     }
+
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_SEND_INVITATION
+      ]);
 
     $response_message = "Invitation Complete. ".$sent_counter." invitations sent & ".$failed_counter." Failed. You can check the status of your invitations Here";
 
@@ -1109,6 +1148,11 @@ class EventMobileController extends BaseController {
       array_push($response_data,$tmp);
     }
 
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_GET_EVENT_HISTORY
+      ]);
+
     $payload = ["statusCode" => 200, "data" => $response_data];
 
     return $this->json->withJsonResponse($response, $payload);
@@ -1174,6 +1218,11 @@ class EventMobileController extends BaseController {
     if(!is_null($fcm_token)){
       $unsubscribe = $this->unSubcribeUser($event_code,$fcm_token);
     }
+
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_RECALL_TICKET
+      ]);
 
     $payload = ["statusCode" => 200, "successMessage" => "Recall successful"];
 
@@ -1350,6 +1399,10 @@ class EventMobileController extends BaseController {
       $this->sendMobileNotification(Constants::NOTIFICATION_ONE_USER, $notification_title, $notification_message, $receiver_fcm_token);
     }
 
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_TRANSFER_TICKET
+      ]);
 
     $payload = ["statusCode" => 200, "successMessage" => "Transfer successful"];
     return $this->json->withJsonResponse($response, $payload);
@@ -1420,6 +1473,11 @@ class EventMobileController extends BaseController {
 
       array_push($response_data,$tmp);
     }
+
+    $this->log->create([
+        "user_id" => $user_id,
+        "activity_type" => Constants::LOG_GET_TIMELINE
+      ]);
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 

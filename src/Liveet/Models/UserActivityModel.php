@@ -2,19 +2,17 @@
 
 namespace Liveet\Models;
 
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Liveet\Controllers\HelperController;
-use Liveet\Domain\Constants;
+use Liveet\Models\BaseModel;
 
-class UserActivityModel extends HelperModel
+class UserActivityModel extends BaseModel
 {
     use SoftDeletes;
 
     protected $table = "user_activity_log";
-    public $incrementing = true;
-    protected $dateFormat = "U";
     public $primaryKey = "user_activity_id";
+    protected $guarded = [];
     protected $fillable = ["user_id","activity_type"];
 
 }

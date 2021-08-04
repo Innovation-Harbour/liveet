@@ -15,6 +15,7 @@ class TempsModel extends BaseModel
     protected $guarded = [];
     protected $fillable = ['temp_phone','temp_name','temp_email','temp_password','base_64'];
 
+
     public function getUserFavourites($user_id, $offset, $limit){
       $sql = "
               SELECT

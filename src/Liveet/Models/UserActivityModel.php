@@ -9,6 +9,7 @@ use Liveet\Models\BaseModel;
 class UserActivityModel extends BaseModel
 {
     use SoftDeletes;
+    
 
     protected $table = "user_activity_log";
     public $primaryKey = "user_activity_id";

@@ -12,7 +12,11 @@ class KeyManager
 
     private $cshrk = array("k" => "435345645768589670!fy!9jzodf6x5bjf!7687jgh453!89678jvguvuygdyfdtfdtcghkjbefkdefhjbkfjkdsbfhsjhvdfjaeww", "slt" => 19);
 
-    private $key = "7bfhk3b!46cxx!ii3ump54wkliusx04183ywu1a3io0hv4wiook7rm0rm8sl622e8el9ip984ajytn1n52bdxiqud780o83dbq14w1w9ucd!1t9gl2p40uibyv3kek8ekjrbxu3dz139y07obct15t5mqisoa9qxc4nl4f8!v8m68hs4zxb0iyioemum74bglryppb!c";
+    private $key = "7bfhk3b!46cxx!ii3ump;slfghkhgfs;lfg54wkliusx04183iugwfkljbfladbglkbywu1a3io0hv4wiook7rm0rm8sl622e8el9ip984ajytn1n52bdxiqud780o83dbq14w1w9ucd!1t9gl2p40lkafdhoiufwkljfdoiahubklhfwoifdjklakuibyv3kek8ekjrbxu3dz139y07obct15;jfgjeropgit5mqisoa9qxc4nl4f8!v8m68hs4zxb0iyioemum74bglryppb!c";
+
+    public function __construct(){
+        $this->key .= $_SERVER["HTTP_HOST"];
+    }
 
     public function getDigest($raw, $type = 1)
     {

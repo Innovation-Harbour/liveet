@@ -26,7 +26,7 @@ class BaseModel extends Model
             ->where("username", "=", $username)
             ->where("usertype", "=", $usertype)
             // ->where("accessStatus", Constants::USER_ENABLED)
-            ;
+        ;
 
         return ($userQuery->exists()) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
@@ -272,7 +272,10 @@ class BaseModel extends Model
             }
         }
 
-        $query = $query->orderBy('id', 'DESC')->limit($limit);
+        $query = $query->orderBy(
+            $this->primaryKey,
+            'DESC'
+        )->limit($limit);
 
         if (!$query->exists()) {
             return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
@@ -330,7 +333,7 @@ class BaseModel extends Model
             }
         }
 
-        $query = $query->orderBy('id', 'DESC');
+        $query = $query->orderBy($this->primaryKey, 'DESC');
 
         if ($relationships) {
             $query = $query->with($relationships);
@@ -396,7 +399,7 @@ class BaseModel extends Model
         if (isset($queryOptions["latest"])) {
             $query = $queryOptions["latest"] ? $query->latest($queryOptions["latest"]) : $query->latest();
         } else {
-            $query = $query->orderBy('id', 'DESC');
+            $query = $query->orderBy($this->primaryKey, 'DESC');
         }
 
         if ($relationships) {

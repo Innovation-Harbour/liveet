@@ -16,7 +16,7 @@ use Rashtell\Domain\KeyManager;
 use Bluerhinos\phpMQTT;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class AuthController extends BaseController {
+class AuthController extends HelperController {
   use LiveetFunction;
 
   public function Register (Request $request, ResponseInterface $response): ResponseInterface

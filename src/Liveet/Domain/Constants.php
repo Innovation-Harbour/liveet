@@ -5,9 +5,6 @@ namespace Liveet\Domain;
 class Constants
 {
   const PRODUCTION_HOST = "https://api.liveet.co";
-  const DEVELOPMENT_HOST = "localhost";
-  // const DEVELOPMENT_BASE_PATH = "/liveet/liveet-apis";
-  // const PRODUCTION_BASE_PATH = "/liveet";
 
   const ENVIRONMENT_DEVELOPMENT = "development";
 
@@ -16,9 +13,12 @@ class Constants
   const USERTYPE_ORGANISER_STAFF = "ORGANIZER_STAFF";
   const USERTYPE_USER = "USER";
 
-
+  const USER_NOT_VERIFIED = 0;
   const USER_VERIFIED = 1;
+  const EMAIL_NOT_VERIFIED = 0;
   const EMAIL_VERIFIED = 1;
+
+  const USER_ENABLED = 0;
 
   const DEFAULT_RESET_PASSWORD = "Liveet_12345";
 
@@ -37,8 +37,23 @@ class Constants
   const ERROR_EMPTY_DATA = "No more data";
 
   const IMAGE_PATH = "assets/images/";
-  const IMAGE_TYPES_ACCEPTED = ["jpg", "png", "gif", "bmp","jpeg"];
+  const IMAGE_TYPES_ACCEPTED = ["jpg", "png", "gif", "bmp", "jpeg"];
+  const VIDEO_PATH = "assets/videos/";
   const VIDEO_TYPES_ACCEPTED = ["mp4", "avi", "flv", "mov"];
+  const MEDIA_PATH = "assets/medias/";
+
+  const MEDIA_TYPES_ACCEPTED = ["pdf"];
+  const MEDIA_TYPES = ["IMAGE", "VIDEO"];
+
+  const MEDIA_TYPE_IMAGE = "IMAGE";
+  const MEDIA_TYPE_VIDEO = "VIDEO";
+  const MEDIA_TYPE_PDF = "PDF";
+
+  const IMAGE_RESIZE_MAX_WIDTH = 1200;
+  const IMAGE_RESIZE_MAX_HEIGHT = 1200;
+  const IMAGE_RESIZE_QUALITY = 90;
+
+  const AWS_S3_BASE_URL = "https://liveet-media.s3-us-west-2.amazonaws.com/";
 
   const EVENT_ACCESS_ASSIGNED = "ASSIGNED";
   const EVENT_ACCESS_UNASSIGNED = "UNASSIGNED";
@@ -78,9 +93,6 @@ class Constants
   const NOTIFICATION_ONE_USER = "ONE_USER";
   const NOTIFICATION_USER_GROUP = "USER_GROUP";
 
-  const MEDIA_TYPE_IMAGE = "IMAGE";
-  const MEDIA_TYPE_VIDEO = "VIDEO";
-  const MEDIA_TYPE_PDF = "PDF";
 
   const MOBILE_APP_DOWNLOAD_URL = "https://bit.ly/liveet";
 

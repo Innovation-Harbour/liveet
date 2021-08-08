@@ -5,6 +5,7 @@ namespace Liveet\Controllers;
 use Liveet\Models\TimelineMediaModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Rashtell\Domain\JSON;
 
 class TimelineMediaController extends HelperController
 {
@@ -13,9 +14,15 @@ class TimelineMediaController extends HelperController
 
     public function createTimelineMedia(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
         $this->checkAdminEventPermission($request, $response);
+        $json = new JSON();
+
+        $event_code = $this->getEventCode($request);
+        if (!$event_code) {
+            $error = ["errorMessage" => "Invalid event selected", "errorStatus" => 1, "statusCode" => 406];
+
+            return $json->withJsonResponse($response, $error);
+        }
 
         return $this->createSelf(
             $request,
@@ -32,7 +39,12 @@ class TimelineMediaController extends HelperController
             ],
             [
                 "mediaOptions" => [
-                    ["mediaKey" => "timeline_media", "multiple" => true]
+                    [
+                        "mediaKey" => "timeline_media", "multiple" => true, "folder" => "timelines/$event_code",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => $event_code . "-" . rand(00000000, 99999999)
+                        ]
+                    ]
                 ]
             ],
         );
@@ -68,9 +80,16 @@ class TimelineMediaController extends HelperController
 
     public function updateTimelineMediaByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
         $this->checkAdminEventPermission($request, $response);
+
+        $json = new JSON();
+
+        $event_code = $this->getEventCode($request);
+        if (!$event_code) {
+            $error = ["errorMessage" => "Invalid event selected", "errorStatus" => 1, "statusCode" => 406];
+
+            return $json->withJsonResponse($response, $error);
+        }
 
         return $this->updateByPK(
             $request,
@@ -89,7 +108,12 @@ class TimelineMediaController extends HelperController
             ],
             [
                 "mediaOptions" => [
-                    ["mediaKey" => "timeline_media"]
+                    [
+                        "mediaKey" => "timeline_media", "folder" => "timelines/$event_code",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => $event_code . "-" . rand(00000000, 99999999)
+                        ]
+                    ]
                 ]
             ]
         );

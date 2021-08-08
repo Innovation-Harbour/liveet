@@ -35,7 +35,7 @@ class OrganiserModel extends BaseModel
 
     public function authenticate($token)
     {
-        $authDetails = (new BaseModel())->getTokenInputs($token);
+        $authDetails = $this->getTokenInputs($token);
 
         if ($authDetails == []) {
             return ["isAuthenticated" => false, "error" => "Invalid token"];
@@ -45,17 +45,11 @@ class OrganiserModel extends BaseModel
         $organiser_username = $authDetails["organiser_username"] ?? "";
         $usertype = $authDetails["usertype"] ?? "";
 
-        $users =  self::where("public_key", $public_key)
+        $user =  self::where("public_key", $public_key)
             ->where("organiser_username", "=", $organiser_username)
-            ->where("usertype", "=", $usertype)
-            ->take(1)
-            ->get();
+            ->where("usertype", "=", $usertype)->first();
 
-        foreach ($users as $user) {
-            return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
-        }
-
-        return ["isAuthenticated" => false, "error" => "Expired session"];
+        return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
     public function createSelf($details, $checks = [])
@@ -152,9 +146,12 @@ class OrganiserModel extends BaseModel
         $public_key = $details["public_key"];
 
         $organiserStaffModel = new OrganiserStaffModel();
-        if (!(new BaseModel())->isExist($this->where("organiser_username", $organiser_username)->where("organiser_password", $organiser_password))) {
+        $organiserStaffQuery = $organiserStaffModel->where(function ($query) use ($organiser_username) {
+            return $query->where("organiser_staff_username", $organiser_username)->orWhere("organiser_staff_email", $organiser_username);
+        })->where("organiser_password", $organiser_password);
 
-            $organiserStaffQuery = $organiserStaffModel->where("organiser_staff_username", $organiser_username);
+        if (!$this->isExist($organiserStaffQuery)) {
+
             if ($organiserStaffQuery->exists()) {
 
                 $organiser_staff_id = $organiserStaffQuery->first()["organiser_staff_id"];
@@ -165,16 +162,25 @@ class OrganiserModel extends BaseModel
             return ["error" => "Invalid Login credential", "data" => null];
         }
 
-        self::where("organiser_username", $organiser_username)->where("organiser_password", $organiser_password)->update([
+        $this->where(function ($query) use ($organiser_username) {
+            return $query->where("organiser_username", $organiser_username)->orWhere("organiser_email", $organiser_username);
+        })->where("organiser_password", $organiser_password)->update([
             "public_key" => $public_key
         ]);
 
-        OrganiserStaffModel::where("organiser_staff_username", $organiser_username)->where("organiser_staff_password", $organiser_password)->update([
+        $organiserStaffQuery->update([
             "public_key" => $public_key
         ]);
 
         $pkColumnName = $this->primaryKey;
-        $organiser = self::select($pkColumnName, "organiser_username",  "organiser_name", "organiser_email", "organiser_phone", "organiser_address", "phone_verified", "usertype", "email_verified",  "public_key", "usertype", "created_at", "updated_at")->where("organiser_username", $organiser_username)->where("public_key", $public_key)->where("organiser_password", $organiser_password)->first();
+        $organiser = $this->select($pkColumnName, "organiser_username",  "organiser_name", "organiser_email", "organiser_phone", "organiser_address", "phone_verified", "usertype", "email_verified",  "public_key", "usertype", "created_at", "updated_at")
+            ->where(function ($query) use ($organiser_username) {
+                return $query->where("organiser_username", $organiser_username)
+                    ->orWhere("organiser_email", $organiser_username);
+            })
+            ->where("public_key", $public_key)
+            ->where("organiser_password", $organiser_password)
+            ->first();
         $organiser->makeVisible(["public_key"]);
 
         $user = $organiserStaffModel->where("organiser_username", $organiser_username)->first();

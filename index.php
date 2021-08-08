@@ -16,7 +16,7 @@ use Liveet\Middlewares\LogMiddleware;
 use Liveet\Middlewares\ToJsonMiddleware;
 use Slim\Exception\HttpNotFoundException;
 
-if (!isset($_ENV["ENVIRONMENT"]) || $_ENV["ENVIRONMENT"] != Constants::ENVIRONMENT_DEVELOPMENT) {
+if (!isset($_ENV["ENVIRONMENT"]) || ($_ENV["ENVIRONMENT"] != Constants::ENVIRONMENT_DEVELOPMENT)) {
     error_reporting(0);
 }
 
@@ -35,16 +35,7 @@ $app->addMiddleware(new CORSMiddleware());
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 
-// $app->addMiddleware(new LogMiddleware());
-// $app->addMiddleware(new ToJsonMiddleware());
 $app->add(new ContentLengthMiddleware());
-
-// $basePath = Constants::DEVELOPMENT_BASE_PATH;
-
-// if ($_SERVER["HTTP_HOST"] == Constants::PRODUCTION_HOST) {
-//     $basePath = Constants::PRODUCTION_BASE_PATH;
-// }
-
 
 $app->group(
     $basePath,

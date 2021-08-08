@@ -42,53 +42,62 @@ class CodeLibrary
 		return null;
 	}
 
-	function  base64ToImage($string, $output, $quality = 65)
+	function  base64ToMedia($string, $output, $quality = 65)
 	{
 		$ifp = fopen($output, "wb");
 		$data = explode(",", $string);
-		//$output = $output.".jpg";
+
 		try {
 			if (count($data) == 2) {
 				fwrite($ifp, base64_decode($data[1]));
 				fclose($ifp);
+
 				$imgsize = getimagesize($output);
-				if ($imgsize == false) {
-					unlink($output);
-					return null;
+				if ($imgsize) {
+					$width = $imgsize[0];
+					$height = $imgsize[1];
+
+					$thumbName = "thumb_" . $output;
+					//$this->resize_crop_image(270, 270, $output, $thumbName, 75);
+
+					$this->resize_crop_image($width, $height, $output, $output, $quality);
 				}
-				$width = $imgsize[0];
-				$height = $imgsize[1];
-				$thumbName = "thumb_" . $output;
-				//$this->resize_crop_image(270, 270, $output, $thumbName, 75);
-				$this->resize_crop_image($width, $height, $output, $output, $quality);
-				return $output;
 			} elseif (count($data) == 1) {
 				fwrite($ifp, base64_decode($data[0]));
 				fclose($ifp);
+
 				$imgsize = getimagesize($output);
-				if ($imgsize == false) {
-					unlink($output);
-					return null;
+				if ($imgsize) {
+					$width = $imgsize[0];
+					$height = $imgsize[1];
+
+					$thumbName = "thumb_" . $output;
+					//$this->resize_crop_image(270, 270, $output, $thumbName, 75);
+
+					$this->resize_crop_image($width, $height, $output, $output, $quality);
 				}
-				$width = $imgsize[0];
-				$height = $imgsize[1];
-				$thumbName = "thumb_" . $output;
-				//$this->resize_crop_image(270, 270, $output, $thumbName, 75);
-				$this->resize_crop_image($width, $height, $output, $output, $quality);
-				return $output;
 			} else {
-				return null;
+				$output = null;
 			}
 		} catch (Exception $e) {
-			return null;
+			$output = null;
 		}
+
+		return $output;
 	}
 
 	function resize_crop_image($max_width, $max_height, $source_file, $dst_dir, $quality)
 	{
 		$imgsize = getimagesize($source_file);
+		if (!$imgsize) {
+			return false;
+		}
 		$width = $imgsize[0];
 		$height = $imgsize[1];
+
+		$max_width = $width < $max_width ? $width : $max_width;
+		$max_height = $height < $max_height ? $height : $max_height;
+
 		$mime = $imgsize["mime"];
 		switch ($mime) {
 			case "image/gif":
@@ -101,11 +110,17 @@ class CodeLibrary
 				$quality = $quality / 100;
 				break;
 			case "image/jpeg":
+			case "image/jpg":
 				$image_create = "imagecreatefromjpeg";
 				$image = "imagejpeg";
-				$quality = $quality;
+				$quality = $quality / 1;
 				break;
-				CoroClub:
+			case "image/webp":
+				$image_create = "imagecreatefromwebp";
+				$image = "imagewebp";
+				$quality = $quality / 1;
+				break;
+			default:
 				return false;
 				break;
 		}
@@ -125,8 +140,14 @@ class CodeLibrary
 			imagecopyresampled($dst_img, $src_img, 0, 0, $w_point, 0, $max_width, $max_height, $width_new, $height);
 		}
 		$image($dst_img, $dst_dir, $quality);
-		if ($dst_img) imagedestroy($dst_img);
-		if ($src_img) imagedestroy($src_img);
+		if ($dst_img) {
+			imagedestroy($dst_img);
+		}
+		if ($src_img) {
+			imagedestroy($src_img);
+		}
+
+		return true;
 	}
 
 	function dataTohtml($data)

@@ -24,7 +24,7 @@ use Rashtell\Domain\KeyManager;
 use Aws\Rekognition\RekognitionClient;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class EventMobileController extends BaseController {
+class EventMobileController extends HelperController {
   use LiveetFunction;
 
   public function __construct (){

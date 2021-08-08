@@ -9,6 +9,7 @@ use Liveet\Models\EventTimelineModel;
 use Liveet\Domain\MailHandler;
 use Liveet\Controllers\BaseController;
 use Liveet\Models\AdminActivityLogModel;
+use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -20,13 +21,20 @@ class EventTimelineController extends HelperController
 
     public function createEventTimeline(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $this->checkAdminEventPermission($request, $response);
+
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an event timeline"]);
 
-        $this->checkAdminEventPermission($request, $response);
+        $event_code = $this->getEventCode($request);
+        if (!$event_code) {
+            $error = ["errorMessage" => "Invalid event selected", "errorStatus" => 1, "statusCode" => 406];
+
+            return $json->withJsonResponse($response, $error);
+        }
 
         return $this->createSelf(
             $request,
@@ -45,9 +53,14 @@ class EventTimelineController extends HelperController
             ],
             [
                 "mediaOptions" => [
-                    ["mediaKey" => "timeline_media", "multiple" => true]
+                    [
+                        "mediaKey" => "timeline_media", "multiple" => true, "folder" => "timelines/$event_code",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => $event_code . "-" . rand(00000000, 99999999)
+                        ]
+                    ]
                 ]
-            ],
+            ]
         );
     }
 

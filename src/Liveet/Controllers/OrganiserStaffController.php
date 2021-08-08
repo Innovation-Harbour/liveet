@@ -118,7 +118,10 @@ class OrganiserStaffController extends HelperController
 
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_profile_picture"
+                        "mediaKey" => "organiser_profile_picture", "folder"=>"organiser-staffs",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                        ]
                     ]
                 ]
             ],
@@ -181,7 +184,10 @@ class OrganiserStaffController extends HelperController
                 ],
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_staff_profile_picture"
+                        "mediaKey" => "organiser_staff_profile_picture", "folder"=>"organiser-staffs",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                        ]
                     ]
                 ]
             ],
@@ -265,7 +271,10 @@ class OrganiserStaffController extends HelperController
             [
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_staff_profile_picture"
+                        "mediaKey" => "organiser_staff_profile_picture", "folder"=>"organiser-staffs",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                        ]
                     ]
                 ]
             ],
@@ -351,7 +360,10 @@ class OrganiserStaffController extends HelperController
             [
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_staff_profile_picture"
+                        "mediaKey" => "organiser_staff_profile_picture", "folder"=>"organiser-staffs",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                        ]
                     ]
                 ]
             ],
@@ -413,7 +425,10 @@ class OrganiserStaffController extends HelperController
             [
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_staff_profile_picture"
+                        "mediaKey" => "organiser_staff_profile_picture", "folder"=>"organiser-staffs",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                        ]
                     ]
                 ]
             ]

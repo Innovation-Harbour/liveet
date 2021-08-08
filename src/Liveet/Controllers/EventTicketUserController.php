@@ -131,7 +131,7 @@ class EventTicketUserController extends HelperController
 
         $this->checkOrganiserEventPermission($request, $response);
 
-        $postBody = $this->checkOrGetPostBody($request, $response, ["event_ticket_id"]);
+        $postBody = $this->checkOrGetPostBody($request, ["event_ticket_id"]);
         $event_ticket_id = $postBody["event_ticket_id"];
 
         $this->eventTicketBelongsToOrganiser($request, $response, $event_ticket_id);

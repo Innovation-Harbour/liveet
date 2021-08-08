@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Rashtell\Domain\JSON;
 use Liveet\Models\AdminUserModel;
+use Liveet\Models\EventModel;
 
 class AdminUserController extends HelperController
 {
@@ -64,7 +65,10 @@ class AdminUserController extends HelperController
                 ],
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "admin_profile_picture"
+                        "mediaKey" => "admin_profile_picture", "folder" => "admins",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                        ]
                     ]
                 ]
             ]
@@ -119,7 +123,10 @@ class AdminUserController extends HelperController
 
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "admin_profile_picture"
+                        "mediaKey" => "admin_profile_picture", "folder" => "admins",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                        ]
                     ]
                 ]
             ],
@@ -186,7 +193,10 @@ class AdminUserController extends HelperController
             [
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "admin_profile_picture"
+                        "mediaKey" => "admin_profile_picture", "folder" => "admins",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                        ]
                     ]
                 ]
             ],

@@ -30,7 +30,7 @@ class UserModel extends BaseModel
 
     public function authenticate($token)
     {
-        $authDetails = (new BaseModel())->getTokenInputs($token);
+        $authDetails = $this->getTokenInputs($token);
 
         if ($authDetails == []) {
             return ["isAuthenticated" => false, "error" => "Invalid token"];
@@ -87,7 +87,7 @@ class UserModel extends BaseModel
         $password = $details["password"];
         $public_key = $details["public_key"];
 
-        if (!(new BaseModel())->isExist($this->where("username", $username)->where("password", $password))) {
+        if (!$this->isExist($this->where("username", $username)->where("password", $password))) {
             return ["error" => "Invalid Login credential", "data" => null];
         }
 

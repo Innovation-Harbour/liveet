@@ -48,3 +48,31 @@
 											if (strlen($data->password) > 6)
 
 ```
+
+## PARAMS
+
+- accountOptions :array
+  - responseMessage :string
+- mediaOptions :multi-dimensional-array
+  - mediaKey :string
+  - multiple :boolean
+  - folder :string || function
+  - clientOptions :array
+    - containerName :string 
+    - baseUrl :string
+    - mediaName :string
+- dataOptions :array
+  - $inputName => $columnName
+- queryOptions :array
+  - idKey :string
+  - whereIn :multi-dimensional-array
+  - dateCreatedColumn :string
+  - distinct
+  - passwordKey :string
+  - publicKey :string
+  - forceDelete :boolean
+  - orderBy :array ["columnName" => "ASC" | "DESC" ]
+  - whereHas :array ["relationshipName"=> function($query){return $query;}]
+  - latest :boolean | string
+- checks :array
+  - [primaryKey :boolean, detailsKey :string, columnName :string, errorText :string ]

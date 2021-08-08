@@ -34,7 +34,7 @@ class AdminUserModel extends BaseModel
 
     public function authenticate($token)
     {
-        $authDetails = (new BaseModel())->getTokenInputs($token);
+        $authDetails = $this->getTokenInputs($token);
 
         if ($authDetails == []) {
             return ["isAuthenticated" => false, "error" => "Invalid token"];
@@ -44,17 +44,11 @@ class AdminUserModel extends BaseModel
         $admin_username = $authDetails["admin_username"] ?? "";
         $usertype = $authDetails["usertype"] ?? "";
 
-        $users =  $this::where("public_key", $public_key)
+        $user =  $this::where("public_key", $public_key)
             ->where("admin_username", "=", $admin_username)
-            ->where("usertype", "=", $usertype)
-            ->take(1)
-            ->get();
+            ->where("usertype", "=", $usertype)->first();
 
-        foreach ($users as $user) {
-            return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
-        }
-
-        return ["isAuthenticated" => false, "error" => "Expired session"];
+        return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
     public function getDashboard($pk, $queryOptions = null, $extras = null)
@@ -133,9 +127,12 @@ class AdminUserModel extends BaseModel
         $admin_password = $details["admin_password"];
         $public_key = $details["public_key"];
 
-        if (!(new BaseModel())->isExist($this->where("admin_username", $admin_username)->where("admin_password", $admin_password))) {
+        $adminQuery = $this->where(function ($query) use ($admin_username) {
+            return $query->where("admin_username", $admin_username)->orWhere("admin_email", $admin_username);
+        })->where("admin_password", $admin_password);
 
-            $adminQuery = $this->where("admin_username", $admin_username);
+        if (!$this->isExist($adminQuery)) {
+
             if ($adminQuery->exists()) {
 
                 $admin_user_id = $adminQuery->first()["admin_user_id"];
@@ -146,12 +143,19 @@ class AdminUserModel extends BaseModel
             return ["error" => "Invalid Login credential", "data" => null];
         }
 
-        self::where("admin_username", $admin_username)->where("admin_password", $admin_password)->update([
+        $adminQuery->update([
             "public_key" => $public_key
         ]);
 
         $pkColumnName = $this->primaryKey;
-        $admin = self::select($pkColumnName, "admin_fullname", "admin_username", "admin_email", "admin_priviledges", "email_verified",  "public_key", "usertype", "created_at", "updated_at")->where("admin_username", $admin_username)->where("public_key", $public_key)->where("admin_password", $admin_password)->first();
+        $admin = $this->select($pkColumnName, "admin_fullname", "admin_username", "admin_email", "admin_priviledges", "email_verified",  "public_key", "usertype", "created_at", "updated_at")
+            ->where(function ($query) use ($admin_username) {
+                return $query->where("admin_username", $admin_username)->orWhere("admin_email", $admin_username);
+            })
+            ->where("public_key", $public_key)
+            ->where("admin_password", $admin_password)
+            ->first();
+
         $admin->makeVisible(["public_key"]);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $admin["admin_user_id"], "activity_log_desc" => "Admin login successfully"]);

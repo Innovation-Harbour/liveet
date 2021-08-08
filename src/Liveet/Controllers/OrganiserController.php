@@ -54,7 +54,10 @@ class OrganiserController extends HelperController
                 ],
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_profile_picture"
+                        "mediaKey" => "organiser_profile_picture", "folder"=>"organisers",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                        ]
                     ]
                 ]
             ]

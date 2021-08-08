@@ -12,13 +12,12 @@ use Rashtell\Domain\MCrypt;
 use Rashtell\Domain\JSON;
 use Liveet\Models\BaseModel;
 use DateTime;
-use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Liveet\Domain\Constants;
 use Liveet\Models\EventModel;
 use Psr\Http\Message\UploadedFileInterface;
 
-abstract class BaseController
+class BaseController
 {
     protected function getValidJsonOrError($request)
     {
@@ -27,9 +26,6 @@ abstract class BaseController
         $data = $request->getParsedBody();
         $data = isset($data) ? $data : $request->getBody();
 
-        if (!isset($data) || empty($data)) {
-            return ["error" => null, "data" => []];
-        }
 
         $validJson = $json->jsonFormat($data);
 
@@ -39,13 +35,13 @@ abstract class BaseController
             return ["error" => $error, "data" => null];
         }
 
-        // if (!isset($validJson->data)) {
-        //     $error = array("errorMessage" => "The request object does not conform to standard", "errorStatus" => 1, "statusCode" => 400);
+        if (!isset($validJson->data)) {
+            $error = array("errorMessage" => "The request object does not conform to standard", "errorStatus" => 1, "statusCode" => 400);
 
-        //     return ["error" => $error, "data" => null];
-        // }
+            return ["error" => $error, "data" => null];
+        }
 
-        return ["data" => isset($validJson->data) ? $validJson->data : $validJson, "error" => ""];
+        return ["data" => $validJson->data, "error" => ""];
     }
 
     protected function getPageNumOrError($request)
@@ -145,7 +141,7 @@ abstract class BaseController
         return ["data" => $token, "error" => null];
     }
 
-    protected function valuesExistsOrError($data, array $details = [], $options = ["all" => true])
+    protected function valuesExistsOrError($data, array $details = [])
     {
         $existData = ["error" => null];
 
@@ -162,11 +158,10 @@ abstract class BaseController
             $existData = array_merge($existData, [$detail => $data->$detail]);
         }
 
-        if (isset($options["all"]) && $options["all"]) {
-            foreach ($data as $key => $value) {
-                $existData[$key] = $value;
-            }
+        foreach ($data as $key => $value) {
+            $existData[$key] = $value;
         }
+
         return $existData;
     }
 
@@ -200,11 +195,9 @@ abstract class BaseController
         return isset($tokenArr[1]) ? $tokenArr[1] : null;
     }
 
-
-
     /**
-     * Parses base64 medias to url
-     * 
+     * Parses base64 images to url
+     *
      * $accountOptions["mediaOptions"=>[
      *  ["mediaKey"=>"", "mediaPrefix"=>"", multiple=>false]
      * ]
@@ -213,12 +206,12 @@ abstract class BaseController
      * @param array $accountOptions
      * @return array
      */
-    public function parseMedia($data, $accountOptions = [])
+    public function parseImage($data, $accountOptions = [])
     {
         if (isset($accountOptions["mediaOptions"])) {
-            foreach ($accountOptions["mediaOptions"] as $mediaOptions) {
+            foreach ($accountOptions["mediaOptions"] as $mediaOption) {
 
-                $mediaKey = $mediaOptions["mediaKey"];
+                $mediaKey = $mediaOption["mediaKey"];
 
                 if (!isset($data[$mediaKey])) {
 
@@ -232,27 +225,21 @@ abstract class BaseController
 
                 $return = [];
 
+                $event_id = $data["event_id"] ?? "";
+
                 if (
-                    (isset($mediaOptions["multiple"]) && $mediaOptions["multiple"] && gettype($data[$mediaKey]) == "array")
+                    (isset($mediaOption["multiple"]) && $mediaOption["multiple"] && gettype($data[$mediaKey]) == "array")
                     || gettype($data[$mediaKey]) == "array"
                 ) {
-                    $index = 1;
-                    foreach ($data[$mediaKey] as $media) {
-
-                        $mediaOptions["clientOptions"]["index"] = $index;
-
-                        $return[] = $this->handleS3ParseMedia($mediaOptions, $media);
-
-                        $index++;
+                    foreach ($data[$mediaKey] as $mediaKeyy) {
+                        $return[] = $this->handleLiveetParseImage($mediaOption, $mediaKeyy, $event_id);
                     }
 
                     $data[$mediaKey] = $return;
-
                 } else {
-                    $return = $this->handleS3ParseMedia($mediaOptions, $data[$mediaKey]);
+                    $return = $this->handleLiveetParseImage($mediaOption, $data[$mediaKey], $event_id);
 
-                    $data[$mediaKey] = $return["url"] ?? $return["path"]  ?? "";
-
+                    $data[$mediaKey] = $return["path"] ?? $return["url"] ?? "";
                     $data[$mediaKey . "Type"] = $return["type"] ?? "";
                 }
             }
@@ -261,185 +248,12 @@ abstract class BaseController
         return $data;
     }
 
-    public function handleS3ParseMedia($mediaOptions, $media)
+    public function handleLiveetParseImage($mediaOption, $media, $event_id)
     {
-        $return = $this->handleParseMedia($mediaOptions, $media);
-
-        $name = $return["name"] ?? "";
-        $ext = $return["ext"] ?? "";
-        $type = $return["type"] ?? "";
-        $path = $return["path"] ?? "";
-        $url = $return["url"] ?? "";
-        $error = $return["error"] ?? "";
-
-        $mediaKey = $mediaOptions["mediaKey"];
-        $folderName = $mediaOptions["folder"] ?? "";
-        $clientOptions = isset($mediaOptions["clientOptions"]) ? $mediaOptions["clientOptions"] : [];
-
-        if ($path) {
-            $bucket = $clientOptions["containerName"] ?? "assets";
-
-            $contentType = $this->getContentType($ext, $type);
-            $content = fopen($path, "r");
-
-            $mediaName = $clientOptions["mediaName"] ?? $name;
-            $index = isset($clientOptions["index"]) ? "-" . $clientOptions["index"] : "";
-
-            $file = "$folderName/$mediaName$index.$ext";
-
-            $aws_key =  $_ENV["AWS_KEY"];
-            $aws_secret =  $_ENV["AWS_SECRET"];
-            try {
-                $s3 = new S3Client([
-                    'region'  => 'us-west-2',
-                    'version' => 'latest',
-                    'credentials' => [
-                        'key'    => $aws_key,
-                        'secret' => $aws_secret,
-                    ]
-                ]);
-
-                $s3->putObject([
-                    'Bucket' => $bucket,
-                    'Key'    => $file,
-                    'Body'   => $content,
-                    'ACL'    => 'public-read',
-                    'ContentType'    => $contentType
-                ]);
-            } catch (\Exception $e) {
-                $data["error"] = $e->getMessage();
-                return $data;
-            }
-
-            $s3baseUrl =  ($clientOptions["baseUrl"]) ?? ($_ENV["AWS_S3_BASE_URL"] ?? Constants::AWS_S3_BASE_URL);
-
-            $url = $s3baseUrl . "$file";
-            fclose($content);
-            unlink($path);
-
-            return ["name" => $name, "ext" => $ext, "type" => $type, "url" => $url, "error" => $error];
-        }
-
-        return $return;
-    }
-
-    #region
-    // public function handleAzureParseMedia($mediaOptions, $media, $azureOptions = [])
-    // {
-    //     $return = $this->handleParseMedia($mediaOptions, $media);
-
-    //     $name = $return["name"] ?? "";
-    //     $ext = $return["ext"] ?? "";
-    //     $type = $return["type"] ?? "";
-    //     $path = $return["path"] ?? "";
-    //     $url = $return["url"] ?? "";
-    //     $error = $return["error"] ?? "";
-
-    //     $mediaKey = $mediaOptions["mediaKey"];
-    //     $folderName = $mediaOptions["folder"] ?? "";
-    //     $clientOptions = isset($mediaOptions["clientOptions"]) && $mediaOptions["clientOptions"];
-
-    //     if ($path) {
-    //         $connectionString = $_ENV["AZURE_STORAGE_CONNECTION_STRING"];
-
-    //         // Create blob client.
-    //         $blobClient = BlobRestProxy::createBlobService($connectionString);
-
-    //         $createContainerOptions = new CreateContainerOptions();
-    //         $createContainerOptions->setPublicAccess(PublicAccessType::CONTAINER_AND_BLOBS);
-    //         // $createContainerOptions->setDecodeContent();
-
-
-    //         $containerName = isset($clientOptions["containerName"]) ? $clientOptions["containerName"] : "static";
-
-    //         try {
-    //             // Create container.
-    //             // $blobClient->createContainer($containerName, $createContainerOptions);
-
-    //             // Getting local file so that we can upload it to Azure
-    //             // $myfile = fopen($path, "w");
-    //             // fclose($myfile);
-
-    //             $content = fopen($path, "r");
-
-    //             $blobName = strtolower($type) . "/$folderName/$name.$ext";
-
-    //             $mimetype = $this->getContentType($ext, $type);
-
-    //             $blobOptions = new CreateBlockBlobOptions();
-    //             $blobOptions->setContentType($mimetype);
-
-    //             //Upload blob
-    //             $blobClient->createBlockBlob($containerName, $blobName, $content, $blobOptions);
-
-    //             $url = $_ENV["AZURE_STORAGE_BASE_URL"] . "$containerName/$blobName";
-    //             fclose($content);
-    //             unlink($path);
-
-    //             return ["name" => $name, "ext" => $ext, "type" => $type, "url" => $url, "error" => $error];
-
-    //             #region
-    //             // List blobs.
-    //             $listBlobsOptions = new ListBlobsOptions();
-    //             // $listBlobsOptions->setPrefix("HelloWorld");
-
-    //             echo "These are the blobs present in the container: ";
-
-    //             do {
-    //                 $result = $blobClient->listBlobs($containerName, $listBlobsOptions);
-    //                 foreach ($result->getBlobs() as $blob) {
-    //                     echo $blob->getName() . ": " . $blob->getUrl() . "<br />";
-    //                 }
-
-    //                 $listBlobsOptions->setContinuationToken($result->getContinuationToken());
-    //             } while ($result->getContinuationToken());
-    //             echo "<br />";
-
-    //             // Get blob.
-    //             echo "This is the content of the blob uploaded: ";
-    //             $blob = $blobClient->getBlob($containerName, $blobName);
-    //             fpassthru($blob->getContentStream());
-    //             echo "<br />";
-    //             #endregion
-    //         } catch (ServiceException $e) {
-    //             // Handle exception based on error codes and messages.
-    //             // Error codes and messages are here:
-    //             // http://msdn.microsoft.com/library/azure/dd179439.aspx
-    //             $code = $e->getCode();
-    //             $error_message = $e->getMessage();
-
-    //             // echo $code . ": " . $error_message . "<br />";
-
-    //             $return["error"] .= $return["error"] ? ". $error_message" : "$error_message";
-    //         } catch (InvalidArgumentTypeException $e) {
-    //             // Handle exception based on error codes and messages.
-    //             // Error codes and messages are here:
-    //             // http://msdn.microsoft.com/library/azure/dd179439.aspx
-    //             $code = $e->getCode();
-    //             $error_message = $e->getMessage();
-
-    //             // echo $code . ": " . $error_message . "<br />";
-
-    //             $return["error"] .= $return["error"] ? ". $error_message" : "$error_message";
-    //         }
-
-    //         return $return;
-    //     }
-
-    //     return $return;
-    // }
-    #endregion
-
-    public function handleParseMedia($mediaOptions, $media)
-    {
-        $cdl = new CodeLibrary();
-        $mediaKey = $mediaOptions["mediaKey"];
-
-        if (strpos($media, "data:image/") !== 0 && strpos($media, "data:video/") !== 0) {
-            //it means its a url or a path
+        if (strrpos($media, "data:image/") !== 0 && strrpos($media, "data:video/") !== 0) {
+           //it means its a url or a path
             //if path first folder name is >10, ki olohun so e
-
-            if (strpos($media, "/") < 30) {
+            if (strrpos($media, "/") < 10) {
                 $data["url"] = $media;
                 return $data;
             }
@@ -448,13 +262,35 @@ abstract class BaseController
             return $data;
         }
 
-        $mediaPrefix = isset($mediaOptions["mediaPrefix"]) ? $mediaOptions["mediaPrefix"] . " - " : "";
+        $mediaPrefix = isset($mediaOption["mediaPrefix"]) ? $mediaOption["mediaPrefix"] . " - " : "";
 
-        $mediaName = bin2hex(random_bytes(8));
-        $mediaName .= $mediaPrefix . (new DateTime())->getTimeStamp();
+        // $mediaName = $mediaPrefix . bin2hex(random_bytes(8));
+        // $mediaName .=  (new DateTime())->getTimeStamp();
+        $mediaName =  rand(00000000, 99999999);
 
+        $event_id = (int)$event_id;
+        $event = (new EventModel)->find($event_id); //get event code from event id
+        $event_code = "";
+        if ($event) {
+            $event_code = $event["event_code"];
+        } else {
+            $data["error"] = "event not found";
+        }
+
+        $event_code_dir = $event_code ? "$event_code/" : "/";
+        $event_code_key = $event_code ? "$event_code-" : "";
+
+        $mediaKey = $mediaOption["mediaKey"];
         $mediaExtType = $this->getFileTypeOfBase64($media);
         $mediaExtType = strtolower($mediaExtType);
+        
+        $key = "$mediaPrefix$event_code_key$mediaName.$mediaExtType";
+
+        $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code_dir$key";
+
+        $aws_key = $_ENV["AWS_KEY"];
+        $aws_secret = $_ENV["AWS_SECRET"];
+
         $mediaType = "";
         if (!in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
             $mediaExtError = "Unsupported media type. ";
@@ -464,103 +300,126 @@ abstract class BaseController
             return $data;
         }
         if (in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
-            $mediaType = CONSTANTS::MEDIA_TYPE_IMAGE;
-            $mediaPath = Constants::IMAGE_PATH;
-        } else if (in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
-            $mediaType = CONSTANTS::MEDIA_TYPE_VIDEO;
-            $mediaPath = Constants::VIDEO_PATH;
-        } else {
-            $mediaPath = Constants::MEDIA_PATH;
+            $mediaType = "IMAGE";
+        }
+        if (in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
+            $mediaType = "VIDEO";
         }
 
-        if (isset($mediaOptions["folder"])) {
-            $folder = $mediaOptions["folder"];
-            $mediaPath .= $folder . "/";
+        $tempMediaPath = Constants::IMAGE_PATH . $event_code_dir;
+        if (!is_dir($tempMediaPath)) {
+            mkdir($tempMediaPath, 0777, true);
         }
+        $tempMediaPath = "$tempMediaPath$key";
+        file_put_contents($tempMediaPath, file_get_contents($media));
+
+        $newMedia = fopen($tempMediaPath, 'r');
+
+        $bucket = "liveet-media";
+        $folder = isset($event_code) ? "$event_code/$key" : $key;
+        $contentType = $this->getContentType($mediaExtType, $mediaType);
+        try {
+            $s3 = new S3Client([
+                'region'  => 'us-west-2',
+                'version' => 'latest',
+                'credentials' => [
+                    'key'    => $aws_key,
+                    'secret' => $aws_secret,
+                ]
+            ]);
+
+            $s3->putObject([
+                'Bucket' => $bucket,
+                'Key'    => $folder,
+                'Body'   => $newMedia,
+                'ACL'    => 'public-read',
+                'ContentType'    => $contentType
+            ]);
+        } catch (\Exception $e) {
+            $data["error"] = $e->getMessage();
+            return $data;
+        }
+
+        fclose($newMedia);
+        unlink($tempMediaPath);
+
+        $data["type"] = $mediaType;
+        $data["path"] = $mediaPath;
+
+        return $data;
+    }
+
+    public function handleParseImage($mediaOption, $media)
+    {
+        $mediaKey = $mediaOption["mediaKey"];
+        $mediaPath = Constants::IMAGE_PATH;
         if (!is_dir($mediaPath)) {
             mkdir($mediaPath, 0777, true);
         }
 
-        $newMediaPath = "$mediaPath$mediaName.$mediaExtType";
-
-        try {
-            $mediaContent = file_get_contents($media);
-            if ($mediaContent) {
-                file_put_contents($newMediaPath, $mediaContent);
-            } else {
-                $outputPath = $cdl->base64ToMedia($media, $newMediaPath, 100);
-
-                if (!$outputPath) {
-                    return ["error" => "Invalid media"];
-                }
-
-                // $data["error"] = "Unable to get the media content";
-                // return $data;
+        if (strrpos($media, "data:image/") !== 0 || strrpos($media, "data:video/") !== 0) {
+            //it means its a url or a path
+            //if path first folder name is >10, ki olohun so e
+            if (strrpos($media, "/") < 10) {
+                $data["url"] = $media;
+                return $data;
             }
-        } catch (Exception $e) {
-            $outputPath = $cdl->base64ToMedia($media, $newMediaPath, 100);
 
-            if (!$outputPath) {
-                return ["error" => "Invalid media"];
-            }
+            $data["error"] = "Unacceptable picture format";
+            return $data;
         }
 
-        if (!file_exists($newMediaPath)) {
-            return ["error" => "File content error."];
+        $mediaPrefix = isset($mediaOption["mediaPrefix"]) ? $mediaOption["mediaPrefix"] . " - " : "";
+
+        $mediaName = bin2hex(random_bytes(8));
+        $mediaName .= $mediaPrefix . (new DateTime())->getTimeStamp();
+
+        $mediaExtType = $this->getFileTypeOfBase64($media);
+        $mediaExtType = strtolower($mediaExtType);
+        if (!in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
+            $mediaExtError = "Unsupported media type. ";
+            $mediaExtError .= $this->getSupportedMediaTypes();
+
+            $data["error"] = $mediaExtError;
+            return $data;
         }
 
-        $resizedMediaPath = null;
-        if ($mediaType === CONSTANTS::MEDIA_TYPE_IMAGE) {
-            $cdl = new CodeLibrary();
+        $newImagePath = "$mediaPath$mediaName.$mediaExtType";
 
-            if (
-                $cdl->resize_crop_image(
-                    Constants::IMAGE_RESIZE_MAX_WIDTH,
-                    Constants::IMAGE_RESIZE_MAX_HEIGHT,
-                    $newMediaPath,
-                    "$mediaPath$mediaName.$mediaExtType",
-                    Constants::IMAGE_RESIZE_QUALITY
-                )
-            ) {
-                $resizedMediaPath = "$mediaPath$mediaName.$mediaExtType";
-            }
-        }
+        file_put_contents($newImagePath, file_get_contents($media));
 
-        $mediaTypeKey = $mediaKey . "Type";
+        $mediaTypeKey = $mediaKey . "_type";
 
-        $data["name"] = $mediaName;
-        $data["ext"] = $mediaExtType;
-        $data["type"] = $mediaType;
-        $data["path"] = $resizedMediaPath ?? $newMediaPath;
-        $data["url"] = $_ENV["HTTP_PROTOCOL"] . "://" . $_ENV["MEDIA_HOST"] . $_ENV["BASE_PATH"] . "/" . ($resizedMediaPath ?? $newMediaPath);
+        $data["type"] = $mediaExtType;
+        $data["path"] = $newImagePath;
 
         return $data;
     }
 
     public function getFileTypeOfBase64($data_media)
     {
-        if (!empty($data_media) && strpos($data_media, ";base64,") > 0) :
+        if (!empty($data_media) && strrpos($data_media, ";base64,") > 0) :
             $string_pieces = explode(";base64,", $data_media);
 
             $media_type_pieces = ["", ""];
-            if (strpos($string_pieces[0], "image/") > 0) :
+            if (strrpos($string_pieces[0], "image/") > 0) :
                 $media_type_pieces = explode("image/", $string_pieces[0]);
             endif;
-            if (strpos($string_pieces[0], "video/") > 0) :
+            if (strrpos($string_pieces[0], "video/") > 0) :
                 $media_type_pieces = explode("video/", $string_pieces[0]);
             endif;
 
             return  $media_type_pieces[1];
         endif;
 
-        if (!empty($data_media) && strpos($data_media, ";charset=UTF-8,") > 0) :
+        if (!empty($data_media) && strrpos($data_media, ";charset=UTF-8,") > 0) :
             $string_pieces = explode(";charset=UTF-8,", $data_media);
 
             $media_type_pieces = ["", ""];
-            if (strpos($string_pieces[0], "image/") > 0) :
+            if (strrpos($string_pieces[0], "image/") > 0) :
                 $media_type_pieces = explode("image/", $string_pieces[0]);
             endif;
-            if (strpos($string_pieces[0], "video/") > 0) :
+            if (strrpos($string_pieces[0], "video/") > 0) :
                 $media_type_pieces = explode("video/", $string_pieces[0]);
             endif;
 
@@ -571,7 +430,7 @@ abstract class BaseController
         endif;
     }
 
-    public function convertBase64ToMedia($base64_code, $path, $media_name = null)
+    public function convertBase64ToImage($base64_code, $path, $media_name = null)
     {
 
         if (!empty($base64_code) && !empty($path)) :
@@ -579,19 +438,19 @@ abstract class BaseController
             $string_pieces = explode(";base64,", $base64_code);
 
             $media_type_pieces = ["", ""];
-            if (strpos($string_pieces[0], "image/") > 0) :
+            if (strrpos($string_pieces[0], "image/") > 0) :
                 $media_type_pieces = explode("image/", $string_pieces[0]);
             endif;
-            if (strpos($string_pieces[0], "video/") > 0) :
+            if (strrpos($string_pieces[0], "video/") > 0) :
                 $media_type_pieces = explode("video/", $string_pieces[0]);
             endif;
 
             $media_type = $media_type_pieces[1];
 
-            /*@ Create full path with media name and extension */
+            /*@ Create full path with image name and extension */
             $store_at = $path . md5(uniqid()) . "." . $media_type;
 
-            /*@ If media name available then use that  */
+            /*@ If image name available then use that  */
             if (!empty($media_name)) :
                 $store_at = $path . $media_name . "." . $media_type;
             endif;
@@ -622,9 +481,6 @@ abstract class BaseController
 
     public function getContentType($filetype, $mediaType)
     {
-        $filetype = strtolower($filetype);
-        $mediaType = strtolower($mediaType);
-
         $return = "$mediaType/$filetype";
 
         if ($filetype == 'mp4') {
@@ -643,17 +499,6 @@ abstract class BaseController
         return $return;
     }
 
-    public function curl_get_contents($URL)
-    {
-        $c = curl_init();
-        curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($c, CURLOPT_URL, $URL);
-        $contents = curl_exec($c);
-        curl_close($c);
-
-        if ($contents) return $contents;
-        else return FALSE;
-    }
 
 
     /**
@@ -674,21 +519,19 @@ abstract class BaseController
         }
 
         $uploadedFiles = $request->getUploadedFiles();
-        $type = $request->getParsedBody()["type"] ?? "";
-        $directory .= "/$type";
-
-        $mediaOptions = ["folderName" => $type];
+        $event_id = $request->getParsedBody()["eventID"] ?? "";
 
         $outputs = [];
 
         // handle single input with multiple file uploads
+        $i = 0;
         foreach ($uploadedFiles as $uploadedFileName => $uploadedFile) {
             if (gettype($uploadedFile) == "object") {
                 $this->uploadFile(
                     $uploadedFile,
                     $directory,
-                    function ($output) use (&$outputs, $directory, $mediaOptions) {
-                        $outputs[] = $this->uploadMediaCallback($output, $directory, $mediaOptions);
+                    function ($output) use (&$outputs, $directory, $event_id) {
+                        $outputs[] = $this->uploadMediaCallback($output, $directory, $event_id);
                     }
                 );
             }
@@ -698,8 +541,8 @@ abstract class BaseController
                     $this->uploadFile(
                         $uploadedFil,
                         $directory,
-                        function ($output) use (&$outputs, $directory, $mediaOptions) {
-                            $outputs[] = $this->uploadMediaCallback($output, $directory, $mediaOptions);
+                        function ($output) use (&$outputs, $directory, $event_id) {
+                            $outputs[] = $this->uploadMediaCallback($output, $directory, $event_id);
                         }
                     );
                 }
@@ -729,18 +572,88 @@ abstract class BaseController
 
         $uploadedFile->moveTo($directory . DIRECTORY_SEPARATOR . $filename);
 
-        return ["name" => $filename, "type" => $extension];
+        return ["filename" => $filename, "filetype" => $extension];
     }
 
-    /**
-     * callback after media uploads
-     *
-     * @param array $mediaDetails [name: stirng, type => string]
-     * @param string $directory
-     * @param array $mediaOptions
-     */
-    abstract public function uploadMediaCallback($mediaDetails, $directory, $mediaOptions): array;
+    function uploadMediaCallback($mediaDetails, $directory, $event_id = 0)
+    {
+        ["filename" => $filename, "filetype" => $filetype] = $mediaDetails;
+        $filePath = $directory . "/" . $filename;
 
+        // $mediaName = bin2hex(random_bytes(8));
+        // $mediaName .=  (new DateTime())->getTimeStamp();
+        $mediaName =  rand(00000000, 99999999);
+
+        $event_id = (int)$event_id;
+        $event = (new EventModel)->find($event_id); //get event code from event id
+        $event_code = "";
+        if ($event) {
+            $event_code = $event["event_code"];
+        } else {
+            $data["error"] = "event not found";
+        }
+
+        $event_code_dir = $event_code ? "$event_code/" : "/";
+        $event_code_key = $event_code ? "$event_code-" : "";
+
+        $filetype = strtolower($filetype);
+        $key = "$event_code_key$mediaName.$filetype";
+        $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code_dir" . $key;
+
+        $media = fopen($filePath, 'r');
+
+        $aws_key = $_ENV["AWS_KEY"];
+        $aws_secret = $_ENV["AWS_SECRET"];
+
+        $mediaType = "";
+        if (!in_array($filetype, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($filetype, Constants::VIDEO_TYPES_ACCEPTED)) {
+            $mediaExtError = "Unsupported media type. ";
+            $mediaExtError .= $this->getSupportedMediaTypes();
+
+            $data["error"] = [$mediaExtError];
+            return $data;
+        }
+        if (in_array($filetype, Constants::IMAGE_TYPES_ACCEPTED)) {
+            $mediaType = "IMAGE";
+        }
+        if (in_array($filetype, Constants::VIDEO_TYPES_ACCEPTED)) {
+            $mediaType = "VIDEO";
+        }
+
+        $bucket = "liveet-media";
+        $folder = isset($event_code) ? "$event_code/$key" : $key;
+        $contentType = $this->getContentType($filetype, $mediaType);
+
+        try {
+            $s3 = new S3Client([
+                'region'  => 'us-west-2',
+                'version' => 'latest',
+                'credentials' => [
+                    'key'    => $aws_key,
+                    'secret' => $aws_secret,
+                ]
+            ]);
+
+            $s3->putObject([
+                'Bucket' => $bucket,
+                'Key'    => $folder,
+                'Body'   => $media,
+                'ACL'    => 'public-read',
+                'ContentType'    => $contentType
+            ]);
+        } catch (\Exception $e) {
+            $data["error"] = $e->getMessage();
+            return $data;
+        }
+
+        fclose($media);
+        unlink($filePath);
+
+        $data["type"] = $mediaType;
+        $data["path"] = $mediaPath;
+
+        return $data;
+    }
 
 
     public function appendSecurity($allInputs, $accountOptions = [])
@@ -793,13 +706,13 @@ abstract class BaseController
                     $emailKey = $emailOptions["emailKey"];
                     $nameKey = $emailOptions["nameKey"];
 
-                    $emailVerificationToken = (new MCrypt())->mCryptThis(time() * rand(111111111, 999999999));
-                    // $emailVerificationToken = (new KeyManager)->createClaims(["email" => $allInputs[$emailKey], "name" => $allInputs[$nameKey]], true);
+                    $email_verification_token = (new MCrypt())->mCryptThis(time() * rand(111111111, 999999999));
+                    // $email_verification_token = (new KeyManager)->createClaims(["email" => $allInputs[$emailKey], "name" => $allInputs[$nameKey]], true);
 
-                    $allInputs["emailVerificationToken"] = $emailVerificationToken;
+                    $allInputs["email_verification_token"] = $email_verification_token;
 
-                    //Send and email with the emailVerificationToken
-                    $mail = new MailHandler($emailOptions["mailtype"], $emailOptions["usertype"], $allInputs[$emailKey], ["username" => $allInputs[$nameKey], "emailVerificationToken" => $allInputs["emailVerificationToken"]]);
+                    //Send and email with the email_verification_token
+                    $mail = new MailHandler($emailOptions["mailtype"], $emailOptions["usertype"], $allInputs[$emailKey], ["username" => $allInputs[$nameKey], "email_verification_token" => $allInputs["email_verification_token"]]);
 
                     ["error" => $error, "success" => $success] = $mail->sendMail();
 
@@ -833,16 +746,17 @@ abstract class BaseController
         return $allInputs;
     }
 
-    public function checkOrGetPostBody($request, $inputs)
+    public function checkOrGetPostBody($request, $response, $inputs)
     {
+        $json = new JSON();
         ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
-            return null;
+            return $json->withJsonResponse($response, $error);
         }
 
-        $allInputs = $this->valuesExistsOrError($data, isset($inputs["required"]) ? $inputs["required"] : $inputs, ["all" => false]);
+        $allInputs = $this->valuesExistsOrError($data, isset($inputs["required"]) ? $inputs["required"] : $inputs);
         if ($allInputs["error"]) {
-            return null;
+            return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
         unset($allInputs["error"]);
@@ -856,7 +770,7 @@ abstract class BaseController
      * @param Model $model
      * @param Array $inputs
      * @param Arrat $accountOptions = []
-     * 
+     *
      */
 
     public function createSelf(Request $request, ResponseInterface $response, $model, array $inputs = ["required" => [], "expected" => []], array $accountOptions = [], array $override = [], array $checks = []): ResponseInterface
@@ -877,7 +791,7 @@ abstract class BaseController
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
-        $allInputs = $this->parseMedia($allInputs, $accountOptions);
+        $allInputs = $this->parseImage($allInputs, $accountOptions);
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
@@ -901,27 +815,28 @@ abstract class BaseController
             $newAllInputs = $allInputs;
         }
 
-        foreach ($override as $ovrKey => $value) {
-            $newAllInputs[$ovrKey] = $value;
+        foreach ($override as $key => $value) {
+            $newAllInputs[$key] = $value;
         }
 
         $data = $model->createSelf($newAllInputs, $checks);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Created successfully. " . $mailResponseSuccess, "statusCode" => 201, "data" => $data["data"], "errorMessage" => $mailResponse["error"]];
+        $payload = ["successMessage" => "Created successfully. " . $mailResponseSuccess, "statusCode" => 201, "data" => $data["data"], "errorMessage" => $mailResponse["error"]];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function createManySelfs(Request $request, ResponseInterface $response, Model $model, array $inputs = ["required" => [], "expected" => []], array $accountOptions = [], array $override = [], array $checks = []): ResponseInterface
+    public function createManySelfs(Request $request, ResponseInterface $response, Model $model, array $inputs = ["required" => [], "expected" => []], array $accountOptions = [], array $override = []): ResponseInterface
     {
         $json = new JSON();
 
         ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
+
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
@@ -940,7 +855,7 @@ abstract class BaseController
                 $returnData[$key] = $allInputs["error"];
                 continue;
             }
-            $allInputs = $this->parseMedia($allInputs, $accountOptions);
+            $allInputs = $this->parseImage($allInputs, $accountOptions);
             if ($allInputs["error"]) {
                 $returnData[$key] = $allInputs["error"];
                 continue;
@@ -950,43 +865,30 @@ abstract class BaseController
                 $returnData[$key] = $allInputs["error"];
                 continue;
             }
-            $mailResponse = $this->sendMail($allInputs, $accountOptions);
-            if ($mailResponse["error"]) {
-            }
-
-            $allInputs = $mailResponse["allInputs"];
-            $mailResponseSuccess =  $mailResponse["success"];
-
-            $newAllInputs = [];
-            if (isset($inputs["expected"])) {
-                foreach ($inputs["expected"] as $expectedKey) {
-                    $newAllInputs[$expectedKey] = $allInputs[$expectedKey] ?? null;
-                }
-            } else {
-                $newAllInputs = $allInputs;
-            }
-
             foreach ($override as $ovrKey => $value) {
-                $newAllInputs[$ovrKey] = $value;
+                $allInputs[$ovrKey] = $value;
             }
 
-            $modelData = method_exists($model, "createManySelfs") ? $model->createManySelfs($newAllInputs, $checks) : $model->createSelf($newAllInputs, $checks);
+            $modelData = $model->createManySelfs($allInputs);
             if ($modelData["error"]) {
+                $error = ["errorMessage" => $modelData["error"], "errorStatus" => 1, "statusCode" => 406];
 
                 $returnData[$key] = $modelData["error"];
 
                 continue;
             }
 
+            $mailResponse = $this->sendMail($allInputs, $accountOptions);
+
             $returnData[$key] = $modelData["data"];
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Success", "statusCode" => 201, "data" => $returnData];
+        $payload = ["successMessage" => "Success", "statusCode" => 201, "data" => $returnData];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function login(Request $request, ResponseInterface $response, Model $model = null, array $inputs = [], array $queryOptions = ["passwordKey" => "password", "publicKeyKey" => "publicKey"], array $accountOptions = []): ResponseInterface
+    public function login(Request $request, ResponseInterface $response, Model $model, array $inputs, array $queryOptions = ["passwordKey" => "password", "publicKeyKey" => "publicKey"], array $accountOptions = []): ResponseInterface
     {
         $json = new JSON();
         $passwordKey = $queryOptions["passwordKey"];
@@ -1022,7 +924,7 @@ abstract class BaseController
         }
 
         $data = $model->login($allInputs);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 401, "data" => null);
 
             return $json->withJsonResponse($response, $payload);
@@ -1036,59 +938,56 @@ abstract class BaseController
 
         unset($data["data"][$publicKeyKey]);
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Login successful", "statusCode" => 200, "data" => $data["data"], "token" => $token);
+        $payload = array("successMessage" => "Login successful", "statusCode" => 200, "data" => $data["data"], "token" => $token);
 
         return $json->withJsonResponse($response, $payload)->withHeader("token", "bearer " . $token);
     }
 
-    public function getSelfDashboard(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function getSelfDashboard(Request $request, ResponseInterface $response, $model, $queryOptions = [], $extras = ["hasKey" => true]): ResponseInterface
     {
         $json = new JSON();
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $pk = $authDetails[$model->primaryKey];
 
-        $data = $model->getDashboard($pk, $queryOptions);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        $pk = isset($extras["hasKey"]) && $extras["hasKey"] ? $authDetails[$model->primaryKey] : null;
+
+        $data = $model->getDashboard($pk, $queryOptions, $extras);
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Dashboard request success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => "Dashboard request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getDashboardByPK(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function getDashboardByPK(Request $request, ResponseInterface $response, $model, $queryOptions = [], $extras = []): ResponseInterface
     {
         $json = new JSON();
-        $pk = NULL;
 
-        if (isset($accountOptions["pk"])) {
-            $pk = $accountOptions["pk"];
-        } else {
 
-            [$model->primaryKey => $pk, "error" => $error] = $this->getRouteParams($request, [$model->primaryKey]);
-            if ($error) {
-                return $json->withJsonResponse($response, $error);
-            }
+        [$model->primaryKey => $pk, "error" => $error] = $this->getRouteParams($request, [$model->primaryKey]);
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
         }
 
-        $data = $model->getDashboard($pk, $queryOptions);
+        $data = $model->getDashboard($pk, $queryOptions, $extras);
 
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Dashboard request success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => "Dashboard request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByPage(Request $request, ResponseInterface $response, $model, $return = null, $conditions = null, $relationships = null, $queryOptions = [], array $accountOptions = []): ResponseInterface
+    public function getByPage(Request $request, ResponseInterface $response, $model, $return = null, $conditions = null, $relationships = null, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
 
@@ -1099,18 +998,18 @@ abstract class BaseController
         }
 
         $data = $model->getByPage($page, $limit, $return, $conditions, $relationships, $queryOptions);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Request success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"]);
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByDate(Request $request, ResponseInterface $response, $model, $return = null, $conditions = null, $relationships = null, $queryOptions = ["dateCreatedColumn" => "dateCreated"], array $accountOptions = []): ResponseInterface
+    public function getByDate(Request $request, ResponseInterface $response, $model, $return = null, $conditions = null, $relationships = null, $queryOptions = ["dateCreatedColumn" => "dateCreated", "distinct" => false]): ResponseInterface
     {
         $json = new JSON();
 
@@ -1133,18 +1032,18 @@ abstract class BaseController
         }
 
         $data = $model->getByDate($from, $to, $return, $conditions, $relationships, $queryOptions);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Request success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"]);
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getSelf(Request $request, ResponseInterface $response, $model,  $return = null, $relationships = null,  $queryOptions = [], array $accountOptions = []): ResponseInterface
+    public function getSelf(Request $request, ResponseInterface $response, $model,  $return = null, $relationships = null,  $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
 
@@ -1155,18 +1054,18 @@ abstract class BaseController
 
         $data = $model->getByPK($pk, $return, $relationships, $queryOptions);
 
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Request success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"]);
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByPK(Request $request, ResponseInterface $response, $model, $return = null, $relationships = null,  $queryOptions = [], array $accountOptions = []): ResponseInterface
+    public function getByPK(Request $request, ResponseInterface $response, $model, $return = null, $relationships = null,  $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
 
@@ -1176,30 +1075,30 @@ abstract class BaseController
         }
 
         $data = $model->getByPK($pk, $return, $relationships, $queryOptions);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Requst success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => "Requst success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getByConditions(Request $request, ResponseInterface $response, Model $model, array $conditions, array $return = null, array $relationships = null, array $queryOptions = null, array $accountOptions = []): ResponseInterface
+    public function getByConditions(Request $request, ResponseInterface $response, $model, $conditions, $return = null, $relationships = null): ResponseInterface
     {
         $json = new JSON();
 
-        $data = $model->getByConditions($conditions, $return, $relationships, $queryOptions);
+        $data = $model->getByConditions($conditions, $return, $relationships);
 
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
             return $json->withJsonResponse($response, $payload);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Requst success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => "Requst success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1221,7 +1120,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
-        $allInputs = $this->parseMedia($allInputs, $accountOptions);
+        $allInputs = $this->parseImage($allInputs, $accountOptions);
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
@@ -1246,13 +1145,13 @@ abstract class BaseController
         $newAllInputs[$model->primaryKey] = $authDetails[$model->primaryKey];
 
         $data = $model->updateByPK($pk, $newAllInputs, $checks);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1274,7 +1173,7 @@ abstract class BaseController
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
-        $allInputs = $this->parseMedia($allInputs, $accountOptions);
+        $allInputs = $this->parseImage($allInputs, $accountOptions);
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
@@ -1282,6 +1181,8 @@ abstract class BaseController
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
+
+        $allInputs[$model->primaryKey] = $pk;
 
         $newAllInputs = [];
         if (isset($inputs["expected"])) {
@@ -1292,29 +1193,28 @@ abstract class BaseController
             $newAllInputs = $allInputs;
         }
 
-        $newAllInputs[$model->primaryKey] = $pk;
-
         foreach ($override as $key => $value) {
             $newAllInputs[$key] = $value;
         }
 
         $data = $model->updateByPK($pk, $newAllInputs, $checks);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function updateManySelfsByPK(Request $request, ResponseInterface $response, $model, array $inputs = ["required" => [], "expected" => []], $accountOptions = [], $checks = [], $override = []): ResponseInterface
+    public function updateManySelfsByPK(Request $request, ResponseInterface $response, $model, array $inputs, $accountOptions = []): ResponseInterface
     {
         $json = new JSON();
 
         ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
+
         if ($error) {
             return $json->withJsonResponse($response, $error);
         }
@@ -1324,39 +1224,31 @@ abstract class BaseController
         $returnData = [];
         foreach ($data as $key => $eachData) {
 
-            $allInputs = $this->valuesExistsOrError($eachData, isset($inputs["required"]) ? $inputs["required"] : $inputs);
+            $allInputs = $this->valuesExistsOrError($eachData, $inputs);
+
             if ($allInputs["error"]) {
                 $returnData[$key] = $allInputs["error"];
+
                 continue;
             }
-            $allInputs = $this->parseMedia($allInputs, $accountOptions);
+
+            $allInputs = $this->parseImage($allInputs, $accountOptions);
             if ($allInputs["error"]) {
                 $returnData[$key] = $allInputs["error"];
+
                 continue;
             }
             $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
             if ($allInputs["error"]) {
                 $returnData[$key] = $allInputs["error"];
+
                 continue;
             }
 
-            $newAllInputs = [];
-            if (isset($inputs["expected"])) {
-                foreach ($inputs["expected"] as $expKey) {
-                    $newAllInputs[$expKey] = $allInputs[$expKey] ?? null;
-                }
-            } else {
-                $newAllInputs = $allInputs;
-            }
-
-            $pk = $newAllInputs[$model->primaryKey] ?? 0;
-
-            foreach ($override as $ovrKey => $value) {
-                $newAllInputs[$ovrKey] = $value;
-            }
-
-            $modelData = $model->updateByPK($pk, $newAllInputs, $checks);
+            $modelData = $model->updateByPK($allInputs);
             if ($modelData["error"]) {
+                $error = ["errorMessage" => $modelData["error"], "errorStatus" => 1, "statusCode" => 406];
+
                 $returnData[$key] = $modelData["error"];
                 continue;
             }
@@ -1364,7 +1256,7 @@ abstract class BaseController
             $returnData[$key] = $modelData["data"];
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $returnData];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $returnData];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1372,7 +1264,6 @@ abstract class BaseController
     public function updateByColumnNames(Request $request, ResponseInterface $response, $model, array $inputs = ["required" => [], "expected" => []], $columnsNames, $checks = [], $override = [], $accountOptions = [], $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $error = "";
 
         ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
         if ($error) {
@@ -1386,7 +1277,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
-        $allInputs = $this->parseMedia($allInputs, $accountOptions);
+        $allInputs = $this->parseImage($allInputs, $accountOptions);
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
@@ -1409,13 +1300,13 @@ abstract class BaseController
         }
 
         $data = $model->updateByColumnNames($columnsNames, $newAllInputs, $checks, $queryOptions);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1442,7 +1333,7 @@ abstract class BaseController
                 continue;
             }
 
-            $allInputs = $this->parseMedia($allInputs, $accountOptions);
+            $allInputs = $this->parseImage($allInputs, $accountOptions);
             if ($allInputs["error"]) {
                 $returnData[$key] = $allInputs["error"];
 
@@ -1472,7 +1363,7 @@ abstract class BaseController
             $returnData[$key] = $modelData["data"];
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $returnData];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $returnData];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1502,7 +1393,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
-        $allInputs = $this->parseMedia($allInputs, $accountOptions);
+        $allInputs = $this->parseImage($allInputs, $accountOptions);
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
@@ -1524,17 +1415,14 @@ abstract class BaseController
             $newAllInputs[$key] = $value;
         }
 
-        $error = $newAllInputs["error"] ?? null;
-        unset($newAllInputs["error"]);
-
         $data = $model->updateByConditions($conditions, $newAllInputs, $checks, $queryOptions);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $error,  "errorStatus" => -1];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1561,7 +1449,7 @@ abstract class BaseController
                 continue;
             }
 
-            $allInputs = $this->parseMedia($allInputs, $accountOptions);
+            $allInputs = $this->parseImage($allInputs, $accountOptions);
             if ($allInputs["error"]) {
                 $returnData[$key] = $allInputs["error"];
 
@@ -1591,12 +1479,12 @@ abstract class BaseController
             $returnData[$key] = $modelData["data"];
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $returnData];
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $returnData];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function updatePassword(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function updatePassword(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
 
@@ -1607,22 +1495,22 @@ abstract class BaseController
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $allInputs = $this->valuesExistsOrError($data, ["newPassword", "oldPassword"]);
+        $allInputs = $this->valuesExistsOrError($data, ["new_password", "old_password"]);
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
 
-        ["newPassword" => $newPassword, "oldPassword" => $oldPassword, "error" => $error] = $allInputs;
+        ["new_password" => $new_password, "old_password" => $old_password, "error" => $error] = $allInputs;
 
         $kmg = new KeyManager();
 
-        $newPassword = $kmg->getDigest($newPassword);
-        $oldPassword = $kmg->getDigest($oldPassword);
+        $new_password = $kmg->getDigest($new_password);
+        $old_password = $kmg->getDigest($old_password);
 
         $pk = $authDetails[$model->primaryKey];
 
-        $data = $model->updatePassword($pk, $newPassword, $oldPassword);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        $data = $model->updatePassword($pk, $new_password, $old_password);
+        if (isset($data["error"]) && $data["error"]) {
             $this->logoutSelf($request, $response, $model);
 
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
@@ -1630,41 +1518,56 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => "Password update success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response,  $payload);
     }
 
-    public function resetPassword(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function resetPassword(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $authDetails = static::getTokenInputsFromRequest($request);
-        $routeParams = $this->getRouteParams($request, [$model->primaryKey]);
 
-        $pk = $routeParams[$model->primaryKey];
-        $newPassword = Constants::DEFAULT_RESET_PASSWORD;
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
+
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $allInputs = $this->valuesExistsOrError($data, [$model->primaryKey]);
+
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
+        }
+
+        [$model->primaryKey => $pk, "error" => $error] = $allInputs;
+        $new_password = Constants::DEFAULT_RESET_PASSWORD;
 
         $kmg = new KeyManager();
-        $encryptedPassword = $kmg->getDigest($newPassword);
+        $encryptedPassword = $kmg->getDigest($new_password);
 
-        $data = $model->resetPassword($pk, $encryptedPassword);
+        $password = $encryptedPassword;
 
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        $data = $model->resetPassword($pk, $password);
+
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password reset to default: " . Constants::DEFAULT_RESET_PASSWORD, "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => "Password reset to default: " . Constants::DEFAULT_RESET_PASSWORD, "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response,  $payload);
     }
 
-    public function verifyEmail(Request $request, ResponseInterface $response, $model, array $accountOptions = []): ResponseInterface
+    public function verifyEmail(Request $request, ResponseInterface $response, $model): ResponseInterface
     {
         $json = new JSON();
 
-        ["data" => $emailVerificationToken, "error" => $error] = $this->getRouteTokenOrError($request);
+        ["data" => $email_verification_token, "error" => $error] = $this->getRouteTokenOrError($request);
 
         if ($error) {
             return $json->withJsonResponse($response, $error);
@@ -1672,21 +1575,21 @@ abstract class BaseController
 
         $status = Constants::EMAIL_VERIFIED;
 
-        $data = $model->verifyEmail($emailVerificationToken, $status);
+        $data = $model->verifyEmail($email_verification_token, $status);
 
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Email verification success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => "Email verification success", "statusCode" => 200, "data" => $data["data"]];
 
         //TODO redirect to login
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function forgotPassword(Request $request, ResponseInterface $response, $model, $inputs = [], $override = [], array $accountOptions = []): ResponseInterface
+    public function forgotPassword(Request $request, ResponseInterface $response, $model, $inputs = [], $override = []): ResponseInterface
     {
         $json = new JSON();
         $authDetails = static::getTokenInputsFromRequest($request);
@@ -1706,27 +1609,27 @@ abstract class BaseController
         }
 
         $mcrypt = new MCrypt();
-        $emailVerificationToken = $mcrypt->mCryptThis(time() * rand(111111111, 999999999));
+        $email_verification_token = $mcrypt->mCryptThis(time() * rand(111111111, 999999999));
         $allInputs["name"] = $allInputs["email"];
-        $allInputs["emailVerificationToken"] = $emailVerificationToken;
+        $allInputs["email_verification_token"] = $email_verification_token;
         $usertype = $allInputs["usertype"];
         $mailtype = MailHandler::TEMPLATE_FORGOT_PASSWORD;
 
         $this->sendMail($allInputs, [["emailKey" => "email", "nameKey" => "name", "usertype" => $usertype, "mailtype" => $mailtype]]);
 
         $data = $model->forgotPassword($allInputs);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password reset link sent to your email", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => "Password reset link sent to your email", "statusCode" => 200, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function verifyForgotPassword(Request $request, ResponseInterface $response, $model, array $accountOptions = []): ResponseInterface
+    public function verifyForgotPassword(Request $request, ResponseInterface $response, $model): ResponseInterface
     {
         $json = new JSON();
 
@@ -1737,7 +1640,7 @@ abstract class BaseController
         $allInputs = ["forgotPasswordVerificationToken" => $forgotPasswordVerificationToken];
 
         $data = $model->verifyForgotPassword($allInputs);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
@@ -1751,12 +1654,12 @@ abstract class BaseController
 
         unset($data["data"]["publicKey"]);
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Login successful", "statusCode" => 200, "data" => $data["data"], "token" => $token);
+        $payload = array("successMessage" => "Login successful", "statusCode" => 200, "data" => $data["data"], "token" => $token);
 
         return $json->withJsonResponse($response, $payload)->withHeader("token", "bearer " . $token);
     }
 
-    public function updateForgotPassword(Request $request, ResponseInterface $response, $model, $queryOptions = ["passwordKey" => "password", "publicKeyKey" => "publicKey"], array $accountOptions = []): ResponseInterface
+    public function updateForgotPassword(Request $request, ResponseInterface $response, $model, $queryOptions = ["passwordKey" => "password", "publicKeyKey" => "publicKey"]): ResponseInterface
     {
         $json = new JSON();
 
@@ -1786,7 +1689,7 @@ abstract class BaseController
 
         $data = $model->updateForgotPassword($pk, $password);
 
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $this->logoutSelf($request, $response, $model);
 
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
@@ -1794,12 +1697,12 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password change success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => "Password change success", "statusCode" => 201, "data" => $data["data"]];
 
         return $json->withJsonResponse($response,  $payload);
     }
 
-    public function verifyUser(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function verifyUser(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
         $authDetails = static::getTokenInputsFromRequest($request);
@@ -1820,18 +1723,18 @@ abstract class BaseController
 
         $data = $model->verifyUser($pk, $status);
 
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406, "data" => null];
 
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "User verification success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => "User verification success", "statusCode" => 200, "data" => $data["data"]];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function deleteSelf(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function deleteSelf(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
 
@@ -1842,18 +1745,18 @@ abstract class BaseController
 
         $data = $model->deleteByPK($pk);
 
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Delete success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => "Delete success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function deleteByPK(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function deleteByPK(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
 
@@ -1868,18 +1771,18 @@ abstract class BaseController
         }
 
         $data = $model->deleteByPK($pk);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Delete success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => "Delete success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function deleteManyByPK(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function deleteManyByPK(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
 
@@ -1898,37 +1801,18 @@ abstract class BaseController
         [$model->primaryKey => $pks] = $allInputs;
 
         $data = $model->deleteManyByPK($pks);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Delete success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => "Delete success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function deleteByConditions(Request $request, ResponseInterface $response, $model, $conditions, $queryOptions = [], array $accountOptions = []): ResponseInterface
-    {
-        $json = new JSON();
-
-
-        $data = isset($queryOptions["forceDelete"]) && $queryOptions["forceDelete"] ?
-            $model->forceDeleteByConditions($conditions, $queryOptions) :
-            $model->deleteByConditions($conditions, $queryOptions);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
-            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
-
-            return $json->withJsonResponse($response,  $error);
-        }
-
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Deleted successfully", "statusCode" => 200, "data" => $data["data"]);
-
-        return $json->withJsonResponse($response, $payload);
-    }
-
-    public function logoutSelf(Request $request, ResponseInterface $response, $model, array $accountOptions = []): ResponseInterface
+    public function logoutSelf(Request $request, ResponseInterface $response, $model): ResponseInterface
     {
         $json = new JSON();
 
@@ -1941,18 +1825,18 @@ abstract class BaseController
         }
 
         $data = $model->logout($pk);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Logout success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => "Logout success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function logoutByPK(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function logoutByPK(Request $request, ResponseInterface $response, $model, $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
 
@@ -1964,29 +1848,175 @@ abstract class BaseController
         [$model->primaryKey => $pk] = $routeParams;
 
         $data = $model->logout($pk);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Logout success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => "Logout success", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function logoutByCondition(Request $request, ResponseInterface $response, $model, $conditions = [], array $accountOptions = []): ResponseInterface
+    public function logoutByCondition(Request $request, ResponseInterface $response, $model, $conditions = []): ResponseInterface
     {
         $json = new JSON();
 
         $data = $model->logoutByCondition($conditions);
-        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+        if (isset($data["error"]) && $data["error"]) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
 
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Logout success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => "Logout success", "statusCode" => 200, "data" => $data["data"]);
+
+        return $json->withJsonResponse($response, $payload);
+    }
+
+    /** Deprecation */
+
+    public function updateSelfColumns(Request $request, ResponseInterface $response, $model, array $columnNames, $queryOptions = []): ResponseInterface
+    {
+        $json = new JSON();
+
+
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $allInputs = $this->valuesExistsOrError($data, $columnNames);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
+        }
+
+        unset($allInputs["error"]);
+
+        $pk = $allInputs[$model->primaryKey];
+
+        unset($allInputs[$model->primaryKey]);
+
+        $data = $model->updateColumns($pk, $allInputs);
+
+        if (isset($data["error"]) && $data["error"]) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
+
+            return $json->withJsonResponse($response,  $error);
+        }
+
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $data["data"]];
+
+        return $json->withJsonResponse($response,  $payload);
+    }
+
+    public function getByDateWithRelationship(Request $request, ResponseInterface $response, $model, $relationships, $return = null): ResponseInterface
+    {
+        $json = new JSON();
+
+        ["from" => $from, "to" => $to, "error" => $error] = $this->getRouteParams($request, ["from", "to"]);
+
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $data = $model->getByDateWithRelationship($from, $to, $relationships, $return);
+
+        if (isset($data["error"]) && $data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
+
+            return $json->withJsonResponse($response, $payload);
+        }
+
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $data["data"]);
+
+        return $json->withJsonResponse($response, $payload);
+    }
+
+    public function getByDateWithConditions(Request $request, ResponseInterface $response, $model, $conditions, $return = null, $override = [], $queryOptions = ["distinct" => null, "max" => null]): ResponseInterface
+    {
+        $json = new JSON();
+
+        ["from" => $from, "to" => $to, "error" => $error] = $this->getRouteParams($request, ["from", "to"]);
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $from = isset($override["from"]) ? $override["from"] : $from;
+        $to = isset($override["to"]) ? $override["to"] : $to;
+
+        $data = $model->getByDateWithConditions($from, $to, $conditions, $return, $queryOptions);
+
+        if (isset($data["error"]) && $data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => "1", "statusCode" => 400);
+
+            return $json->withJsonResponse($response, $payload);
+        }
+
+        $payload = array("successMessage" => "Request success", "statusCode" => 200, "data" => $data["data"]);
+
+        return $json->withJsonResponse($response, $payload);
+    }
+
+    public function getByPKWithRelationships(Request $request, ResponseInterface $response, $model, $relationships, $return = null, $queryOptions = []): ResponseInterface
+    {
+        $json = new JSON();
+
+
+        [$model->primaryKey => $pk, "error" => $error] = $this->getRouteParams($request, [$model->primaryKey]);
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $data = $model->getWithRelationships($pk, $relationships, $return);
+        if (isset($data["error"]) && $data["error"]) {
+            $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
+
+            return $json->withJsonResponse($response, $payload);
+        }
+
+        $payload = array("successMessage" => "Requst success", "statusCode" => 200, "data" => $data["data"]);
+
+        return $json->withJsonResponse($response, $payload);
+    }
+
+    public function updateManySelfsSelf(Request $request, ResponseInterface $response, $model, array $inputs): ResponseInterface
+    {
+        $json = new JSON();
+
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $returnData = [];
+        foreach ($data as $key => $eachData) {
+
+            $eachData = $this->parseImage($eachData);
+
+            $allInputs = $this->valuesExistsOrError($eachData, $inputs);
+            if ($allInputs["error"]) {
+                $returnData[$key] = $allInputs["error"];
+                continue;
+            }
+
+            $allInputs[$model->primaryKey] = $authDetails[$model->primaryKey];
+
+            $modelData = $model->updateSelf($allInputs);
+            if ($modelData["error"]) {
+                $returnData[$key] = $modelData["error"];
+                continue;
+            }
+
+            $returnData[$key] = $modelData["data"];
+        }
+
+        $payload = ["successMessage" => "Update success", "statusCode" => 201, "data" => $returnData];
 
         return $json->withJsonResponse($response, $payload);
     }

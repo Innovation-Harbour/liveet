@@ -18,9 +18,10 @@ use Aws\S3\S3Client;
 use Rashtell\Domain\KeyManager;
 use Liveet\Models\Mobile\TempsModel;
 use Bluerhinos\phpMQTT;
+use Liveet\Controllers\HelperController;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class OrganiserController extends BaseController {
+class OrganiserController extends HelperController {
   use LiveetFunction;
 
   public function __construct (){

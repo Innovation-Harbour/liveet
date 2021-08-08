@@ -126,7 +126,7 @@ class EventInvitationController extends HelperController
 
         (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "created an event invitation"]);
 
-        $postBody = $this->checkOrGetPostBody($request, $response, ["event_id"]);
+        $postBody = $this->checkOrGetPostBody($request, ["event_id"]);
         $event_id = $postBody["event_id"];
 
         $this->eventBelongsToOrganiser($request, $response, $event_id);

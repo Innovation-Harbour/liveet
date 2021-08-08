@@ -18,23 +18,27 @@ class BaseModel extends Model
             return ["isAuthenticated" => false, "error" => "Invalid token"];
         }
 
-        $publicKey = $authDetails["publicKey"] ?? "";
+        $public_key = $authDetails["public_key"] ?? "";
         $username = $authDetails["username"] ?? "";
         $usertype = $authDetails["usertype"] ?? "";
 
-        $userQuery =  $this::where("publicKey", $publicKey)
+        $users =  self::where("public_key", $public_key)
             ->where("username", "=", $username)
             ->where("usertype", "=", $usertype)
-            // ->where("accessStatus", Constants::USER_ENABLED)
-            ;
+            ->take(1)
+            ->get();
 
-        return ($userQuery->exists()) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
+        foreach ($users as $user) {
+            return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
+        }
+
+        return ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
-    public function getTokenInputs($token, $key = null)
+    public function getTokenInputs($token)
     {
         $kmg = new KeyManager();
-        $auth = $kmg->validateClaim($token, $key);
+        $auth = $kmg->validateClaim($token);
 
         if (!$auth) {
             return [];
@@ -90,7 +94,7 @@ class BaseModel extends Model
 
         foreach ($uniqueColumns as $uniqueColumn) {
             if (gettype($uniqueColumn) === "array" && isset($uniqueColumn["primaryKey"])) {
-                $pk =  $uniqueColumn["columnName"] ?? $uniqueColumn["detailsKey"];
+                $pk =  $uniqueColumn["columnName"];
                 break;
             }
         }
@@ -120,7 +124,7 @@ class BaseModel extends Model
             $key = gettype($uniqueColumn) === "string" ? $uniqueColumn : $key;
             if (gettype($uniqueColumn) === "array") {
                 $key = $uniqueColumn["detailsKey"] ?? $key;
-                $columnName = $uniqueColumn["columnName"] ?? $uniqueColumn["detailsKey"] ?? $columnName;
+                $columnName = $uniqueColumn["columnName"] ?? $columnName;
                 $errorText = $uniqueColumn["errorText"] ?? $errorText;
             }
 
@@ -164,7 +168,7 @@ class BaseModel extends Model
             $key = gettype($require) === "string" ? $require : $key;
             if (gettype($require) === "array") {
                 $key = $require["detailsKey"];
-                $columnName = $require["columnName"] ?? $require["detailsKey"];
+                $columnName = $require["columnName"];
                 $errorText = $require["errorText"];
             }
 
@@ -219,25 +223,13 @@ class BaseModel extends Model
         return ["data" => $model["data"], "error" => $model["error"]];
     }
 
-    public function createManySelfs($allInputs, $checks = [])
-    {
-        $inputError = $this->checkInputError($allInputs, $checks);
-        if (null != $inputError) {
-            return $inputError;
-        }
-
-        $createReturn = $this->create($allInputs);
-
-        return ["data" => $createReturn, "error" => null];
-    }
-
     public function getByPage($page, $limit, $return = null, $conditions = null, $relationships = [], $queryOptions = null)
     {
         $minID = $this->min($this->primaryKey);
         $start = $minID + (($page - 1) * $limit) - 1;
 
         if (!$this->isExist($this->select($this->primaryKey)->where($this->primaryKey, ">", $start))) {
-            return ["data" => [], "error" => Constants::ERROR_EMPTY_DATA];
+            return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
         }
 
         $query = $return ?
@@ -256,23 +248,11 @@ class BaseModel extends Model
             }
         }
 
-        if (isset($queryOptions["whereHas"])) {
-            foreach ($queryOptions["whereHas"] as $relationshipName => $relationshipCondition) {
-                $query = $query->whereHas($relationshipName, $relationshipCondition);
-            }
-        }
-
         if ($queryOptions && isset($queryOptions["distinct"]) && $queryOptions["distinct"]) {
             $query = $query->distinct();
         }
 
-        if ($queryOptions && isset($queryOptions["orderBy"])) {
-            foreach ($queryOptions["orderBy"] as $columnName => $direction) {
-                $query = $query->orderBy($columnName, $direction);
-            }
-        }
-
-        $query = $query->orderBy('id', 'DESC')->limit($limit);
+        $query = $query->limit($limit);
 
         if (!$query->exists()) {
             return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
@@ -318,20 +298,6 @@ class BaseModel extends Model
             }
         }
 
-        if (isset($queryOptions["whereHas"])) {
-            foreach ($queryOptions["whereHas"] as $relationshipName => $relationshipCondition) {
-                $query = $query->whereHas($relationshipName, $relationshipCondition);
-            }
-        }
-
-        if ($queryOptions && isset($queryOptions["orderBy"])) {
-            foreach ($queryOptions["orderBy"] as $columnName => $direction) {
-                $query = $query->orderBy($columnName, $direction);
-            }
-        }
-
-        $query = $query->orderBy('id', 'DESC');
-
         if ($relationships) {
             $query = $query->with($relationships);
         }
@@ -371,32 +337,6 @@ class BaseModel extends Model
 
         if ($conditions) {
             $query = $query->where($conditions);
-        }
-
-        if (isset($queryOptions["whereIn"])) {
-            foreach ($queryOptions["whereIn"] as $whereIn) {
-                foreach ($whereIn as $whereInKey => $whereInValue) {
-                    $query = $query->whereIn($whereInKey, $whereInValue);
-                }
-            }
-        }
-
-        if (isset($queryOptions["whereHas"])) {
-            foreach ($queryOptions["whereHas"] as $relationshipName => $relationshipCondition) {
-                $query = $query->whereHas($relationshipName, $relationshipCondition);
-            }
-        }
-
-        if ($queryOptions && isset($queryOptions["orderBy"])) {
-            foreach ($queryOptions["orderBy"] as $columnName => $direction) {
-                $query = $query->orderBy($columnName, $direction);
-            }
-        }
-
-        if (isset($queryOptions["latest"])) {
-            $query = $queryOptions["latest"] ? $query->latest($queryOptions["latest"]) : $query->latest();
-        } else {
-            $query = $query->orderBy('id', 'DESC');
         }
 
         if ($relationships) {
@@ -469,8 +409,7 @@ class BaseModel extends Model
 
         $query = $this->where($conditions);
         if (!$query->exists()) {
-
-            return ["error" => "An error occured while updating", "data" => null];
+            return ["error" => "Error while updating", "data" => null];
         }
 
         $query->update($allInputs);
@@ -480,7 +419,7 @@ class BaseModel extends Model
         return ["data" => $model["data"], "error" => $model["error"]];
     }
 
-    public function updatePassword($pk, $newPassword, $oldPassword)
+    public function updatePassword($pk, $new_password, $old_password)
     {
         $model = $this->find($pk);
         if (!$model) {
@@ -488,27 +427,29 @@ class BaseModel extends Model
         }
 
         $password  = $model[$this->passwordKey];
-        if ($oldPassword != $password) {
+        if ($old_password != $password) {
 
-            return ["error" => "Incorrect password", "data" => [],];
+            return ["error" => "Incorrect password, please try again", "data" => [],];
         }
 
-        $model[$this->passwordKey] = $newPassword;
-        $model->publicKey = null;
+        $model[$this->passwordKey] = $new_password;
+        $model->public_key = null;
         $model->save();
 
-        return ["data" => [$this->primaryKey => $pk], "error" => null];
+        $model = $this->getByPK($pk);
+
+        return ["data" => $model["data"][$this->primaryKey], "error" => $model["error"]];
     }
 
-    public function resetPassword($pk, $newPassword)
+    public function resetPassword($pk, $new_password)
     {
         $model = $this->find($pk);
         if (!$model) {
             return ["error" => "Error while updating the password", "data" => null];
         }
 
-        $model->password = $newPassword;
-        $model->publicKey = null;
+        $model->password = $new_password;
+        $model->public_key = null;
 
         $email = $model->email;
         //TODO send password to mail
@@ -524,7 +465,7 @@ class BaseModel extends Model
     public function forgotPassword($allInputs)
     {
         $email = $allInputs["email"];
-        $forgotPasswordToken = $allInputs["emailVerificationToken"];
+        $forgotPasswordToken = $allInputs["email_verification_token"];
 
         if (!$this->select($this->primaryKey)->where("email", $email)->exists()) {
             return ["error" => "Email not registered", "data" => null];
@@ -550,18 +491,18 @@ class BaseModel extends Model
 
         $this->select("emailVerified")->where("forgotPasswordToken", $forgotPasswordToken)->update(["forgotPasswordToken" => null]);
 
-        $model = self::select($this->primaryKey, "username",  "publicKey", "usertype")->where("forgotPasswordToken", $forgotPasswordToken)->first();
+        $model = self::select($this->primaryKey, "username",  "public_key", "usertype")->where("forgotPasswordToken", $forgotPasswordToken)->first();
 
         return ["data" => $model, "error" => null];
     }
 
-    public function verifyEmail($emailVerificationToken, $status)
+    public function verifyEmail($email_verification_token, $status)
     {
-        if (!$this->isExist($this->select($this->primaryKey)->where("emailVerificationToken", $emailVerificationToken))) {
+        if (!$this->isExist($this->select($this->primaryKey)->where("email_verification_token", $email_verification_token))) {
             return ["error" => "User not found, please register again", "data" => null];
         }
 
-        $pk = $this->select($this->primaryKey)->where("emailVerificationToken", $emailVerificationToken)->first()[$this->primaryKey];
+        $pk = $this->select($this->primaryKey)->where("email_verification_token", $email_verification_token)->first()[$this->primaryKey];
 
         $model = $this->find($pk);
 
@@ -608,7 +549,7 @@ class BaseModel extends Model
         }
 
         $model->password = $password;
-        $model->publicKey = null;
+        $model->public_key = null;
         $model->save();
 
         $model = $this->getByPK($pk);
@@ -629,32 +570,6 @@ class BaseModel extends Model
         return ["data" => ["deleted" => true], "error" => ""];
     }
 
-    public function deleteByConditions($conditions, $queryOptions = [])
-    {
-        $model = $this->where($conditions);
-
-        if (!$model->exists()) {
-            return ["error" => Constants::ERROR_NOT_FOUND, "data" => null];
-        }
-
-        $model->delete();
-
-        return ["data" => ["deleted" => true], "error" => ""];
-    }
-
-    public function forceDeleteByConditions($conditions, $queryOptions = [])
-    {
-        $model = $this->where($conditions);
-
-        if (!$model->exists()) {
-            return ["error" => Constants::ERROR_NOT_FOUND, "data" => null];
-        }
-
-        $model->forceDelete();
-
-        return ["data" => ["deleted" => true], "error" => ""];
-    }
-
     public function logout($pk)
     {
         $model = $this->find($pk);
@@ -663,7 +578,7 @@ class BaseModel extends Model
             return ["error" => "Invalid request. " . Constants::ERROR_NOT_FOUND, "data" => []];
         }
 
-        $model->publicKey = null;
+        $model->public_key = null;
         $model->save();
 
         return ["data" => ["logout" => true], "error" => null];
@@ -677,8 +592,109 @@ class BaseModel extends Model
             return ["error" => "Invalid request. " . Constants::ERROR_NOT_FOUND, "data" => []];
         }
 
-        $query->update(["publicKey" => null]);
+        $query->update(["public_key" => null]);
 
         return ["data" => ["logout" => true], "error" => null];
+    }
+
+    /** Deprecation */
+
+    public function updateColumns($pk, $allInputs)
+    {
+        $model = $this->find($pk);
+        if (!$model) {
+            return ["error" => "Error while updating", "data" => null];
+        }
+
+        $model->update($allInputs);
+
+        // foreach ($allInputs as $columnName => $columnValue) {
+
+        //     $model->$columnName = $columnValue;
+        //     $model->save();
+        // }
+
+        $model = $this->getByPK($pk);
+
+        return ["data" => $model["data"], "error" => $model["error"]];
+    }
+
+    public function getByDateWithRelationship($from, $to, $relationships, $return = null)
+    {
+        if (!$this->isExist($this->select($this->primaryKey)->where("dateCreated", ">=", $from)->where("dateCreated", "<=", $to))) {
+            return ["data" => null, "error" => Constants::ERROR_EMPTY_DATA];
+        }
+
+        $allmodels = $return ? $this->select($return)->where("dateCreated", ">=", $from)->where("dateCreated", "<=", $to)->get() : $this->getStruct()->where("dateCreated", ">=", $from)->where("dateCreated", "<=", $to)->get();
+
+        foreach ($allmodels as $models) {
+
+            foreach ($relationships as $relationship) {
+
+                $models[$relationship["table"]];
+
+                foreach ($relationship["unsets"] as $unset) {
+                    // var_dump($relationship["table"]);
+
+                    if (isset($models[$relationship["table"]][0])) {
+
+                        foreach ($models[$relationship["table"]] as $val) {
+
+                            unset($val[$unset]);
+                        }
+                    } else {
+
+                        if (isset($models[$relationship["table"]][$unset])) {
+
+                            unset($models[$relationship["table"]][$unset]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return ["data" => $allmodels, "error" => ""];
+    }
+
+    public function getWithRelationships($pk, $relationships, $return = null)
+    {
+        if (!$this->find($pk)) {
+            return ["data" => null, "error" => Constants::ERROR_NOT_FOUND];
+        }
+
+        $model = $return ? $this->select($return)->where($this->primaryKey, $pk)->first() : $this->getStruct()->where($this->primaryKey, $pk)->first();
+
+        $this->handleRelationships($relationships, $model);
+
+        return ["data" => $model, "error" => ""];
+    }
+
+    public function handleRelationships($relationships, $model)
+    {
+        foreach ($relationships as $relationship) {
+
+            $model[$relationship["table"]];
+
+            foreach ($relationship["unsets"] as $unset) {
+
+                if (isset($model[$relationship["table"]][0])) {
+
+                    foreach ($model[$relationship["table"]] as $val) {
+                        unset($val[$unset]);
+                    }
+                } else if (isset($model[$relationship["table"]][$unset])) {
+
+                    unset($model[$relationship["table"]][$unset]);
+                }
+            }
+
+            if (isset($relationship["children"])) {
+
+                foreach ($model[$relationship["table"]] as $table) {
+
+                    $this->handleRelationships($relationship["children"], $table);
+                }
+            }
+        }
     }
 }

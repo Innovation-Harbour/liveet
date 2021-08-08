@@ -25,6 +25,13 @@ class HelperController extends BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
+    public function uploadMediaCallback($mediaDetails, $directory, $mediaOptions): array
+    {
+        ["name" => $name, "ext" => $ext] = $mediaDetails;
+
+        return ["name" => $name, "ext" => $ext];
+    }
+
     public function checkAdminAdminPermission(Request $request, ResponseInterface $response)
     {
         $json = new JSON();
@@ -293,5 +300,27 @@ class HelperController extends BaseController
 
             return $json->withJsonResponse($response, $error);
         }
+    }
+
+    public function getEventCode($request)
+    {
+        $eventID = $this->checkOrGetPostBody($request, ["event_id"]);
+        if (!$eventID) {
+            return null;
+        }
+
+        $eventID = $eventID["event_id"];
+
+        $eventID = (int)$eventID;
+        $event = EventModel::find($eventID);
+
+        $event_code = "";
+        if ($event) {
+            $event_code = $event["event_code"];
+        } else {
+            return null;
+        }
+
+        return $event_code;
     }
 }

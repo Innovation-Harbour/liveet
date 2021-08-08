@@ -29,7 +29,7 @@ class OrganiserStaffModel extends BaseModel
 
     public function authenticate($token)
     {
-        $authDetails = (new BaseModel())->getTokenInputs($token);
+        $authDetails = $this->getTokenInputs($token);
 
         if ($authDetails == []) {
             return ["isAuthenticated" => false, "error" => "Invalid token"];
@@ -85,9 +85,12 @@ class OrganiserStaffModel extends BaseModel
         $organiser_staff_password = $details["organiser_staff_password"];
         $public_key = $details["public_key"];
 
-        if (!(new BaseModel())->isExist($this->where("organiser_staff_username", $organiser_staff_username)->where("organiser_staff_password", $organiser_staff_password))) {
+        $organiserStaffQuery = $this->where(function ($query) use ($organiser_staff_username) {
+            return $query->where("organiser_staff_username", $organiser_staff_username)->orWhere("organiser_staff_email", $organiser_staff_username);
+        })->where("organiser_password", $organiser_staff_password);
 
-            $organiserStaffQuery = $this->where("organiser_staff_username", $organiser_staff_username);
+        if (!$this->isExist($organiserStaffQuery)) {
+
             if ($organiserStaffQuery->exists()) {
 
                 $organiser_staff_id = $organiserStaffQuery->first()["organiser_staff_id"];
@@ -98,12 +101,18 @@ class OrganiserStaffModel extends BaseModel
             return ["error" => "Invalid Login credential", "data" => null];
         }
 
-        self::where("organiser_staff_username", $organiser_staff_username)->where("organiser_staff_password", $organiser_staff_password)->update([
+        $organiserStaffQuery->update([
             "public_key" => $public_key
         ]);
 
         $pkKey = $this->primaryKey;
-        $organiserStaff = self::select($pkKey, "organiser_id", "organiser_staff_name", "organiser_staff_username", "organiser_staff_phone", "organiser_staff_email", "organiser_staff_profile_picture", "organiser_staff_priviledges", "phone_verified", "email_verified", "usertype", "public_key", "created_at", "updated_at")->where("organiser_staff_username", $organiser_staff_username)->where("organiser_staff_password", $organiser_staff_password)->first();
+        $organiserStaff = self::select($pkKey, "organiser_id", "organiser_staff_name", "organiser_staff_username", "organiser_staff_phone", "organiser_staff_email", "organiser_staff_profile_picture", "organiser_staff_priviledges", "phone_verified", "email_verified", "usertype", "public_key", "created_at", "updated_at")
+            ->where(function ($query) use ($organiser_staff_username) {
+                return $query->where("organiser_staff_username", $organiser_staff_username)
+                    ->orWhere("organiser_email", $organiser_staff_username);
+            })
+            ->where("organiser_staff_password", $organiser_staff_password)
+            ->first();
         $organiserStaff->makeVisible(["public_key"]);
 
         (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiserStaff["organiser_staff_id"], "activity_log_desc" => "Organiser login successful"]);

@@ -165,7 +165,7 @@ class OrganiserController extends HelperController {
     $exploded_image = explode(",",$image);
 
 
-    [$is_approved,$ticketname,$user_id] = $this->checkFaceMatchForEvent($exploded_image[1],$turnstile_id,true);
+    $is_approved = $this->checkTurnstileFaceMatchForEvent($exploded_image[1],$turnstile_id,);
 
     $server = $_ENV["MQTT_SERVER"];
     $port = $_ENV["MQTT_PORT"];
@@ -177,7 +177,7 @@ class OrganiserController extends HelperController {
 
     $topic = 'mqtt/face/'.$turnstile_id;
 
-    if($is_approved && $ticketname && $user_id)
+    if($is_approved)
     {
       $message = [
         "operator" => "Unlock",

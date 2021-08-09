@@ -248,7 +248,7 @@ trait LiveetFunction
     return true;
   }
 
-  public function checkFaceMatchForEvent($base64,$event_identifier)
+  public function checkFaceMatchForEvent($base64,$event_id)
   {
     $is_approved = false;
     $ticket_name  = false;
@@ -259,8 +259,6 @@ trait LiveetFunction
     $turnstile_db = new TurnstileEventModel();
     $log = new FaceVerificationLogModel();
     $ticket_id = false;
-
-    $event_id = $event_identifier;
 
     $byte_image = base64_decode($base64);
 
@@ -343,16 +341,13 @@ trait LiveetFunction
      return [$is_approved,$ticket_name,$user_id];
   }
 
-  public function checkTurnstileFaceMatchForEvent($base64,$event_identifier)
+  public function checkTurnstileFaceMatchForEvent($base64,$turnstile_id)
   {
     $is_approved = false;
     $event_db = new EventModel();
     $event_user_db = new EventTicketUserModel();
     $turnstile_db = new TurnstileEventModel();
     $log = new VerificationLogModel();
-
-
-    $turnstile_id = $event_identifier;
 
     $turnstile_query = $turnstile_db->join('turnstile', 'turnstile_event.turnstile_id', '=', 'turnstile.turnstile_id')
     ->join('event_ticket', 'turnstile_event.event_ticket_id', '=', 'event_ticket.event_ticket_id')

@@ -248,7 +248,7 @@ trait LiveetFunction
     return true;
   }
 
-  public function checkFaceMatchForEvent($base64,$event_identifier,$from_mqtt = false)
+  public function checkFaceMatchForEvent($base64,$event_identifier)
   {
     $is_approved = false;
     $ticket_name  = false;
@@ -260,30 +260,7 @@ trait LiveetFunction
     $log = new VerificationLogModel();
     $ticket_id = false;
 
-
-    if($from_mqtt)
-    {
-      $turnstile_id = $event_identifier;
-
-      $turnstile_query = $turnstile_db->join('turnstile', 'turnstile_event.turnstile_id', '=', 'turnstile.turnstile_id')
-      ->join('event_ticket', 'turnstile_event.event_ticket_id', '=', 'event_ticket.event_ticket_id')
-      ->select('event_ticket.event_ticket_id','event_ticket.event_id')
-      ->where("turnstile.turnstile_name",$turnstile_id);
-
-
-
-      if($turnstile_query->count() < 1)
-      {
-        return [$is_approved,$ticket_name,$user_id];
-      }
-
-      $turnstile_details = $turnstile_query->first();
-      $event_id = $turnstile_details->event_id;
-      $ticket_id = $turnstile_details->event_ticket_id;
-    }
-    else{
-      $event_id = $event_identifier;
-    }
+    $event_id = $event_identifier;
 
     $byte_image = base64_decode($base64);
 
@@ -328,14 +305,7 @@ trait LiveetFunction
       if($similarity > 90)
       {
         $face_id = $img_result["FaceMatches"][0]["Face"]["FaceId"];
-
-        if($from_mqtt)
-        {
-          $event_user = $event_user_db->where("user_face_id",$face_id)->where("event_ticket_id",$ticket_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
-        }
-        else {
-          $event_user = $event_user_db->where("user_face_id",$face_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
-        }
+        $event_user = $event_user_db->where("user_face_id",$face_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
 
         if($event_user->count() == 1)
         {
@@ -370,6 +340,109 @@ trait LiveetFunction
         "verification_status" => Constants::VERIFICATION_FAILED
       ]);
     }
+     return [$is_approved,$ticket_name,$user_id];
+  }
+
+  public function checkTurnstileFaceMatchForEvent($base64,$event_identifier)
+  {
+    $is_approved = false;
+    $ticket_name  = false;
+    $user_id = false;
+    $event_db = new EventModel();
+    $ticket_db = new EventTicketModel();
+    $event_user_db = new EventTicketUserModel();
+    $turnstile_db = new TurnstileEventModel();
+    $log = new VerificationLogModel();
+    $ticket_id = false;
+
+
+    $turnstile_id = $event_identifier;
+
+    $turnstile_query = $turnstile_db->join('turnstile', 'turnstile_event.turnstile_id', '=', 'turnstile.turnstile_id')
+    ->join('event_ticket', 'turnstile_event.event_ticket_id', '=', 'event_ticket.event_ticket_id')
+    ->select('event_ticket.event_ticket_id','event_ticket.event_id')
+    ->where("turnstile.turnstile_name",$turnstile_id)->where("turnstile_event.deleted_at",NULL);
+
+
+
+    if($turnstile_query->count() < 1)
+    {
+      return [$is_approved,$ticket_name,$user_id];
+    }
+
+    $turnstile_details = $turnstile_query->get();
+
+    foreach ($turnstile_details as $details)
+    {
+      $event_id = $details->event_id;
+      $ticket_id = $details->event_ticket_id;
+
+
+      $byte_image = base64_decode($base64);
+
+      $event_details = $event_db->where("event_id", $event_id)->first();
+      $event_code = $event_details->event_code;
+
+      $aws_key = $_ENV["AWS_KEY"];
+      $aws_secret = $_ENV["AWS_SECRET"];
+
+      try{
+        $recognition = new RekognitionClient([
+    		    'region'  => 'us-west-2',
+    		    'version' => 'latest',
+    		    'credentials' => [
+    		        'key'    => $aws_key,
+    		        'secret' => $aws_secret,
+    		    ]
+    		]);
+
+        $img_result = $recognition->searchFacesByImage([ // REQUIRED
+    		    'CollectionId' => $event_code,
+            'FaceMatchThreshold' => 90.0,
+    		    'Image' => [ // REQUIRED
+              'Bytes' => $byte_image,
+    		    ],
+            'MaxFaces' => 1
+    		]);
+      }
+      catch (\Exception $e){
+        continue;
+      }
+
+
+      if(isset($img_result["FaceMatches"][0]["Face"]["FaceId"]))
+      {
+        $similarity = round($img_result["FaceMatches"][0]["Similarity"]);
+
+        if($similarity > 90)
+        {
+          $face_id = $img_result["FaceMatches"][0]["Face"]["FaceId"];
+          $event_user = $event_user_db->where("user_face_id",$face_id)->where("event_ticket_id",$ticket_id)->where("ownership_status",Constants::EVENT_TICKET_ACTIVE);
+
+
+          if($event_user->count() == 1)
+          {
+            $user_details =  $event_user->first();
+            $ticket_id = $user_details->event_ticket_id;
+            $user_id = $user_details->user_id;
+
+            $ticket_details = $ticket_db->where("event_ticket_id", $ticket_id)->first();
+            $ticket_name = $ticket_details->ticket_name;
+
+            //update the ticket as used
+            $event_user->update(["status" => Constants::EVENT_TICKET_USED]);
+            $is_approved = true;
+
+            $log->create([
+              "event_id" => $event_id,
+              "user_id" => $user_id,
+              "verification_status" => Constants::VERIFICATION_VERIFIED
+            ]);
+          }
+        }
+      }
+    }
+
      return [$is_approved,$ticket_name,$user_id];
   }
 }

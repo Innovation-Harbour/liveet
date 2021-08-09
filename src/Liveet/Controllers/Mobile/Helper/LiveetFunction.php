@@ -3,6 +3,7 @@
 namespace Liveet\Controllers\Mobile\Helper;
 
 use Aws\Rekognition\RekognitionClient;
+use Aws\ElasticBeanstalk\ElasticBeanstalkClient;
 use Rashtell\Domain\JSON;
 use Liveet\Domain\Constants;
 use GuzzleHttp\Client;
@@ -432,5 +433,35 @@ trait LiveetFunction
     }
 
      return $is_approved;
+  }
+
+  public function restartServer()
+  {
+    $is_restarted = false;
+
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+    $aws_server = $_ENV["AWS_MQTT_SERVER"];
+
+    try{
+      $client = new ElasticBeanstalkClient([
+          'region'  => 'us-west-2',
+          'version' => 'latest',
+          'credentials' => [
+              'key'    => $aws_key,
+              'secret' => $aws_secret,
+          ]
+      ]);
+
+      $result = $client->restartAppServer([
+          'EnvironmentName' => $aws_server,
+      ]);
+
+      $is_restarted = true;
+      return $is_restarted;
+    }
+    catch (\Exception $e){
+      return $is_restarted;
+    }
   }
 }

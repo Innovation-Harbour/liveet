@@ -87,7 +87,7 @@ class OrganiserStaffModel extends BaseModel
 
         $organiserStaffQuery = $this->where(function ($query) use ($organiser_staff_username) {
             return $query->where("organiser_staff_username", $organiser_staff_username)->orWhere("organiser_staff_email", $organiser_staff_username);
-        })->where("organiser_password", $organiser_staff_password);
+        })->where("organiser_staff_password", $organiser_staff_password);
 
         if (!$this->isExist($organiserStaffQuery)) {
 
@@ -109,7 +109,7 @@ class OrganiserStaffModel extends BaseModel
         $organiserStaff = self::select($pkKey, "organiser_id", "organiser_staff_name", "organiser_staff_username", "organiser_staff_phone", "organiser_staff_email", "organiser_staff_profile_picture", "organiser_staff_priviledges", "phone_verified", "email_verified", "usertype", "public_key", "created_at", "updated_at")
             ->where(function ($query) use ($organiser_staff_username) {
                 return $query->where("organiser_staff_username", $organiser_staff_username)
-                    ->orWhere("organiser_email", $organiser_staff_username);
+                    ->orWhere("organiser_staff_email", $organiser_staff_username);
             })
             ->where("organiser_staff_password", $organiser_staff_password)
             ->first();

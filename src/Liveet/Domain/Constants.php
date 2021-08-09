@@ -41,13 +41,13 @@ class Constants
   const VIDEO_PATH = "assets/videos/";
   const VIDEO_TYPES_ACCEPTED = ["mp4", "avi", "flv", "mov"];
   const MEDIA_PATH = "assets/medias/";
-
   const MEDIA_TYPES_ACCEPTED = ["pdf"];
-  const MEDIA_TYPES = ["IMAGE", "VIDEO"];
+
+  const MEDIA_TYPES = ["IMAGE", "VIDEO", "APPLICATION"];
 
   const MEDIA_TYPE_IMAGE = "IMAGE";
   const MEDIA_TYPE_VIDEO = "VIDEO";
-  const MEDIA_TYPE_PDF = "PDF";
+  const MEDIA_TYPE_APPLICATION = "APPLICATION";
 
   const IMAGE_RESIZE_MAX_WIDTH = 1200;
   const IMAGE_RESIZE_MAX_HEIGHT = 1200;

@@ -247,7 +247,6 @@ abstract class BaseController
                     }
 
                     $data[$mediaKey] = $return;
-
                 } else {
                     $return = $this->handleS3ParseMedia($mediaOptions, $data[$mediaKey]);
 
@@ -435,7 +434,7 @@ abstract class BaseController
         $cdl = new CodeLibrary();
         $mediaKey = $mediaOptions["mediaKey"];
 
-        if (strpos($media, "data:image/") !== 0 && strpos($media, "data:video/") !== 0) {
+        if (strpos($media, "data:image/") !== 0 && strpos($media, "data:video/") !== 0 && strpos($media, "data:application/pdf") !== 0) {
             //it means its a url or a path
             //if path first folder name is >10, ki olohun so e
 
@@ -454,19 +453,25 @@ abstract class BaseController
         $mediaName .= $mediaPrefix . (new DateTime())->getTimeStamp();
 
         $mediaExtType = $this->getFileTypeOfBase64($media);
-        $mediaExtType = strtolower($mediaExtType);
-        $mediaType = "";
-        if (!in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
+        if (!$mediaExtType) {
+            return ["error" => "Invalid media type"];
+        }
+
+        $mediaExt = strtolower($mediaExtType["ext"]);
+        $mediaType = strtoupper($mediaExtType["type"]);
+
+        if (!in_array($mediaExt, Constants::IMAGE_TYPES_ACCEPTED) && !in_array($mediaExt, Constants::VIDEO_TYPES_ACCEPTED) && !in_array($mediaExt, Constants::MEDIA_TYPES_ACCEPTED)) {
             $mediaExtError = "Unsupported media type. ";
             $mediaExtError .= $this->getSupportedMediaTypes();
 
             $data["error"] = $mediaExtError;
             return $data;
         }
-        if (in_array($mediaExtType, Constants::IMAGE_TYPES_ACCEPTED)) {
+
+        if (in_array($mediaExt, Constants::IMAGE_TYPES_ACCEPTED)) {
             $mediaType = CONSTANTS::MEDIA_TYPE_IMAGE;
             $mediaPath = Constants::IMAGE_PATH;
-        } else if (in_array($mediaExtType, Constants::VIDEO_TYPES_ACCEPTED)) {
+        } else if (in_array($mediaExt, Constants::VIDEO_TYPES_ACCEPTED)) {
             $mediaType = CONSTANTS::MEDIA_TYPE_VIDEO;
             $mediaPath = Constants::VIDEO_PATH;
         } else {
@@ -481,7 +486,7 @@ abstract class BaseController
             mkdir($mediaPath, 0777, true);
         }
 
-        $newMediaPath = "$mediaPath$mediaName.$mediaExtType";
+        $newMediaPath = "$mediaPath$mediaName.$mediaExt";
 
         try {
             $mediaContent = file_get_contents($media);
@@ -518,18 +523,16 @@ abstract class BaseController
                     Constants::IMAGE_RESIZE_MAX_WIDTH,
                     Constants::IMAGE_RESIZE_MAX_HEIGHT,
                     $newMediaPath,
-                    "$mediaPath$mediaName.$mediaExtType",
+                    "$mediaPath$mediaName.$mediaExt",
                     Constants::IMAGE_RESIZE_QUALITY
                 )
             ) {
-                $resizedMediaPath = "$mediaPath$mediaName.$mediaExtType";
+                $resizedMediaPath = "$mediaPath$mediaName.$mediaExt";
             }
         }
 
-        $mediaTypeKey = $mediaKey . "Type";
-
         $data["name"] = $mediaName;
-        $data["ext"] = $mediaExtType;
+        $data["ext"] = $mediaExt;
         $data["type"] = $mediaType;
         $data["path"] = $resizedMediaPath ?? $newMediaPath;
         $data["url"] = $_ENV["HTTP_PROTOCOL"] . "://" . $_ENV["MEDIA_HOST"] . $_ENV["BASE_PATH"] . "/" . ($resizedMediaPath ?? $newMediaPath);
@@ -539,35 +542,30 @@ abstract class BaseController
 
     public function getFileTypeOfBase64($data_media)
     {
-        if (!empty($data_media) && strpos($data_media, ";base64,") > 0) :
-            $string_pieces = explode(";base64,", $data_media);
-
-            $media_type_pieces = ["", ""];
-            if (strpos($string_pieces[0], "image/") > 0) :
-                $media_type_pieces = explode("image/", $string_pieces[0]);
-            endif;
-            if (strpos($string_pieces[0], "video/") > 0) :
-                $media_type_pieces = explode("video/", $string_pieces[0]);
-            endif;
-
-            return  $media_type_pieces[1];
+        if (empty($data_media)) :
+            return;
         endif;
 
-        if (!empty($data_media) && strpos($data_media, ";charset=UTF-8,") > 0) :
+        $string_pieces = [];
+        if (strpos($data_media, ";base64,") > 0) :
+            $string_pieces = explode(";base64,", $data_media);
+        elseif (strpos($data_media, ";charset=UTF-8,") > 0) :
             $string_pieces = explode(";charset=UTF-8,", $data_media);
+        elseif (strpos($data_media, ";utf") > 0) :
+            $string_pieces = explode(";utf", $data_media);
+        endif;
 
-            $media_type_pieces = ["", ""];
-            if (strpos($string_pieces[0], "image/") > 0) :
-                $media_type_pieces = explode("image/", $string_pieces[0]);
-            endif;
-            if (strpos($string_pieces[0], "video/") > 0) :
-                $media_type_pieces = explode("video/", $string_pieces[0]);
-            endif;
+        if (strpos($string_pieces[0], ":") > 0) :
+            $string_pieces = explode(":", $string_pieces[0]);
+        endif;
 
-            $media_type_pieces = $media_type_pieces[1];
-            $media_type_pieces = explode("+", $media_type_pieces);
+        if (strpos($string_pieces[1], "/") > 0) :
+            $media_type_pieces = explode("/", $string_pieces[1]);
 
-            return  $media_type_pieces[0];
+            $type = $media_type_pieces[0];
+            $ext = $media_type_pieces[1];
+
+            return ["ext" => $ext, "type" => $type];
         endif;
     }
 
@@ -605,16 +603,25 @@ abstract class BaseController
 
     public function getSupportedMediaTypes()
     {
-        $mediatypes = "Supported image types are ";
+        $tense = count(Constants::IMAGE_TYPES_ACCEPTED) > 0 ? "are" : "is";
+        $mediatypes = "Supported image types $tense ";
         foreach (Constants::IMAGE_TYPES_ACCEPTED as $acceptedImageType) {
             $appender = array_search($acceptedImageType, Constants::IMAGE_TYPES_ACCEPTED) === sizeof(Constants::IMAGE_TYPES_ACCEPTED) - 1 ? "." : ", ";
             $mediatypes .= $acceptedImageType . $appender;
         }
 
-        $mediatypes .= " And supported video types are ";
+        $tense = count(Constants::VIDEO_TYPES_ACCEPTED) > 0 ? "are" : "is";
+        $mediatypes .= " , supported video types $tense ";
         foreach (Constants::VIDEO_TYPES_ACCEPTED as $acceptedVideoType) {
             $appender = array_search($acceptedVideoType, Constants::VIDEO_TYPES_ACCEPTED) === sizeof(Constants::VIDEO_TYPES_ACCEPTED) - 1 ? "." : ", ";
             $mediatypes .= $acceptedVideoType . $appender;
+        }
+
+        $tense = count(Constants::MEDIA_TYPES_ACCEPTED) > 0 ? "are" : "is";
+        $mediatypes .= " And supported application types $tense ";
+        foreach (Constants::MEDIA_TYPES_ACCEPTED as $acceptedMediaType) {
+            $appender = array_search($acceptedMediaType, Constants::MEDIA_TYPES_ACCEPTED) === sizeof(Constants::MEDIA_TYPES_ACCEPTED) - 1 ? "." : ", ";
+            $mediatypes .= $acceptedMediaType . $appender;
         }
 
         return $mediatypes;

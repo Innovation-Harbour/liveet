@@ -35,6 +35,11 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $organiserGroup->get(
+            "/detachturnstile",
+            OrganiserController::class . ":detachTurnStiles"
+        );
+
+        $organiserGroup->get(
             "/getevents/{organiser_id}/{offset}/{limit}",
             OrganiserController::class . ":getOrganiserEvent"
         );

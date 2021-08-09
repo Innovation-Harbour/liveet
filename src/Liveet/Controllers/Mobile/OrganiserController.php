@@ -354,6 +354,8 @@ class OrganiserController extends HelperController {
     $turnstile_db = new TurnstileEventModel();
     $ticket_db = new EventTicketModel();
 
+    $this->restartServer();
+
     $results = $turnstile_db->where("deleted_at", NULL)->get();
 
     foreach ($results as $result)

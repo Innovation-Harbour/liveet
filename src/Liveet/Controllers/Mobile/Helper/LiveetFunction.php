@@ -424,6 +424,8 @@ trait LiveetFunction
               "user_id" => $user_id,
               "verification_status" => Constants::VERIFICATION_VERIFIED
             ]);
+
+            return $is_approved;
           }
         }
       }

@@ -346,14 +346,10 @@ trait LiveetFunction
   public function checkTurnstileFaceMatchForEvent($base64,$event_identifier)
   {
     $is_approved = false;
-    $ticket_name  = false;
-    $user_id = false;
     $event_db = new EventModel();
-    $ticket_db = new EventTicketModel();
     $event_user_db = new EventTicketUserModel();
     $turnstile_db = new TurnstileEventModel();
     $log = new VerificationLogModel();
-    $ticket_id = false;
 
 
     $turnstile_id = $event_identifier;
@@ -367,7 +363,7 @@ trait LiveetFunction
 
     if($turnstile_query->count() < 1)
     {
-      return [$is_approved,$ticket_name,$user_id];
+      return $is_approved;
     }
 
     $turnstile_details = $turnstile_query->get();
@@ -423,12 +419,7 @@ trait LiveetFunction
           if($event_user->count() == 1)
           {
             $user_details =  $event_user->first();
-            $ticket_id = $user_details->event_ticket_id;
             $user_id = $user_details->user_id;
-
-            $ticket_details = $ticket_db->where("event_ticket_id", $ticket_id)->first();
-            $ticket_name = $ticket_details->ticket_name;
-
             //update the ticket as used
             $event_user->update(["status" => Constants::EVENT_TICKET_USED]);
             $is_approved = true;
@@ -443,6 +434,6 @@ trait LiveetFunction
       }
     }
 
-     return [$is_approved,$ticket_name,$user_id];
+     return $is_approved;
   }
 }

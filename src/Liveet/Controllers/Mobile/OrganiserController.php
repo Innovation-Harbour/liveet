@@ -19,6 +19,7 @@ use Rashtell\Domain\KeyManager;
 use Liveet\Models\Mobile\TempsModel;
 use Bluerhinos\phpMQTT;
 use Liveet\Controllers\HelperController;
+use Liveet\Models\TurnstileEventModel;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class OrganiserController extends HelperController {
@@ -344,6 +345,34 @@ class OrganiserController extends HelperController {
     ];
 
     $payload = ["statusCode" => 200, "data" => $response_data, "successMessage" => "Test Successfully"];
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function detachTurnStiles (Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $turnstile_db = new TurnstileEventModel();
+    $ticket_db = new EventTicketModel();
+
+    $results = $turnstile_db->where("deleted_at", NULL)->get();
+
+    foreach ($results as $result)
+    {
+      $turnstile_event_id = $result->turnstile_event_id;
+      $ticket_id = $result->event_ticket_id;
+
+      $event_details = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
+      ->where("event_ticket.event_ticket_id",$ticket_id)->first();
+
+      $event_time = intval($event_details->event_date_time);
+
+      if(time() > $event_time)
+      {
+        $turnstile_db->where('turnstile_event_id', $turnstile_event_id)->delete();
+      }
+    }
+
+    $payload = ["statusCode" => 200, "successMessage" => "Turnstile Detach Successfully"];
     return $this->json->withJsonResponse($response, $payload);
   }
 

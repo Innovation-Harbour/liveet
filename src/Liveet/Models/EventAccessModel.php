@@ -55,13 +55,12 @@ class EventAccessModel extends HelperModel
             return ["error" => "Ticket sales closed"];
         }
 
-        $totalTicketCount = (new EventTicketModel())->find($event_ticket_id)->count();
+        $totalTicketCount = (new EventTicketModel())->find($event_ticket_id)->first()["ticket_population"];
         $usedTicketCount = (new EventTicketUserModel())->where("event_ticket_id", $event_ticket_id)->count();
-        // $unusedTicketCount = $totalTicketCount - $usedTicketCount;
 
-        $totalAccessCodeForTicketTypeCount = $this->where("event_ticket_id", $event_ticket_id)->count() + $event_access_population;
+        $totalAccessCodeForTicketTypeCount = $this->where("event_ticket_id", $event_ticket_id)->count();
         $assignedAccessCodeForTicketTypeCount = $this->where("event_ticket_id", $event_ticket_id)->where("event_access_used_status", Constants::EVENT_ACCESS_ASSIGNED)->count();
-        $unAssignedAccessCodeForTicketTypeCount = $this->where("event_ticket_id", $event_ticket_id)->where("event_access_used_status", Constants::EVENT_ACCESS_UNASSIGNED)->count() + $event_access_population;
+        $unAssignedAccessCodeForTicketTypeCount = $this->where("event_ticket_id", $event_ticket_id)->where("event_access_used_status", Constants::EVENT_ACCESS_UNASSIGNED)->count();
         $usedAccessCodeForTicketTypeCount = $this->where("event_ticket_id", $event_ticket_id)->where("event_access_used_status", Constants::EVENT_ACCESS_USED)->count();
 
         $unusedTicketCount = $totalTicketCount - $usedTicketCount - $totalAccessCodeForTicketTypeCount;
@@ -69,8 +68,6 @@ class EventAccessModel extends HelperModel
         if ($event_access_population > $unusedTicketCount) {
             return ["error" => "Access cards exceeds unused tickets"];
         }
-
-        // var_dump($totalTicketCount, $usedTicketCount, $unusedTicketCount, $createdAccessCodeForTicketTypeCount);
 
         $event_id = (new EventTicketModel())->find($event_ticket_id)["event_id"];
         $event_code = (new EventModel())->find($event_id)->first()["event_code"];
@@ -82,16 +79,15 @@ class EventAccessModel extends HelperModel
             $output = $this->create(["event_ticket_id" => $event_ticket_id, "event_access_code" => $event_access_code]);
         }
 
-        // var_dump($output);
         return ["data" =>
         [
             "total_ticket_count" => $totalTicketCount,
             "used_ticket_count" => $usedTicketCount,
-            "total_access_code_for_ticket_type_count" => $totalAccessCodeForTicketTypeCount,
-            "unassigned_access_code_for_ticket_type_count" => $unAssignedAccessCodeForTicketTypeCount,
+            "total_access_code_for_ticket_type_count" => $totalAccessCodeForTicketTypeCount + $event_access_population,
+            "unassigned_access_code_for_ticket_type_count" => $unAssignedAccessCodeForTicketTypeCount + $event_access_population,
             "assigned_access_code_for_ticket_type_count" => $assignedAccessCodeForTicketTypeCount,
             "used_access_code_for_ticket_type_count" => $usedAccessCodeForTicketTypeCount,
-            "unused_ticket_count" => $unusedTicketCount,
+            "unused_ticket_count" => $unusedTicketCount + $event_access_population,
         ], "error" => null];
     }
 

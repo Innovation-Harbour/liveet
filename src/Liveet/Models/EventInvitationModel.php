@@ -31,9 +31,11 @@ class EventInvitationModel extends BaseModel
         $event_inviter_user_id = $details["event_inviter_user_id"];
         $event_invitee_user_phone = $details["event_invitee_user_phone"];
 
-        $inviter = UserModel::find($event_inviter_user_id);
-        if (!$inviter) {
-            return ["data" => null, "error" => "Inviter not found"];
+        if ($event_inviter_user_id) {
+            $inviter = UserModel::find($event_inviter_user_id);
+            if (!$inviter) {
+                return ["data" => null, "error" => "Inviter not found"];
+            }
         }
 
         $inviteeQuery = UserModel::where("user_phone", $event_invitee_user_phone);

@@ -47,7 +47,9 @@ class AdminUserModel extends BaseModel
 
         $user =  $this::where("public_key", $public_key)
             ->where("admin_username", "=", $admin_username)
-            ->where("usertype", "=", $usertype)->first();
+            ->where("usertype", "=", $usertype)
+            ->where("accessStatus", Constants::USER_ENABLED)
+            ->first();
 
         return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
@@ -69,40 +71,39 @@ class AdminUserModel extends BaseModel
 
 
         $totalEventTicketCount = EventTicketModel::sum("ticket_population");
-
-        $totalBoughtTicketByTicketCount = EventTicketUserModel::count();
-        $totalUsedTicketByTicketCount = EventTicketUserModel::where("status", Constants::EVENT_TICKET_USED)->count();
-        $totalUnusedTicketByTicketCount = EventTicketUserModel::where("status", Constants::EVENT_TICKET_UNUSED)->count();
-
-        $totalGeneratedAccessCodeCount = EventAccessModel::count();
-        $totalAssignedAccessCodeCount = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_ASSIGNED)->count();
-        $totalUnassignedAccessCodeCount = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_UNASSIGNED)->count();
-        $totalUsedAccessCodeCount = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_USED)->count();
-
-        $totalPredictedUsedTicketCount = $totalBoughtTicketByTicketCount + $totalUsedAccessCodeCount + $totalAssignedAccessCodeCount;
-        $totalMinimumUsedTicketCount = $totalUsedTicketByTicketCount + $totalUsedAccessCodeCount;
-
-
         $totalExpectedTicketRevenue = EventTicketModel::selectRaw('SUM(ticket_population * ticket_cost) as totalExpectedTicketRevenue')->first()["totalExpectedTicketRevenue"];
 
+        $totalBoughtTicketByTicketCount = EventTicketUserModel::count();
         $totalBoughtTicketByTicketSum = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->sum("ticket_cost");
+
+        $totalUsedTicketByTicketCount = EventTicketUserModel::where("status", Constants::EVENT_TICKET_USED)->count();
         $totalUsedTicketByTicketSum = EventTicketUserModel::where("status", Constants::EVENT_TICKET_USED)->join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->sum("ticket_cost");
+
+        $totalUnusedTicketByTicketCount = EventTicketUserModel::where("status", Constants::EVENT_TICKET_UNUSED)->count();
         $totalUnusedTicketByTicketSum = EventTicketUserModel::where("status", Constants::EVENT_TICKET_UNUSED)->join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->sum("ticket_cost");
 
+        $totalGeneratedAccessCodeCount = EventAccessModel::count();
         $totalGeneratedAccessCodeSum = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->sum("ticket_cost");
-        $totalAssignedAccessCodeSum = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_ASSIGNED)->join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->sum("ticket_cost");;
-        $totalUnassignedAccessCodeSum = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_UNASSIGNED)->join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->sum("ticket_cost");;
-        $totalUsedAccessCodeSum = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_USED)->join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->sum("ticket_cost");;
 
+        $totalAssignedAccessCodeCount = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_ASSIGNED)->count();
+        $totalAssignedAccessCodeSum = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_ASSIGNED)->join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->sum("ticket_cost");
+
+        $totalUnassignedAccessCodeCount = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_UNASSIGNED)->count();
+        $totalUnassignedAccessCodeSum = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_UNASSIGNED)->join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->sum("ticket_cost");
+
+        $totalUsedAccessCodeCount = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_USED)->count();
+        $totalUsedAccessCodeSum = EventAccessModel::where("event_access_used_status", Constants::EVENT_ACCESS_USED)->join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->sum("ticket_cost");
+
+        $totalPredictedUsedTicketCount = $totalBoughtTicketByTicketCount + $totalUsedAccessCodeCount + $totalAssignedAccessCodeCount;
         $totalPreredictedRevenue = $totalBoughtTicketByTicketSum + $totalUsedAccessCodeSum + $totalAssignedAccessCodeSum;
-        $totalMinimumPossibleRevenue = $totalUsedTicketByTicketSum + $totalUsedAccessCodeSum;
 
+        $totalMinimumUsedTicketCount = $totalUsedTicketByTicketCount + $totalUsedAccessCodeCount;
+        $totalMinimumPossibleRevenue = $totalUsedTicketByTicketSum + $totalUsedAccessCodeSum;
 
         $totalGeneratedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalGeneratedInvitations')->first()["totalGeneratedInvitations"];
         $totalAcceptedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalAcceptedInvitations')->where("event_invitation_status", Constants::INVITATION_ACCEPT)->first()["totalAcceptedInvitations"];
         $totalPendingInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalPendingInvitations')->where("event_invitation_status", Constants::INVITATION_PENDING)->first()["totalPendingInvitations"];
         $totalRejectedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalRejectedInvitations')->where("event_invitation_status", Constants::INVITATION_PENDING)->first()["totalRejectedInvitations"];
-
 
         $eventTimelinesCount = EventTimelineModel::count();
         $evnetTimelinMediaCount = TimelineMediaModel::count();
@@ -111,73 +112,70 @@ class AdminUserModel extends BaseModel
         $paymentSum = PaymentModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "payment.event_ticket_id")->sum("ticket_cost");
 
 
-
         $dashboard = [
-            "adminsCount" => $adminsCount,
-            "organiserCount" => $organiserCount,
-            "organiserStaffCount" => $organiserStaffCount,
-            "usersCount" => $usersCount,
+            "adminsCount" => $adminsCount ?? 0,
+            "organiserCount" => $organiserCount ?? 0,
+            "organiserStaffCount" => $organiserStaffCount ?? 0,
+            "usersCount" => $usersCount ?? 0,
 
-            "eventCount" => $eventCount,
-            "publicEventCount" => $publicEventCount,
-            "privateEventCount" => $privateEventCount,
-            "freeEventCount" => $freeEventCount,
-            "paidEventCount" => $paidEventCount,
+            "eventCount" => $eventCount ?? 0,
+            "publicEventCount" => $publicEventCount ?? 0,
+            "privateEventCount" => $privateEventCount ?? 0,
+            "freeEventCount" => $freeEventCount ?? 0,
+            "paidEventCount" => $paidEventCount ?? 0,
 
-            "eventTicketTypesCount" => $eventTicketTypesCount,
+            "eventTicketTypesCount" => $eventTicketTypesCount ?? 0,
 
-            "totalEventTicketCount" => $totalEventTicketCount,
-            "totalExpectedTicketRevenue" => $totalExpectedTicketRevenue,
+            "totalEventTicketCount" => $totalEventTicketCount ?? 0,
+            "totalExpectedTicketRevenue" => $totalExpectedTicketRevenue ?? 0,
 
-            "totalBoughtTicketByTicketCount" => $totalBoughtTicketByTicketCount,
-            "totalBoughtTicketByTicketSum" => $totalBoughtTicketByTicketSum,
+            "totalBoughtTicketByTicketCount" => $totalBoughtTicketByTicketCount ?? 0,
+            "totalBoughtTicketByTicketSum" => $totalBoughtTicketByTicketSum ?? 0,
 
-            "totalUsedTicketByTicketCount" => $totalUsedTicketByTicketCount,
-            "totalUsedTicketByTicketSum" => $totalUsedTicketByTicketSum,
+            "totalUsedTicketByTicketCount" => $totalUsedTicketByTicketCount ?? 0,
+            "totalUsedTicketByTicketSum" => $totalUsedTicketByTicketSum ?? 0,
 
-            "totalUnusedTicketByTicketCount" => $totalUnusedTicketByTicketCount,
-            "totalUnusedTicketByTicketSum" => $totalUnusedTicketByTicketSum,
+            "totalUnusedTicketByTicketCount" => $totalUnusedTicketByTicketCount ?? 0,
+            "totalUnusedTicketByTicketSum" => $totalUnusedTicketByTicketSum ?? 0,
 
-            "totalGeneratedAccessCodeCount" => $totalGeneratedAccessCodeCount,
-            "totalGeneratedAccessCodeSum" => $totalGeneratedAccessCodeSum,
+            "totalGeneratedAccessCodeCount" => $totalGeneratedAccessCodeCount ?? 0,
+            "totalGeneratedAccessCodeSum" => $totalGeneratedAccessCodeSum ?? 0,
 
-            "totalAssignedAccessCodeCount" => $totalAssignedAccessCodeCount,
-            "totalAssignedAccessCodeSum" => $totalAssignedAccessCodeSum,
+            "totalAssignedAccessCodeCount" => $totalAssignedAccessCodeCount ?? 0,
+            "totalAssignedAccessCodeSum" => $totalAssignedAccessCodeSum ?? 0,
 
-            "totalUnassignedAccessCodeCount" => $totalUnassignedAccessCodeCount,
-            "totalUnassignedAccessCodeSum" => $totalUnassignedAccessCodeSum,
+            "totalUnassignedAccessCodeCount" => $totalUnassignedAccessCodeCount ?? 0,
+            "totalUnassignedAccessCodeSum" => $totalUnassignedAccessCodeSum ?? 0,
 
-            "totalUsedAccessCodeCount" => $totalUsedAccessCodeCount,
-            "totalUsedAccessCodeSum" => $totalUsedAccessCodeSum,
+            "totalUsedAccessCodeCount" => $totalUsedAccessCodeCount ?? 0,
+            "totalUsedAccessCodeSum" => $totalUsedAccessCodeSum ?? 0,
 
-            "totalPredictedUsedTicketCount" => $totalPredictedUsedTicketCount,
-            "totalPreredictedRevenue" => $totalPreredictedRevenue,
+            "totalPredictedUsedTicketCount" => $totalPredictedUsedTicketCount ?? 0,
+            "totalPreredictedRevenue" => $totalPreredictedRevenue ?? 0,
 
-            "totalMinimumUsedTicketCount" => $totalMinimumUsedTicketCount,
-            "totalMinimumPossibleRevenue" => $totalMinimumPossibleRevenue,
+            "totalMinimumUsedTicketCount" => $totalMinimumUsedTicketCount ?? 0,
+            "totalMinimumPossibleRevenue" => $totalMinimumPossibleRevenue ?? 0,
 
+            "totalGeneratedInvitations" => $totalGeneratedInvitations ?? 0,
+            "totalAcceptedInvitations" => $totalAcceptedInvitations ?? 0,
+            "totalPendingInvitations" => $totalPendingInvitations ?? 0,
+            "totalRejectedInvitations" => $totalRejectedInvitations ?? 0,
 
-            "totalGeneratedInvitations" => $totalGeneratedInvitations,
-            "totalAcceptedInvitations" => $totalAcceptedInvitations,
-            "totalPendingInvitations" => $totalPendingInvitations,
-            "totalRejectedInvitations" => $totalRejectedInvitations,
+            "eventTicketUserCount" => $totalEventTicketCount ?? 0,
+            "eventTicketUserSum" => $totalBoughtTicketByTicketSum ?? 0,
 
+            "eventTickerAccessCount" => $totalGeneratedAccessCodeCount ?? 0,
+            "eventTicketAccessCount" => $totalGeneratedAccessCodeCount ?? 0,
+            "eventTicketAccessSum" => $totalGeneratedAccessCodeSum ?? 0,
 
-            "eventTicketUserCount" => $totalEventTicketCount,
-            "eventTicketUserSum" => $totalBoughtTicketByTicketSum,
+            "totalTicketCount" => ($totalEventTicketCount + $totalGeneratedAccessCodeCount) ?? 0,
+            "totalTicketSum" => ($totalBoughtTicketByTicketSum + $totalGeneratedAccessCodeSum) ?? 0,
 
-            "eventTickerAccessCount" => $totalGeneratedAccessCodeCount,
-            "eventTicketAccessCount" => $totalGeneratedAccessCodeCount,
-            "eventTicketAccessSum" => $totalGeneratedAccessCodeSum,
+            "eventTimelinesCount" => $eventTimelinesCount ?? 0,
+            "evnetTimelinMediaCount" => $evnetTimelinMediaCount ?? 0,
 
-            "totalTicketCount" => $totalEventTicketCount + $totalGeneratedAccessCodeCount,
-            "totalTicketSum" => $totalBoughtTicketByTicketSum + $totalGeneratedAccessCodeSum,
-
-            "eventTimelinesCount" => $eventTimelinesCount,
-            "evnetTimelinMediaCount" => $evnetTimelinMediaCount,
-
-            "paymentCount" => $paymentCount,
-            "paymentSum" => $paymentSum
+            "paymentCount" => $paymentCount ?? 0,
+            "paymentSum" => $paymentSum ?? 0
 
         ];
 
@@ -226,7 +224,8 @@ class AdminUserModel extends BaseModel
 
         $adminQuery = $this->where(function ($query) use ($admin_username) {
             return $query->where("admin_username", $admin_username)->orWhere("admin_email", $admin_username);
-        })->where("admin_password", $admin_password);
+        })->where("admin_password", $admin_password)
+            ->where("accessStatus", Constants::USER_ENABLED);
 
         if (!$this->isExist($adminQuery)) {
 
@@ -263,6 +262,6 @@ class AdminUserModel extends BaseModel
     public function getStruct()
     {
         $pkKey = $this->primaryKey;
-        return self::select($pkKey, "admin_fullname", "admin_username", "admin_password", "admin_email", "admin_priviledges", "email_verified",  "usertype", "created_at", "updated_at");
+        return self::select($pkKey, "admin_fullname", "admin_username", "admin_password", "admin_email", "admin_priviledges", "email_verified",  "usertype", "accessStatus", "created_at", "updated_at");
     }
 }

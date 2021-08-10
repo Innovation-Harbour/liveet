@@ -47,7 +47,12 @@ class OrganiserModel extends BaseModel
 
         $user =  self::where("public_key", $public_key)
             ->where("organiser_username", "=", $organiser_username)
-            ->where("usertype", "=", $usertype)->first();
+            ->where(
+                "usertype",
+                "=",
+                $usertype
+                    ->where("accessStatus", Constants::USER_ENABLED)
+            )->first();
 
         return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
@@ -109,34 +114,7 @@ class OrganiserModel extends BaseModel
     public function getStruct()
     {
         $pkKey = $this->primaryKey;
-        return $this->select($pkKey, "organiser_username",  "organiser_name", "organiser_email", "organiser_phone", "organiser_address", "phone_verified", "usertype", "email_verified", "created_at", "updated_at");
-    }
-
-    public function updateByPK($pk, $allInputs, $checks = [])
-    {
-        $inputError = $this->checkInputError($allInputs, $checks);
-        if (null != $inputError) {
-            return $inputError;
-        }
-
-        unset($allInputs[$this->primaryKey]);
-
-        (new OrganiserStaffModel())->where($this->primaryKey, $pk)->update(
-            ["organiser_staff_username" => $allInputs["organiser_username"], "organiser_staff_name" => $allInputs["organiser_name"], "organiser_staff_phone" => $allInputs["organiser_phone"], "organiser_staff_profile_picture" => $allInputs["organiser_profile_picture"]]
-        );
-
-        unset($allInputs["organiser_profile_picture"]);
-
-        $query = $this->find($pk);
-        if (!$query) {
-            return ["error" => Constants::ERROR_NOT_FOUND, "data" => null];
-        }
-
-        $query->update($allInputs);
-
-        $model = $this->getByPK($pk);
-
-        return ["data" => $model["data"], "error" => $model["error"]];
+        return $this->select($pkKey, "organiser_username",  "organiser_name", "organiser_email", "organiser_phone", "organiser_address", "phone_verified", "usertype", "accessStatus", "email_verified", "created_at", "updated_at");
     }
 
     public function login($details)
@@ -148,7 +126,8 @@ class OrganiserModel extends BaseModel
         $organiserStaffModel = new OrganiserStaffModel();
         $organiserStaffQuery = $organiserStaffModel->where(function ($query) use ($organiser_username) {
             return $query->where("organiser_staff_username", $organiser_username)->orWhere("organiser_staff_email", $organiser_username);
-        })->where("organiser_password", $organiser_password);
+        })->where("organiser_password", $organiser_password)
+            ->where("accessStatus", Constants::USER_ENABLED);
 
         if (!$this->isExist($organiserStaffQuery)) {
 
@@ -190,8 +169,43 @@ class OrganiserModel extends BaseModel
         return ["data" => $organiser, "error" => ""];
     }
 
+    public function updateByPK($pk, $allInputs, $checks = [], $queryOptions = [])
+    {
+        if (isset($queryOptions["useParentModel"]) && $queryOptions["useParentModel"]) {
+            return parent::updateByPK($pk, $allInputs, $checks);
+        }
+
+        $inputError = $this->checkInputError($allInputs, $checks);
+        if (null != $inputError) {
+            return $inputError;
+        }
+
+        unset($allInputs[$this->primaryKey]);
+
+        (new OrganiserStaffModel())->where($this->primaryKey, $pk)->update(
+            ["organiser_staff_username" => $allInputs["organiser_username"], "organiser_staff_name" => $allInputs["organiser_name"], "organiser_staff_phone" => $allInputs["organiser_phone"], "organiser_staff_profile_picture" => $allInputs["organiser_profile_picture"]]
+        );
+
+        unset($allInputs["organiser_profile_picture"]);
+
+        $query = $this->find($pk);
+        if (!$query) {
+            return ["error" => Constants::ERROR_NOT_FOUND, "data" => null];
+        }
+
+        $query->update($allInputs);
+
+        $model = $this->getByPK($pk);
+
+        return ["data" => $model["data"], "error" => $model["error"]];
+    }
+
     public function updateByConditions($conditions, $allInputs, $checks = [], $queryOptions = [])
     {
+        if (isset($queryOptions["useParentModel"]) && $queryOptions["useParentModel"]) {
+            return parent::updateByConditions($conditions, $allInputs, $checks, $queryOptions);
+        }
+
         $inputError = $this->checkInputError($allInputs, $checks);
         if (null != $inputError) {
             return $inputError;

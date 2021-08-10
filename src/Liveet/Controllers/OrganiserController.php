@@ -19,13 +19,11 @@ class OrganiserController extends HelperController
 
     public function createOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $this->checkAdminOrganiserPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an organiser"]);
-
-        $this->checkAdminOrganiserPermission($request, $response);
 
         return $this->createSelf(
             $request,
@@ -54,7 +52,7 @@ class OrganiserController extends HelperController
                 ],
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_profile_picture", "folder"=>"organisers",
+                        "mediaKey" => "organiser_profile_picture", "folder" => "organisers",
                         "clientOptions" => [
                             "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
                         ]
@@ -66,10 +64,6 @@ class OrganiserController extends HelperController
 
     public function getOrganisers(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
         $this->checkAdminOrganiserPermission($request, $response);
 
         return $this->getByPage($request, $response, new OrganiserModel(), null, ["usertype" => Constants::USERTYPE_ORGANISER_ADMIN]);
@@ -77,10 +71,6 @@ class OrganiserController extends HelperController
 
     public function getOrganiserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
         $this->checkAdminOrganiserPermission($request, $response);
 
         return $this->getByPK($request, $response, new OrganiserModel());
@@ -88,13 +78,11 @@ class OrganiserController extends HelperController
 
     public function updateOrganiserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $this->checkAdminOrganiserPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an organiser details"]);
-
-        $this->checkAdminOrganiserPermission($request, $response);
 
         return $this->updateByPK(
             $request,
@@ -127,19 +115,24 @@ class OrganiserController extends HelperController
 
     public function logoutOrganiserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $this->checkAdminOrganiserPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "logged out an organiser"]);
 
-        $this->checkAdminOrganiserPermission($request, $response);
-
         return $this->logoutByPK($request, $response, new OrganiserModel());
     }
 
+    public function toggleOrganiserAccessStatusByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $this->checkAdminOrganiserPermission($request, $response);
+
+        return $this->toggleUserAccessStatusByPK($request, $response, new OrganiserModel());
+    }
+
     /**
-     * Disable Organiser
+     *
 
     public function deleteOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
@@ -176,13 +169,13 @@ class OrganiserController extends HelperController
 
     public function updateOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $this->checkOrganiserAdminPermission($request, $response);
+        
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
 
         (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "Updated organiser details"]);
-
-        $this->checkOrganiserAdminPermission($request, $response);
 
         $organiser_id = $authDetails["organiser_id"];
 

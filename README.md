@@ -52,17 +52,19 @@
 ## PARAMS
 
 - accountOptions :array
+  - dataOptions :array
+    - overrideKeys  :array
+      - $inputName => $columnName
+  - mediaOptions :multi-dimensional-array
+    - mediaKey :string
+    - multiple :boolean
+    - folder :string || function
+    - clientOptions :array
+      - containerName :string 
+      - baseUrl :string
+      - mediaName :string
   - responseMessage :string
-- mediaOptions :multi-dimensional-array
-  - mediaKey :string
-  - multiple :boolean
-  - folder :string || function
-  - clientOptions :array
-    - containerName :string 
-    - baseUrl :string
-    - mediaName :string
-- dataOptions :array
-  - $inputName => $columnName
+  
 - queryOptions :array
   - idKey :string
   - whereIn :multi-dimensional-array
@@ -74,5 +76,6 @@
   - orderBy :array ["columnName" => "ASC" | "DESC" ]
   - whereHas :array ["relationshipName"=> function($query){return $query;}]
   - latest :boolean | string
+  - useParentModel  :boolean
 - checks :array
   - [primaryKey :boolean, detailsKey :string, columnName :string, errorText :string ]

@@ -140,6 +140,11 @@ isset($v1Group) && $v1Group->group(
             AdminUserController::class . ":logoutAdminUserByPK"
         );
 
+        $adminGroup->put(
+            "/toggle/admin/access/{admin_user_id}",
+            AdminUserController::class . ":toggleAdminUserAccessStatusByPK"
+        );
+
         /** 
          * TODO
          * 

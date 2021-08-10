@@ -348,7 +348,7 @@ class BaseModel extends Model
         return ["data" => $model, "error" => ""];
     }
 
-    public function updateByPK($pk, $allInputs, $checks = [])
+    public function updateByPK($pk, $allInputs, $checks = [], $queryOptions = [])
     {
         $inputError = $this->checkInputError($allInputs, $checks);
         if (null != $inputError) {

@@ -39,7 +39,7 @@ class TimelineMediaModel extends BaseModel
         return (new EventTimelineModel())->getByPK($timeline_id, null, ["timelineMedia"]);
     }
 
-    public function updateByPK($pk, $allInputs, $checks = [])
+    public function updateByPK($pk, $allInputs, $checks = [], $queryOptions = [])
     {
         $inputError = $this->checkInputError($allInputs, $checks);
         if (null != $inputError) {

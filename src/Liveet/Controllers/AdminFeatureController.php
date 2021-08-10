@@ -17,13 +17,11 @@ class AdminFeatureController extends HelperController
 
     public function createAdminFeature(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $this->checkAdminAdminPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an admin feature"]);
-
-        $this->checkAdminAdminPermission($request, $response);
 
         return $this->createSelf(
             $request,

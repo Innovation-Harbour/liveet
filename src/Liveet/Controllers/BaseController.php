@@ -1838,6 +1838,60 @@ abstract class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
+    public function toggleUserAccessStatusByPK(Request $request, ResponseInterface $response, $model, $inputs = ["required" => ["status"], "expected" => ["accessStatus"]], $conditions = [], $accountOptions = []): ResponseInterface
+    {
+        if ($inputs == null) {
+            $inputs = ["required" => ["status"], "expected" => ["accessStatus"]];
+        }
+
+        $statusInputKey = $inputs["required"][0];
+        $statusColumnKey = $inputs["expected"][0];
+
+        $routeParams = $this->getRouteParams($request, [$model->primaryKey]);
+        if (isset($routeParams[$model->primaryKey])) {
+            $conditions[$model->primaryKey] = $routeParams[$model->primaryKey];
+        }
+
+        $json = new JSON();
+        $body = $this->checkOrGetPostBody($request, [$statusInputKey]);
+        if (!$body) {
+            $error = ["errorMessage" => "Invalid status", "errorStatus" => 1, "statusCode" => 406];
+
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $accessStatus = $body[$statusInputKey];
+        if ($accessStatus != Constants::USER_DISABLED && $accessStatus != Constants::USER_ENABLED) {
+            $error = ["errorMessage" => "Invalid status", "errorStatus" => 1, "statusCode" => 406];
+
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $responseMessage = null;
+        if (isset($accountOptions["responseMessage"])) {
+            $responseMessage = $accountOptions["responseMessage"];
+        } else {
+            $responseMessage = $accessStatus == Constants::USER_DISABLED ? "Account disabled successfully" : "Account enabled successfully";
+        }
+
+        return $this->updateByConditions(
+            $request,
+            $response,
+            $model,
+            $inputs,
+            $conditions,
+            [],
+            [],
+            [
+                "responseMessage" => $responseMessage,
+                "dataOptions" => [
+                    "overrideKeys" => [$statusInputKey => $statusColumnKey]
+                ]
+            ],
+            ["useParentModel" => true]
+        );
+    }
+
     public function deleteSelf(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
     {
         $json = new JSON();

@@ -251,7 +251,7 @@ class BaseController
     public function handleLiveetParseImage($mediaOption, $media, $event_id)
     {
         if (strrpos($media, "data:image/") !== 0 && strrpos($media, "data:video/") !== 0) {
-           //it means its a url or a path
+            //it means its a url or a path
             //if path first folder name is >10, ki olohun so e
             if (strrpos($media, "/") < 10) {
                 $data["url"] = $media;
@@ -283,7 +283,7 @@ class BaseController
         $mediaKey = $mediaOption["mediaKey"];
         $mediaExtType = $this->getFileTypeOfBase64($media);
         $mediaExtType = strtolower($mediaExtType);
-        
+
         $key = "$mediaPrefix$event_code_key$mediaName.$mediaExtType";
 
         $mediaPath = "https://liveet-media.s3-us-west-2.amazonaws.com/$event_code_dir$key";
@@ -772,7 +772,6 @@ class BaseController
      * @param Arrat $accountOptions = []
      *
      */
-
     public function createSelf(Request $request, ResponseInterface $response, $model, array $inputs = ["required" => [], "expected" => []], array $accountOptions = [], array $override = [], array $checks = []): ResponseInterface
     {
         $json = new JSON();

@@ -18,10 +18,6 @@ class OrganiserStaffController extends HelperController
 
     public function getOrganiserStaffs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
         $this->checkAdminOrganiserPermission($request, $response);
 
         return $this->getByPage($request, $response, new OrganiserStaffModel());
@@ -29,10 +25,6 @@ class OrganiserStaffController extends HelperController
 
     public function getOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
         $this->checkAdminOrganiserPermission($request, $response);
 
         return $this->getByPK($request, $response, new OrganiserStaffModel());
@@ -40,20 +32,24 @@ class OrganiserStaffController extends HelperController
 
     public function logoutOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $this->checkAdminOrganiserPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "logged out an organiser staff"]);
 
-        $this->checkAdminOrganiserPermission($request, $response);
-
         return $this->logoutByPK($request, $response, new OrganiserStaffModel());
     }
 
-    /**
-     * Disable Organiser
+    public function toggleOrganiserStaffAccessStatusByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $this->checkAdminOrganiserPermission($request, $response);
 
+        return $this->toggleUserAccessStatusByPK($request, $response, new OrganiserStaffModel());
+    }
+
+    /**
+     *
     public function deleteOrganiserStaff(Request $request, ResponseInterface $response): ResponseInterface
     {
         return $this->deleteSelf($request, $response, new OrganiserStaffModel());
@@ -80,26 +76,22 @@ class OrganiserStaffController extends HelperController
 
     public function createOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $this->checkAdminOrganiserPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an organiser"]);
-
-        $this->checkAdminOrganiserPermission($request, $response);
 
         return (new OrganiserController())->createOrganiser($request, $response);
     }
 
     public function updateOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $this->checkAdminOrganiserPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an organiser staff details"]);
-
-        $this->checkAdminOrganiserPermission($request, $response);
 
         return $this->updateByPK(
             $request,
@@ -118,7 +110,7 @@ class OrganiserStaffController extends HelperController
 
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_profile_picture", "folder"=>"organiser-staffs",
+                        "mediaKey" => "organiser_profile_picture", "folder" => "organiser-staffs",
                         "clientOptions" => [
                             "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
                         ]
@@ -148,15 +140,13 @@ class OrganiserStaffController extends HelperController
 
     public function createOrganiserSelfStaff(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $this->checkOrganiserOrganiserPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
 
         (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "created an organiser staff"]);
-
-        $this->checkOrganiserOrganiserPermission($request, $response);
 
         $organiser_id = $authDetails["organiser_id"];
 
@@ -184,7 +174,7 @@ class OrganiserStaffController extends HelperController
                 ],
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_staff_profile_picture", "folder"=>"organiser-staffs",
+                        "mediaKey" => "organiser_staff_profile_picture", "folder" => "organiser-staffs",
                         "clientOptions" => [
                             "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
                         ]
@@ -210,9 +200,10 @@ class OrganiserStaffController extends HelperController
 
     public function getOrganiserSelfStaffs(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $this->checkOrganiserOrganiserPermission($request, $response);
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $this->checkOrganiserOrganiserPermission($request, $response);
         $organiser_id = $authDetails["organiser_id"];
 
         return $this->getByConditions($request, $response, new OrganiserStaffModel(), ["organiser_id" => $organiser_id]);
@@ -220,9 +211,9 @@ class OrganiserStaffController extends HelperController
 
     public function getOrganiserSelfStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
         $this->checkOrganiserOrganiserPermission($request, $response);
+
+        $authDetails = static::getTokenInputsFromRequest($request);
 
         $organiser_id = $authDetails["organiser_id"];
         ["organiser_staff_id" => $organiser_staff_id] = $this->getRouteParams($request, ["organiser_staff_id"]);
@@ -232,13 +223,13 @@ class OrganiserStaffController extends HelperController
 
     public function updateOrganiserSelfStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $this->checkOrganiserOrganiserPermission($request, $response);
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
 
         (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "updated an organiser staff details"]);
-
-        $this->checkOrganiserOrganiserPermission($request, $response);
 
         $organiser_id = $authDetails["organiser_id"];
         ["organiser_staff_id" => $organiser_staff_id] = $this->getRouteParams($request, ["organiser_staff_id"]);
@@ -271,7 +262,7 @@ class OrganiserStaffController extends HelperController
             [
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_staff_profile_picture", "folder"=>"organiser-staffs",
+                        "mediaKey" => "organiser_staff_profile_picture", "folder" => "organiser-staffs",
                         "clientOptions" => [
                             "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
                         ]
@@ -285,18 +276,82 @@ class OrganiserStaffController extends HelperController
 
     public function logoutOrganiserSelfStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $this->checkOrganiserOrganiserPermission($request, $response);
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
 
         (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "logged out an organiser staff"]);
 
-        $this->checkOrganiserOrganiserPermission($request, $response);
-
         $organiser_id = $authDetails["organiser_id"];
         ["organiser_staff_id" => $organiser_staff_id] = $this->getRouteParams($request, ["organiser_staff_id"]);
 
         return $this->logoutByCondition($request, $response, new OrganiserStaffModel(), ["organiser_staff_id" => $organiser_staff_id, "organiser_id" => $organiser_id]);
+    }
+
+    public function updateOrganiserAdmin(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $this->checkOrganiserAdminPermission($request, $response);
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "Updated organiser admin details"]);
+        $organiser_id = $authDetails["organiser_id"];
+        $organiser_staff_id = $authDetails["organiser_staff_id"];
+
+        return $this->updateByConditions(
+            $request,
+            $response,
+            new OrganiserStaffModel(),
+            [
+                "required" => [
+                    "organiser_staff_name", "organiser_staff_phone", "organiser_staff_username"
+                ],
+
+                "expected" => [
+                    "organiser_staff_name",  "organiser_staff_phone", "organiser_staff_address", "organiser_staff_username", "organiser_staff_profile_picture"
+                ],
+            ],
+            ["organiser_id" => $organiser_id],
+            [
+                [
+                    "detailsKey" => "organiser_staff_id", "columnName" => "organiser_staff_id", "errorText" =>
+                    "Organiser Staff Id", "primaryKey" => true
+                ],
+                [
+                    "detailsKey" => "organiser_staff_username", "columnName" => "organiser_staff_username", "errorText" =>
+                    "Organiser Staff Username"
+                ],
+                [
+                    "detailsKey" => "organiser_staff_phone", "columnName" => "organiser_staff_phone", "errorText" =>
+                    "Organiser Staff Phone"
+                ]
+            ],
+            ["organiser_id" => $organiser_id, "organiser_staff_id" => $organiser_staff_id],
+            [
+                "mediaOptions" => [
+                    [
+                        "mediaKey" => "organiser_staff_profile_picture", "folder" => "organiser-staffs",
+                        "clientOptions" => [
+                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                        ]
+                    ]
+                ]
+            ]
+        );
+    }
+
+    public function toggleOrganiserSelfStaffAccessStatusByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $this->checkAdminOrganiserPermission($request, $response);
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+        $organiser_id = $authDetails["organiser_id"];
+
+        return $this->toggleUserAccessStatusByPK($request, $response, new OrganiserStaffModel(), null, ["organiser_id" => $organiser_id]);
     }
 
     /** Organiser Admin or Staff */
@@ -360,7 +415,7 @@ class OrganiserStaffController extends HelperController
             [
                 "mediaOptions" => [
                     [
-                        "mediaKey" => "organiser_staff_profile_picture", "folder"=>"organiser-staffs",
+                        "mediaKey" => "organiser_staff_profile_picture", "folder" => "organiser-staffs",
                         "clientOptions" => [
                             "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
                         ]
@@ -376,60 +431,6 @@ class OrganiserStaffController extends HelperController
                 [
                     "detailsKey" => "organiser_staff_username", "columnName" => "organiser_staff_username", "errorText" =>
                     "Organiser Staff Username"
-                ]
-            ]
-        );
-    }
-
-    public function updateOrganiserAdmin(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
-
-        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "Updated organiser admin details"]);
-
-        $this->checkOrganiserAdminPermission($request, $response);
-        $organiser_id = $authDetails["organiser_id"];
-        $organiser_staff_id = $authDetails["organiser_staff_id"];
-
-        return $this->updateByConditions(
-            $request,
-            $response,
-            new OrganiserStaffModel(),
-            [
-                "required" => [
-                    "organiser_staff_name", "organiser_staff_phone", "organiser_staff_username"
-                ],
-
-                "expected" => [
-                    "organiser_staff_name",  "organiser_staff_phone", "organiser_staff_address", "organiser_staff_username", "organiser_staff_profile_picture"
-                ],
-            ],
-            ["organiser_id" => $organiser_id],
-            [
-                [
-                    "detailsKey" => "organiser_staff_id", "columnName" => "organiser_staff_id", "errorText" =>
-                    "Organiser Staff Id", "primaryKey" => true
-                ],
-                [
-                    "detailsKey" => "organiser_staff_username", "columnName" => "organiser_staff_username", "errorText" =>
-                    "Organiser Staff Username"
-                ],
-                [
-                    "detailsKey" => "organiser_staff_phone", "columnName" => "organiser_staff_phone", "errorText" =>
-                    "Organiser Staff Phone"
-                ]
-            ],
-            ["organiser_id" => $organiser_id, "organiser_staff_id" => $organiser_staff_id],
-            [
-                "mediaOptions" => [
-                    [
-                        "mediaKey" => "organiser_staff_profile_picture", "folder"=>"organiser-staffs",
-                        "clientOptions" => [
-                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
-                        ]
-                    ]
                 ]
             ]
         );

@@ -140,7 +140,7 @@ class EventModel extends BaseModel
         return self::select("event_id", "event_name", "event_code", "event_desc", "event_multimedia", "event_type", "event_venue", "event_date_time", "location_lat", "location_long", "organiser_id", "event_payment_type", "created_at", "updated_at");
     }
 
-    public function updateByPk($pk, $details, $checks = [])
+    public function updateByPK($pk, $details, $checks = [], $queryOptions = [])
     {
         $event_name = $details["event_name"];
         $event_desc = $details["event_desc"];

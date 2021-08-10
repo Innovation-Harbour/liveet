@@ -39,6 +39,11 @@ isset($adminGroup) && $adminGroup->group(
             OrganiserController::class . ":logoutOrganiserByPK"
         );
 
+        $organiserGroup->put(
+            "/toggle/organiser/access/{organiser_id}",
+            OrganiserController::class . ":toggleOrganiserAccessStatusByPK"
+        );
+
 
         /** 
          * TODO

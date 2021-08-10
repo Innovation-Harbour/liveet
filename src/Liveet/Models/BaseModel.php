@@ -25,7 +25,7 @@ class BaseModel extends Model
         $userQuery =  $this::where("publicKey", $publicKey)
             ->where("username", "=", $username)
             ->where("usertype", "=", $usertype)
-            // ->where("accessStatus", Constants::USER_ENABLED)
+            ->where("accessStatus", Constants::USER_ENABLED)
         ;
 
         return ($userQuery->exists()) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
@@ -411,7 +411,7 @@ class BaseModel extends Model
         return ["data" => $model, "error" => ""];
     }
 
-    public function updateByPK($pk, $allInputs, $checks = [])
+    public function updateByPK($pk, $allInputs, $checks = [], $queryOptions = [])
     {
         $inputError = $this->checkInputError($allInputs, $checks);
         if (null != $inputError) {

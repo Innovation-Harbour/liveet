@@ -107,6 +107,11 @@ isset($v1Group) && $v1Group->group(
             OrganiserStaffController::class . ":logoutOrganiserAdminOrStaff"
         );
 
+        $organiserStaffGroup->put(
+            "/toggle/organiser-staff/access/{organiser_staff_id}",
+            OrganiserStaffController::class . ":toggleOrganiserSelfStaffAccessStatusByPK"
+        );
+
         /**
          * TODO 
          * convert to disable
@@ -185,6 +190,11 @@ isset($adminGroup) && $adminGroup->group(
         $organiserStaffGroup->post(
             "/logout/organiser-staff/{organiser_staff_id}",
             OrganiserStaffController::class . ":logoutOrganiserStaffByPK"
+        );
+
+        $organiserStaffGroup->put(
+            "/toggle/organiser-staff/access/{organiser_staff_id}",
+            OrganiserStaffController::class . ":toggleOrganiserStaffAccessStatusByPK"
         );
     }
 );

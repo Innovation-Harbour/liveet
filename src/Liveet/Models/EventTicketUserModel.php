@@ -105,7 +105,7 @@ class EventTicketUserModel extends HelperModel
         return parent::getByPage($page, $limit, $return, $whereConditions, $relationships, $queryOptions);
     }
 
-    public function updateByPK($pk, $allInputs, $checks = [])
+    public function updateByPK($pk, $allInputs, $checks = [], $queryOptions = [])
     {
         $inputError = $this->checkInputError($allInputs, $checks);
         if (null != $inputError) {

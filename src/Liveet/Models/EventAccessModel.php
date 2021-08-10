@@ -117,7 +117,7 @@ class EventAccessModel extends HelperModel
         return ["data" => $eventAccesses, "error" => null];
     }
 
-    public function updateByPK($pk, $allInputs, $checks = [])
+    public function updateByPK($pk, $allInputs, $checks = [], $queryOptions = [])
     {
         $inputError = $this->checkInputError($allInputs, $checks, (new UserModel()));
         if (null != $inputError) {

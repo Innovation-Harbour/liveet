@@ -99,6 +99,19 @@ class HelperController extends BaseController
         }
     }
 
+    public function checkAdminPaymentPermission(Request $request, ResponseInterface $response)
+    {
+        $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
+        if (!in_array(Constants::PRIVILEDGE_ADMIN_REPORT, $ownerPriviledges)) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+    }
+
     public function checkOrganiserAdminPermission(Request $request, ResponseInterface $response)
     {
         $json = new JSON();
@@ -163,6 +176,20 @@ class HelperController extends BaseController
         $ownerPriviledges = isset($authDetails["organiser_priviledges"]) ? json_decode($authDetails["organiser_priviledges"]) : [];
         $usertype = $authDetails["usertype"];
         if (!in_array(Constants::PRIVILEDGE_ORGANISER_REPORT, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+    }
+
+    public function checkOrganiserPaymentPermission(Request $request, ResponseInterface $response)
+    {
+        $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["organiser_priviledges"]) ? json_decode($authDetails["organiser_priviledges"]) : [];
+        $usertype = $authDetails["usertype"];
+        if (!in_array(Constants::PRIVILEDGE_ORGANISER_PAYMENT, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
             $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
 
             return $json->withJsonResponse($response, $error);

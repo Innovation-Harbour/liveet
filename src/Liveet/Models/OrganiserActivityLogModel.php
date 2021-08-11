@@ -19,6 +19,6 @@ class OrganiserActivityLogModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select("activity_log_id", "organiser_staff_id", "activity_log_desc", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "organiser_staff_id", "activity_log_desc", "created_at", "updated_at");
     }
 }

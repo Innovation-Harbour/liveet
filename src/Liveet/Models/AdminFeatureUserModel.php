@@ -15,8 +15,18 @@ class AdminFeatureUserModel extends BaseModel
     public $primaryKey = "admin_feature_user_id";
     protected $fillable = ["admin_user_id", "admin_feature_id"];
 
+    public function adminUsers()
+    {
+        return $this->belongsTo(AdminUserModel::class, "admin_user_id", $this->primaryKey);
+    }
+
+    public function adminFeatures()
+    {
+        return $this->belongsTo(AdminFeatureModel::class, "admin_feature_id", $this->primaryKey);
+    }
+
     public function getStruct()
     {
-        return self::select("admin_feature_user_id", "admin_user_id", "admin_feature_id", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "admin_user_id", "admin_feature_id", "created_at", "updated_at");
     }
 }

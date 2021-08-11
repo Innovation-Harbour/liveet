@@ -30,7 +30,7 @@ class AdminUserModel extends BaseModel
 
     public function adminAcitivityLogs()
     {
-        return $this->hasMany(AdminActivityLogModel::class, "admin_user_id, admin_user_id");
+        return $this->hasMany(AdminActivityLogModel::class, "$this->primaryKey, $this->primaryKey");
     }
 
     public function authenticate($token)
@@ -45,18 +45,17 @@ class AdminUserModel extends BaseModel
         $admin_username = $authDetails["admin_username"] ?? "";
         $usertype = $authDetails["usertype"] ?? "";
 
-        $user =  $this::where("public_key", $public_key)
+        $userQuery =  $this::where("public_key", $public_key)
             ->where("admin_username", "=", $admin_username)
             ->where("usertype", "=", $usertype)
-            ->where("accessStatus", Constants::USER_ENABLED)
-            ->first();
+            ->where("accessStatus", Constants::USER_ENABLED);
 
-        return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
+        return ($userQuery->exists()) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
     public function getDashboard($pk, $queryOptions = null, $extras = null)
     {
-        $adminsCount = self::count();
+        $adminsCount = $this->count();
         $organiserCount = (new OrganiserModel())->where("usertype", Constants::USERTYPE_ORGANISER_ADMIN)->count();
         $organiserStaffCount = (new OrganiserModel())->where("usertype", Constants::USERTYPE_ORGANISER_STAFF)->count();
         $usersCount = UserModel::count();
@@ -231,9 +230,9 @@ class AdminUserModel extends BaseModel
 
             if ($adminQuery->exists()) {
 
-                $admin_user_id = $adminQuery->first()["admin_user_id"];
+                $admin_user_id = $adminQuery->first()[$this->primaryKey];
 
-                (new AdminActivityLogModel())->createSelf(["admin_user_id" => $admin_user_id, "activity_log_desc" => "Admin login failed"]);
+                (new AdminActivityLogModel())->createSelf([$this->primaryKey => $admin_user_id, "activity_log_desc" => "Admin login failed"]);
             }
 
             return ["error" => "Invalid Login credential", "data" => null];
@@ -254,7 +253,7 @@ class AdminUserModel extends BaseModel
 
         $admin->makeVisible(["public_key"]);
 
-        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $admin["admin_user_id"], "activity_log_desc" => "Admin login successfully"]);
+        (new AdminActivityLogModel())->createSelf([$this->primaryKey => $admin[$this->primaryKey], "activity_log_desc" => "Admin login successfully"]);
 
         return ["data" => $admin, "error" => ""];
     }
@@ -262,6 +261,6 @@ class AdminUserModel extends BaseModel
     public function getStruct()
     {
         $pkKey = $this->primaryKey;
-        return self::select($pkKey, "admin_fullname", "admin_username", "admin_password", "admin_email", "admin_priviledges", "email_verified",  "usertype", "accessStatus", "created_at", "updated_at");
+        return $this->select($pkKey, "admin_fullname", "admin_username", "admin_password", "admin_email", "admin_priviledges", "admin_profile_picture", "email_verified",  "usertype", "accessStatus", "created_at", "updated_at");
     }
 }

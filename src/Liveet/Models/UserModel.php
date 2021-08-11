@@ -12,21 +12,29 @@ class UserModel extends BaseModel
 
     protected $table = "user";
     protected $dateFormat = "U";
-    protected $fillable = ['user_fullname', 'user_phone', 'user_email', 'user_password', 'user_picture', 'image_key','fcm_token'];
+    protected $fillable = ['user_fullname', 'user_phone', 'user_email', 'user_password', 'user_picture', 'image_key', 'fcm_token'];
     protected $hidden = ["user_password"];
     protected $guarded = [];
     public $primaryKey = "user_id";
 
     public function eventTickets()
     {
-        return $this->belongsToMany(EventTicketModel::class, "event_ticket_users", "user_id", "event_ticket_id", "user_id", "event_ticket_id");
+        return $this->belongsToMany(EventTicketModel::class, "event_ticket_users", $this->primaryKey, "event_ticket_id", $this->primaryKey, "event_ticket_id");
+    }
+
+    public function eventFavourites()
+    {
+        return $this->belongsToMany(EventTicketModel::class, "event_user_favourite", $this->primaryKey, "event_id", $this->primaryKey, "event_id");
     }
 
     public function payments()
     {
-        return $this->hasMany(PaymentModel::class, "user_id", "user_id");
+        return $this->hasMany(PaymentModel::class, $this->primaryKey, $this->primaryKey);
     }
 
+    public function userActivityLogs(){
+        return $this->hasMany(UserActivityModel::class, "user_id", "user_id");
+    }
 
     public function authenticate($token)
     {
@@ -38,7 +46,7 @@ class UserModel extends BaseModel
 
         $email = $authDetails["email"];
 
-        $user =  self::where("user_email", $email)->first();
+        $user =  $this->where("user_email", $email)->first();
 
         return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
 
@@ -91,12 +99,12 @@ class UserModel extends BaseModel
             return ["error" => "Invalid Login credential", "data" => null];
         }
 
-        // self::where("username", $username)->where("password", $password)->update([
+        // $this->where("username", $username)->where("password", $password)->update([
         //     "public_key" => $public_key
         // ]);
 
         $pkKey = $this->primaryKey;
-        $user = self::select(
+        $user = $this->select(
             $pkKey,
             "username",
             "name",
@@ -115,6 +123,6 @@ class UserModel extends BaseModel
 
     public function getStruct()
     {
-        return $this->select("user_id", "user_fullname", "user_phone", "user_email", "user_password", "image_key", "user_picture", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "user_fullname", "user_phone", "user_email", "user_picture", "image_key", "fcm_token", "created_at", "updated_at");
     }
 }

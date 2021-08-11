@@ -16,13 +16,11 @@ class AdminFeatureUserController extends HelperController
 
     public function assignAdminFeature(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $this->checkAdminAdminPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "assigned an admin feature to a user"]);
-
-        $this->checkAdminAdminPermission($request, $response);
 
         return $this->createSelf(
             $request,
@@ -42,10 +40,6 @@ class AdminFeatureUserController extends HelperController
 
     public function getAssignedAdminFeatures(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
         $this->checkAdminAdminPermission($request, $response);
 
         $routeParams = $this->getRouteParams($request, ["admin_user_id", "admin_feature_id"]);
@@ -57,17 +51,23 @@ class AdminFeatureUserController extends HelperController
             $conditions["admin_feature_id"] = $routeParams["admin_feature_id"];
         }
 
-        return $this->getByPage($request, $response, new AdminFeatureUserModel(), null, $conditions);
+        return $this->getByPage(
+            $request,
+            $response,
+            new AdminFeatureUserModel(),
+            null,
+            $conditions,
+            // ["adminUsers", "adminFeatures"]
+        );
     }
 
     public function updateAssignedAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $this->checkAdminAdminPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an assigned admin user feature"]);
-
-        $this->checkAdminAdminPermission($request, $response);
 
         return $this->updateByPK(
             $request,

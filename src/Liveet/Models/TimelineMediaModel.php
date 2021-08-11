@@ -23,7 +23,7 @@ class TimelineMediaModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select("timeline_media_id", "timeline_id", "timeline_media", "media_type", "media_datetime", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "timeline_id", "timeline_media", "media_type", "media_datetime", "created_at", "updated_at");
     }
 
     public function createSelf($details, $checks = [])

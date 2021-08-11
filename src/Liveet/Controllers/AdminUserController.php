@@ -34,7 +34,7 @@ class AdminUserController extends HelperController
 
     public function getAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return $this->getSelf($request, $response, new AdminUserModel());
+        return $this->getSelf($request, $response, new AdminUserModel(), null, ["adminFeatures"]);
     }
 
     public function updateAdminUser(Request $request, ResponseInterface $response): ResponseInterface
@@ -153,14 +153,14 @@ class AdminUserController extends HelperController
 
         $this->checkAdminAdminPermission($request, $response);
 
-        return $this->getByPage($request, $response, new AdminUserModel());
+        return $this->getByPage($request, $response, new AdminUserModel(), null, null, ["adminFeatures"]);
     }
 
     public function getAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $this->checkAdminAdminPermission($request, $response);
 
-        return $this->getByPK($request, $response, new AdminUserModel());
+        return $this->getByPK($request, $response, new AdminUserModel(), null, ["adminFeatures"]);
     }
 
     public function updateAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface

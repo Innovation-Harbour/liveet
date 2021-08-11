@@ -42,13 +42,13 @@ class OrganiserStaffModel extends BaseModel
         $organiserAccess = $organiser ? $organiser["accessStatus"] : null;
         $organiserAccessEnabled = $organiserAccess == Constants::USER_ENABLED;
 
-        $user =  $this->where("public_key", $public_key)
+        $userQuery =  $this->where("public_key", $public_key)
             ->where("organiser_id", $organiser_id)
             ->where("accessStatus", Constants::USER_ENABLED)
             // ->where("token", "=", $token)
-            ->first();
+        ;
 
-        return ($user && $user->exists && $organiserAccessEnabled) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
+        return ($userQuery->exists() && $organiserAccessEnabled) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
     public function authenticateWithPublicKey($details)
@@ -101,9 +101,9 @@ class OrganiserStaffModel extends BaseModel
 
             if ($organiserStaffQuery->exists()) {
 
-                $organiser_staff_id = $organiserStaffQuery->first()["organiser_staff_id"];
+                $organiser_staff_id = $organiserStaffQuery->first()[$this->primaryKey];
 
-                (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "Organiser login failed"]);
+                (new OrganiserActivityLogModel())->createSelf([$this->primaryKey => $organiser_staff_id, "activity_log_desc" => "Organiser login failed"]);
             }
 
             return ["error" => "Invalid Login credential", "data" => null];
@@ -114,7 +114,7 @@ class OrganiserStaffModel extends BaseModel
         ]);
 
         $pkKey = $this->primaryKey;
-        $organiserStaff = self::select($pkKey, "organiser_id", "organiser_staff_name", "organiser_staff_username", "organiser_staff_phone", "organiser_staff_email", "organiser_staff_profile_picture", "organiser_staff_priviledges", "phone_verified", "email_verified", "usertype", "public_key", "created_at", "updated_at")
+        $organiserStaff = $this->select($pkKey, "organiser_id", "organiser_staff_name", "organiser_staff_username", "organiser_staff_phone", "organiser_staff_email", "organiser_staff_profile_picture", "organiser_staff_priviledges", "phone_verified", "email_verified", "usertype", "public_key", "created_at", "updated_at")
             ->where(function ($query) use ($organiser_staff_username) {
                 return $query->where("organiser_staff_username", $organiser_staff_username)
                     ->orWhere("organiser_staff_email", $organiser_staff_username);
@@ -123,7 +123,7 @@ class OrganiserStaffModel extends BaseModel
             ->first();
         $organiserStaff->makeVisible(["public_key"]);
 
-        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiserStaff["organiser_staff_id"], "activity_log_desc" => "Organiser login successful"]);
+        (new OrganiserActivityLogModel())->createSelf([$this->primaryKey => $organiserStaff[$this->primaryKey], "activity_log_desc" => "Organiser login successful"]);
 
         return ["data" => $organiserStaff, "error" => ""];
     }

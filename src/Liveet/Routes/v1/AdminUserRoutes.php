@@ -70,6 +70,11 @@ isset($v1Group) && $v1Group->group(
         require "src/Liveet/Routes/v1/TimelineMediaRoutes.php";
 
         /**
+         * Payment Routes
+         */
+        require "src/Liveet/Routes/v1/PaymentRoutes.php";
+
+        /**
          * Helper Routes
          */
         require "src/Liveet/Routes/v1/HelperRoutes.php";

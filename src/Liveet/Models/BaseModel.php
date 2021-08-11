@@ -553,7 +553,7 @@ class BaseModel extends Model
 
         $this->select("emailVerified")->where("forgotPasswordToken", $forgotPasswordToken)->update(["forgotPasswordToken" => null]);
 
-        $model = self::select($this->primaryKey, "username",  "publicKey", "usertype")->where("forgotPasswordToken", $forgotPasswordToken)->first();
+        $model = $this->select($this->primaryKey, "username",  "publicKey", "usertype")->where("forgotPasswordToken", $forgotPasswordToken)->first();
 
         return ["data" => $model, "error" => null];
     }

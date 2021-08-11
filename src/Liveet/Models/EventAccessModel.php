@@ -93,7 +93,7 @@ class EventAccessModel extends HelperModel
 
     public function getStruct()
     {
-        return self::select("event_access_id", "event_access_code", "event_ticket_id", "user_id", "event_access_used_status", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "event_access_code", "event_ticket_id", "user_id", "event_access_used_status", "created_at", "updated_at");
     }
 
     public function getDashboard($pk, $queryOptions = null, $extras = null)

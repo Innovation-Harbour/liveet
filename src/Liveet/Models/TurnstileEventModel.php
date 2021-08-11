@@ -15,4 +15,8 @@ class TurnstileEventModel extends BaseModel
     public $primaryKey = "turnstile_event_id";
     protected $fillable = ["turnstile_id,event_ticket_id"];
 
+
+    public function getStruct(){
+        return $this->select($this->primaryKey, "turnstile_id", "event_ticket_it", "created_at", "updated_at");
+    }
 }

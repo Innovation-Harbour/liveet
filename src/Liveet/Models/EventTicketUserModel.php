@@ -35,7 +35,7 @@ class EventTicketUserModel extends HelperModel
 
     public function getStruct()
     {
-        return self::select("event_ticket_user_id", "event_ticket_id", "user_id", "user_face_id", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "event_ticket_id", "user_id", "user_face_id", "status", "ownership_status", "created_at", "updated_at");
     }
 
     public function createSelf($details, $checks = [])
@@ -146,13 +146,13 @@ class EventTicketUserModel extends HelperModel
 
     public function recallEventTicket($event_ticket_user_id)
     {
-        $query = $this->where("event_ticket_user_id", $event_ticket_user_id);
+        $query = $this->where($this->primaryKey, $event_ticket_user_id);
 
         if (!$query->exists()) {
             return ["data" => null, "error" => "user ticket not found"];
         }
 
-        $query = $this->getStruct()->where("event_ticket_user_id", $event_ticket_user_id);
+        $query = $this->getStruct()->where($this->primaryKey, $event_ticket_user_id);
         $event_ticket_user = $query->first();
 
         $event_ticket_user_status = $event_ticket_user["status"];
@@ -176,6 +176,6 @@ class EventTicketUserModel extends HelperModel
         // $query->delete();
         //TODO: Add refund protocol
 
-        return ["data" => ["type" => "success", "message" => "ticket recalled successfully", "event_ticket_user_id" => $event_ticket_user_id, "user" => $user]];
+        return ["data" => ["type" => "success", "message" => "ticket recalled successfully", $this->primaryKey => $event_ticket_user_id, "user" => $user]];
     }
 }

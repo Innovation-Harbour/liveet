@@ -15,4 +15,13 @@ class TurnstileModel extends BaseModel
     protected $guarded = [];
     protected $fillable = ["turnstile_name"];
 
+    public function events()
+    {
+        return $this->belongsToMany(EventModel::class, "turnstile_event", $this->primaryKey, "event_id", $this->primaryKey, "event_id");
+    }
+
+    public function getStruct()
+    {
+        return $this->select($this->primaryKey, "turnstile_name", "created_at", "updated_at");
+    }
 }

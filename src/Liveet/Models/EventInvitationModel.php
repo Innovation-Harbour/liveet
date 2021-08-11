@@ -22,7 +22,7 @@ class EventInvitationModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select("event_invitation_id", "event_id", "invitation_name", "event_inviter_user_id", "event_invitee_user_phone", "invitee_can_invite_count", "event_invitation_status", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "event_id", "invitation_name", "event_inviter_user_id", "event_invitee_user_phone", "invitee_can_invite_count", "event_invitation_status", "created_at", "updated_at");
     }
 
     public function createSelf($details, $checks = [])

@@ -35,6 +35,11 @@ isset($v1Group) && $v1Group->group(
     function (RouteCollectorProxy $organiserStaffGroup) {
 
         /**
+         * Activity Log Routes
+         */
+        require "src/Liveet/Routes/v1/ActivityLogRoutes.php";
+
+        /**
          * Organiser Routes
          */
         require "src/Liveet/Routes/v1/OrganiserRoutes.php";
@@ -70,9 +75,9 @@ isset($v1Group) && $v1Group->group(
         require "src/Liveet/Routes/v1/EventTimelineRoutes.php";
 
         /**
-         * Activity Log Routes
+         * Payment Routes
          */
-        require "src/Liveet/Routes/v1/ActivityLogRoutes.php";
+        require "src/Liveet/Routes/v1/PaymentRoutes.php";
 
         /**
          * Helper Routes

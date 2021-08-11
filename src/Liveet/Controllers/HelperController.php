@@ -32,6 +32,9 @@ class HelperController extends BaseController
         return ["name" => $name, "ext" => $ext];
     }
 
+
+    /** Admin Permissions */
+
     public function checkAdminAdminPermission(Request $request, ResponseInterface $response)
     {
         $json = new JSON();
@@ -105,12 +108,54 @@ class HelperController extends BaseController
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-        if (!in_array(Constants::PRIVILEDGE_ADMIN_REPORT, $ownerPriviledges)) {
+        if (!in_array(Constants::PRIVILEDGE_ADMIN_PAYMENT, $ownerPriviledges)) {
             $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
 
             return $json->withJsonResponse($response, $error);
         }
     }
+
+    public function checkAdminUserPermission(Request $request, ResponseInterface $response)
+    {
+        $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
+        if (!in_array(Constants::PRIVILEDGE_ADMIN_USER, $ownerPriviledges)) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+    }
+
+    public function checkAdminFaceVerificationLogPermission(Request $request, ResponseInterface $response)
+    {
+        $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
+        if (!in_array(Constants::PRIVILEDGE_ADMIN_FACE_VERIFICATION_LOG, $ownerPriviledges)) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+    }
+
+    public function checkAdminTurnstilePermission(Request $request, ResponseInterface $response)
+    {
+        $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
+        if (!in_array(Constants::PRIVILEDGE_ADMIN_TURNSTILE, $ownerPriviledges)) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+    }
+
+
+    /** Organiser Permissions */
 
     public function checkOrganiserAdminPermission(Request $request, ResponseInterface $response)
     {
@@ -195,6 +240,50 @@ class HelperController extends BaseController
             return $json->withJsonResponse($response, $error);
         }
     }
+
+    public function checkOrganiserUserPermission(Request $request, ResponseInterface $response)
+    {
+        $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["organiser_priviledges"]) ? json_decode($authDetails["organiser_priviledges"]) : [];
+        $usertype = $authDetails["usertype"];
+        if (!in_array(Constants::PRIVILEDGE_ORGANISER_USER, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+    }
+
+    public function checkOrganiserFaceVerificationLogPermission(Request $request, ResponseInterface $response)
+    {
+        $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["organiser_priviledges"]) ? json_decode($authDetails["organiser_priviledges"]) : [];
+        $usertype = $authDetails["usertype"];
+        if (!in_array(Constants::PRIVILEDGE_ORGANISER_FACE_VERIFICATION_LOG, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+    }
+
+    public function checkOrganiserTurnstilePermission(Request $request, ResponseInterface $response)
+    {
+        $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        $ownerPriviledges = isset($authDetails["organiser_priviledges"]) ? json_decode($authDetails["organiser_priviledges"]) : [];
+        $usertype = $authDetails["usertype"];
+        if (!in_array(Constants::PRIVILEDGE_ORGANISER_TURNSTILE, $ownerPriviledges) && $usertype != Constants::USERTYPE_ORGANISER_ADMIN) {
+            $error = ["errorMessage" => "You do not have sufficient priveleges to perform this action", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+    }
+
+    /** */
 
     public function getOrganiserStaffIds($organiser_id)
     {

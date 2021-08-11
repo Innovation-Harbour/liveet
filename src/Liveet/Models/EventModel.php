@@ -27,27 +27,37 @@ class EventModel extends BaseModel
 
     public function eventControl()
     {
-        return $this->hasOne(EventControlModel::class, "event_id", "event_id");
+        return $this->hasOne(EventControlModel::class, $this->primaryKey, $this->primaryKey);
     }
 
     public function eventTickets()
     {
-        return $this->hasMany(EventTicketModel::class, "event_id", "event_id");
+        return $this->hasMany(EventTicketModel::class, $this->primaryKey, $this->primaryKey);
     }
 
     public function eventAccesses()
     {
-        return $this->hasManyThrough(EventAccessModel::class, EventTicketModel::class, "event_id", "event_ticket_id", "event_id", "event_ticket_id");
+        return $this->hasManyThrough(EventAccessModel::class, EventTicketModel::class, $this->primaryKey, "event_ticket_id", $this->primaryKey, "event_ticket_id");
     }
 
     public function eventTimelines()
     {
-        return $this->hasMany(EventTimelineModel::class, "event_id", "event_id");
+        return $this->hasMany(EventTimelineModel::class, $this->primaryKey, $this->primaryKey);
     }
 
     public function eventTimelineMedias()
     {
-        return $this->hasManyThrough(TimelineMediaModel::class, EventTimelineModel::class, "event_id", "timeline_id", "event_id", "timeline_id");
+        return $this->hasManyThrough(TimelineMediaModel::class, EventTimelineModel::class, $this->primaryKey, "timeline_id", $this->primaryKey, "timeline_id");
+    }
+
+    public function turnstiles()
+    {
+        return $this->belongsToMany(TurnstileModel::class, "turnstile_event", $this->primaryKey, "turnstile_id", $this->primaryKey, "turnstile_id");
+    }
+
+    public function userFavourites()
+    {
+        return $this->belongsToMany(UserModel::class, "event_user_favourite", $this->primaryKey, "user_id", $this->primaryKey, "user_id");
     }
 
     public function generateEventCode($name)
@@ -95,12 +105,13 @@ class EventModel extends BaseModel
             return ["data" => null, "error" => "An error occured while creating aws event"];
         }
 
-        [$address_found,$latitude,$longitude] = $this->getCoordinates($event_venue);
+        [$address_found, $latitude, $longitude] = $this->getCoordinates($event_venue);
         //["address_found" => $address_found, "longitude" => $longitude, "latitude" => $latitude] = $cordinates;
 
         //create event
-        $this->create(["organiser_id" => $organiser_id, "event_name" => $event_name, "event_code" => $event_code, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type
-        , "location_lat" => $latitude, "location_long" => $longitude]);
+        $this->create([
+            "organiser_id" => $organiser_id, "event_name" => $event_name, "event_code" => $event_code, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type, "location_lat" => $latitude, "location_long" => $longitude
+        ]);
 
         //Get event id
         $event_id = $this->select($this->primaryKey)->where("event_code", $event_code)->latest($this->primaryKey)->first()[$this->primaryKey];
@@ -112,20 +123,20 @@ class EventModel extends BaseModel
             $ticketModel = new EventTicketModel();
             $ticket_cost = $event_payment_type == Constants::PAYMENT_TYPE_FREE ? 0 : $ticket->ticket_cost;
 
-            $ticketModel->create(["event_id" => $event_id, "ticket_name" => $ticket->ticket_name, "ticket_desc" => $ticket->ticket_desc, "ticket_cost" => $ticket_cost, "ticket_population" => $ticket->ticket_population, "ticket_discount" => $ticket->ticket_discount]);
+            $ticketModel->create([$this->primaryKey => $event_id, "ticket_name" => $ticket->ticket_name, "ticket_desc" => $ticket->ticket_desc, "ticket_cost" => $ticket_cost, "ticket_population" => $ticket->ticket_population, "ticket_discount" => $ticket->ticket_discount]);
 
-            $ticketIDs[$ticketIndex] = $ticketModel->select($ticketModel->primaryKey)->where("event_id", $event_id)->latest($ticketModel->primaryKey)->first()[$ticketModel->primaryKey];
+            $ticketIDs[$ticketIndex] = $ticketModel->select($ticketModel->primaryKey)->where($this->primaryKey, $event_id)->latest($ticketModel->primaryKey)->first()[$ticketModel->primaryKey];
 
             $ticketIndex++;
         }
 
         //create event controls
         $eventControlModel = (new EventControlModel());
-        $eventControlModel->create(["event_id" => $event_id, "event_can_invite" => $event_can_invite, "event_sale_stop_time" => $event_sale_stop_time, "event_can_transfer_ticket" => $event_can_transfer_ticket, "event_can_recall" => $event_can_recall]);
+        $eventControlModel->create([$this->primaryKey => $event_id, "event_can_invite" => $event_can_invite, "event_sale_stop_time" => $event_sale_stop_time, "event_can_transfer_ticket" => $event_can_transfer_ticket, "event_can_recall" => $event_can_recall]);
 
         $eventReturn = $this->getByPK($event_id)["data"];
-        // $eventControls = $eventControlModel->getStruct()->where("event_id", $event_id)->latest($eventControlModel->primaryKey)->first();
-        // $eventReturn["event_tickets"] = (new EventTicketModel())->where("event_id", $event_id)->get();
+        // $eventControls = $eventControlModel->getStruct()->where($this->primaryKey, $event_id)->latest($eventControlModel->primaryKey)->first();
+        // $eventReturn["event_tickets"] = (new EventTicketModel())->where($this->primaryKey, $event_id)->get();
         // +$eventReturn["event_controls"] = $eventControls;
 
         if (!$address_found) {
@@ -137,7 +148,7 @@ class EventModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select("event_id", "event_name", "event_code", "event_desc", "event_multimedia", "event_type", "event_venue", "event_date_time", "location_lat", "location_long", "organiser_id", "event_payment_type", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "event_name", "event_code", "event_desc", "event_multimedia", "event_type", "event_venue", "event_date_time", "event_payment_type", "location_lat", "location_long", "organiser_id", "created_at", "updated_at");
     }
 
     public function updateByPK($pk, $details, $checks = [], $queryOptions = [])
@@ -173,7 +184,7 @@ class EventModel extends BaseModel
 
         foreach ($tickets as $ticket) {
             $event_ticket_id = $ticket->event_ticket_id;
-            $ticketQuery = $ticketModel->where("event_ticket_id", $event_ticket_id)->where("event_id", $event_id);
+            $ticketQuery = $ticketModel->where("event_ticket_id", $event_ticket_id)->where($this->primaryKey, $event_id);
 
             if ($ticketQuery->exists()) {
                 $ticket_cost = $event_payment_type == Constants::PAYMENT_TYPE_FREE ? 0 : $ticket->ticket_cost;
@@ -182,9 +193,9 @@ class EventModel extends BaseModel
             } else {
                 $ticketInstance = new EventTicketModel();
 
-                $ticketInstance->create(["event_id" => $event_id, "ticket_name" => $ticket->ticket_name, "ticket_desc" => $ticket->ticket_desc, "ticket_cost" => $ticket->ticket_cost, "ticket_population" => $ticket->ticket_population, "ticket_discount" => $ticket->ticket_discount]);
+                $ticketInstance->create([$this->primaryKey => $event_id, "ticket_name" => $ticket->ticket_name, "ticket_desc" => $ticket->ticket_desc, "ticket_cost" => $ticket->ticket_cost, "ticket_population" => $ticket->ticket_population, "ticket_discount" => $ticket->ticket_discount]);
 
-                $event_ticket_id = $ticketInstance->select($ticketInstance->primaryKey)->where("event_id", $event_id)->latest($ticketModel->primaryKey)->first()[$ticketModel->primaryKey];
+                $event_ticket_id = $ticketInstance->select($ticketInstance->primaryKey)->where($this->primaryKey, $event_id)->latest($ticketModel->primaryKey)->first()[$ticketModel->primaryKey];
             }
 
             $ticketIDs[$ticketIndex] = $event_ticket_id;
@@ -194,17 +205,17 @@ class EventModel extends BaseModel
 
         //create event controls
         $eventControlModel = (new EventControlModel());
-        $eventControlQuery = $eventControlModel->where("event_id", $event_id);
+        $eventControlQuery = $eventControlModel->where($this->primaryKey, $event_id);
         if ($eventControlQuery->exists()) {
             $eventControlQuery->update(["event_can_invite" => $event_can_invite, "event_sale_stop_time" => $event_sale_stop_time, "event_can_transfer_ticket" => $event_can_transfer_ticket, "event_can_recall" => $event_can_recall]);
         } else {
 
-            $eventControlQuery->create(["event_id" => $event_id, "event_can_invite" => $event_can_invite, "event_sale_stop_time" => $event_sale_stop_time, "event_can_transfer_ticket" => $event_can_transfer_ticket, "event_can_recall" => $event_can_recall]);
+            $eventControlQuery->create([$this->primaryKey => $event_id, "event_can_invite" => $event_can_invite, "event_sale_stop_time" => $event_sale_stop_time, "event_can_transfer_ticket" => $event_can_transfer_ticket, "event_can_recall" => $event_can_recall]);
         }
 
         $eventReturn = $this->find($event_id);
-        // $eventControls = $eventControlModel->getStruct()->where("event_id", $event_id)->latest($eventControlModel->primaryKey)->first();
-        // $eventReturn["event_tickets"] = (new EventTicketModel())->where("event_id", $event_id)->get();
+        // $eventControls = $eventControlModel->getStruct()->where($this->primaryKey, $event_id)->latest($eventControlModel->primaryKey)->first();
+        // $eventReturn["event_tickets"] = (new EventTicketModel())->where($this->primaryKey, $event_id)->get();
         // $eventReturn["event_controls"] = $eventControls;
 
         if (!$address_found) {
@@ -214,16 +225,17 @@ class EventModel extends BaseModel
         return ["data" => $eventReturn, "error" => null];
     }
 
-    public function getMobileEvents($user_id, $offset, $limit){
-      $sql = "
+    public function getMobileEvents($user_id, $offset, $limit)
+    {
+        $sql = "
                 SELECT * FROM event
                 LEFT JOIN
-                  (SELECT event_id AS invitation_event_id,invitee_can_invite_count,event_invitation_status,user_id FROM event_invitation INNER JOIN user ON event_invitation.event_invitee_user_phone = user.user_phone WHERE user.user_id = ".$user_id.") X ON event.event_id = X.invitation_event_id
-                WHERE event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND user_id = ".$user_id.")
+                  (SELECT event_id AS invitation_event_id,invitee_can_invite_count,event_invitation_status,user_id FROM event_invitation INNER JOIN user ON event_invitation.event_invitee_user_phone = user.user_phone WHERE user.user_id = " . $user_id . ") X ON event.event_id = X.invitation_event_id
+                WHERE event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND user_id = " . $user_id . ")
                 ORDER BY event.event_date_time DESC, event.event_id DESC
-                LIMIT ".$offset.", ".$limit."
+                LIMIT " . $offset . ", " . $limit . "
               ";
-      $result = $this->getConnection()->select($sql);
-      return $result;
+        $result = $this->getConnection()->select($sql);
+        return $result;
     }
 }

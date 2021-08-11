@@ -23,12 +23,12 @@ class EventTimelineModel extends BaseModel
 
     public function timelineMedia()
     {
-        return $this->hasMany(TimelineMediaModel::class, "timeline_id", "timeline_id");
+        return $this->hasMany(TimelineMediaModel::class, $this->primaryKey, $this->primaryKey);
     }
 
     public function getStruct()
     {
-        return self::select("timeline_id", "event_id", "timeline_desc", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "event_id", "timeline_desc", "timeline_datetime", "created_at", "updated_at");
     }
 
     public function createSelf($details, $checks = [])
@@ -55,12 +55,12 @@ class EventTimelineModel extends BaseModel
         }
 
         $eventTimelineData = $eventTimeline["data"];
-        $timeline_id = $eventTimelineData["timeline_id"];
+        $timeline_id = $eventTimelineData[$this->primaryKey];
 
         $timeline_media = $details["timeline_media"];
 
         foreach ($timeline_media as $media) {
-            TimelineMediaModel::create(["timeline_id" => $timeline_id, "timeline_media" => $media["path"] ?? $media["url"], "media_type" => $media["type"] ?? ""]);
+            TimelineMediaModel::create([$this->primaryKey => $timeline_id, "timeline_media" => $media["path"] ?? $media["url"], "media_type" => $media["type"] ?? ""]);
         }
 
 
@@ -69,7 +69,7 @@ class EventTimelineModel extends BaseModel
 
     public function deleteByPK($pk)
     {
-        TimelineMediaModel::where("timeline_id", $pk)->delete();
+        TimelineMediaModel::where($this->primaryKey, $pk)->delete();
 
         return Parent::deleteByPK($pk);
     }

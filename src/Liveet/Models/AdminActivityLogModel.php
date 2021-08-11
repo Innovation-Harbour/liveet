@@ -19,6 +19,6 @@ class AdminActivityLogModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select("activity_log_id", "admin_user_id", "activity_log_desc", "created_at", "updated_at");
+        return $this->select("activity_log_id", "admin_user_id", "activity_log_desc", "created_at", "updated_at");
     }
 }

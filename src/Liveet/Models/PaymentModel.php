@@ -11,6 +11,7 @@ class PaymentModel extends BaseModel
     protected $table = "payment";
     protected $dateFormat = "U";
     protected $fillable = ["event_ticket_id", "user_id"];
+    public $primaryKey = "payment_id";
 
     public function user()
     {
@@ -24,6 +25,6 @@ class PaymentModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select("payment_id", "event_ticket_id", "user_id", "payment_desc", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "event_ticket_id", "user_id", "payment_desc", "created_at", "updated_at");
     }
 }

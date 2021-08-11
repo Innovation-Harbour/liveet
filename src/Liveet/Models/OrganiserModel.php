@@ -45,16 +45,16 @@ class OrganiserModel extends BaseModel
         $organiser_username = $authDetails["organiser_username"] ?? "";
         $usertype = $authDetails["usertype"] ?? "";
 
-        $user =  self::where("public_key", $public_key)
+        $userQuery =  $this->where("public_key", $public_key)
             ->where("organiser_username", "=", $organiser_username)
             ->where(
                 "usertype",
                 "=",
                 $usertype
                     ->where("accessStatus", Constants::USER_ENABLED)
-            )->first();
+            );
 
-        return ($user->exists) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
+        return ($userQuery->exists()) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
     public function createSelf($details, $checks = [])
@@ -104,7 +104,7 @@ class OrganiserModel extends BaseModel
 
         $organiser = $this->getByPK($organiser_id);
 
-        $organiserAdmin = (new OrganiserStaffModel())->createSelf(["organiser_id" => $organiser_id, "usertype" => Constants::USERTYPE_ORGANISER_ADMIN, "organiser_staff_name" => $organiser_name, "organiser_staff_username" => $organiser_staff_username, "organiser_staff_password" => $organiser_staff_password, "organiser_staff_email" => $organiser_email, "organiser_staff_phone" => $organiser_phone, "organiser_staff_profile_picture" => $organiser_staff_profile_picture, "email_verification_token" => $email_verification_token]);
+        $organiserAdmin = (new OrganiserStaffModel())->createSelf([$this->primaryKey => $organiser_id, "usertype" => Constants::USERTYPE_ORGANISER_ADMIN, "organiser_staff_name" => $organiser_name, "organiser_staff_username" => $organiser_staff_username, "organiser_staff_password" => $organiser_staff_password, "organiser_staff_email" => $organiser_email, "organiser_staff_phone" => $organiser_phone, "organiser_staff_profile_picture" => $organiser_staff_profile_picture, "email_verification_token" => $email_verification_token]);
 
         $organiser["data"]["admin"] = $organiserAdmin["data"];
 
@@ -114,7 +114,7 @@ class OrganiserModel extends BaseModel
     public function getStruct()
     {
         $pkKey = $this->primaryKey;
-        return $this->select($pkKey, "organiser_username",  "organiser_name", "organiser_email", "organiser_phone", "organiser_address", "phone_verified", "usertype", "accessStatus", "email_verified", "created_at", "updated_at");
+        return $this->select($pkKey, "organiser_username",  "organiser_name", "organiser_email", "organiser_phone", "organiser_address", "organiser_profile_picture", "phone_verified", "usertype", "accessStatus", "email_verified", "created_at", "updated_at");
     }
 
     public function login($details)

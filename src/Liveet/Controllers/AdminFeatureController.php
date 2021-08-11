@@ -49,33 +49,26 @@ class AdminFeatureController extends HelperController
 
     public function getAdminFeatures(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
         $this->checkAdminAdminPermission($request, $response);
 
-        return $this->getByPage($request, $response, new AdminFeatureModel());
+        return $this->getByPage($request, $response, new AdminFeatureModel(), null, null, ["adminUsers"]);
     }
 
     public function getAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
         $this->checkAdminAdminPermission($request, $response);
 
-        return $this->getByPK($request, $response, new AdminFeatureModel());
+        return $this->getByPK($request, $response, new AdminFeatureModel(), null, ["adminUsers"]);
     }
 
     public function updateAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $this->checkAdminAdminPermission($request, $response);
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an admin feature"]);
 
-        $this->checkAdminAdminPermission($request, $response);
 
         ["admin_feature_id" => $admin_feature_id] = $this->getRouteParams($request, ["admin_feature_id"]);
 

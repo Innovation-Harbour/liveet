@@ -21,17 +21,17 @@ class EventTicketModel extends BaseModel
 
     public function eventAccess()
     {
-        return $this->hasOne(EventAccessModel::class, "event_ticket_id", "event_ticket_id");
+        return $this->hasOne(EventAccessModel::class, $this->primaryKey, $this->primaryKey);
     }
 
     public function users()
     {
-        return $this->belongsToMany(EventModel::class, "event_ticket_users", "event_ticket_id", "user_id", "event_ticket_id", "user_id");
+        return $this->belongsToMany(EventModel::class, "event_ticket_users", $this->primaryKey, "user_id", $this->primaryKey, "user_id");
     }
 
     public function payments()
     {
-        return $this->hasMany(PaymentModel::class, "event_ticket_id", "event_ticket_id");
+        return $this->hasMany(PaymentModel::class, $this->primaryKey, $this->primaryKey);
     }
 
     public function eventTicketUsers()
@@ -41,6 +41,6 @@ class EventTicketModel extends BaseModel
 
     public function getStruct()
     {
-        return self::select("event_ticket_id", "event_id", "ticket_name", "ticket_desc", "ticket_cost", "ticket_population", "ticket_discount", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "event_id", "ticket_name", "ticket_desc", "ticket_cost", "ticket_population", "ticket_discount", "created_at", "updated_at");
     }
 }

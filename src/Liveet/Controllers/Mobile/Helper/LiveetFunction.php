@@ -14,7 +14,7 @@ use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketModel;
 use Liveet\Models\EventTicketUserModel;
 use Liveet\Models\TurnstileEventModel;
-use Liveet\Models\VerificationLogModel;
+use Liveet\Models\FaceVerificationLogModel;
 
 
 /**
@@ -257,7 +257,7 @@ trait LiveetFunction
     $ticket_db = new EventTicketModel();
     $event_user_db = new EventTicketUserModel();
     $turnstile_db = new TurnstileEventModel();
-    $log = new VerificationLogModel();
+    $log = new FaceVerificationLogModel();
     $ticket_id = false;
 
 

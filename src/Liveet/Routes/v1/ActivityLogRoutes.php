@@ -10,19 +10,19 @@ use Liveet\Controllers\ActivityLogController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $activityLog) {
 
-        $eventGroup->get(
+        $activityLog->get(
             "/get/self/activity-logs[/{from}[/{to}]]",
             ActivityLogController::class . ":getSelfActivityLogs"
         );
 
-        $eventGroup->get(
+        $activityLog->get(
             "/get/activity-logs[/{admin_user_id}[/{from}[/{to}]]]",
             ActivityLogController::class . ":getActivityLogs"
         );
 
-        $eventGroup->get(
+        $activityLog->get(
             "/get/organisers/activity-logs[/{organiser_id}[/{organiser_staff_id}[/{from}[/{to}]]]]",
             ActivityLogController::class . ":getOrganiserActivityLogs"
         );
@@ -34,14 +34,14 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $activityLog) {
 
-        $eventGroup->get(
+        $activityLog->get(
             "/get/self/activity-logs[/{from}[/{to}]]",
             ActivityLogController::class . ":getSelfOrganiserStaffActivityLogs"
         );
 
-        $eventGroup->get(
+        $activityLog->get(
             "/get/activity-logs/{organiser_staff_id}[/{from}[/{to}]]",
             ActivityLogController::class . ":getOrganiserStaffActivityLogs"
         );

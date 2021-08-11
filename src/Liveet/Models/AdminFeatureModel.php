@@ -14,11 +14,11 @@ class AdminFeatureModel extends BaseModel
 
     public function adminUsers()
     {
-        return $this->belongsToMany(AdminUserModel::class, "admin_feature_user", "admin_feature_id", "admin_user_id", "admin_feature_id", "admin_user_id");
+        return $this->belongsToMany(AdminUserModel::class, "admin_feature_user", $this->primaryKey, "admin_user_id", $this->primaryKey, "admin_user_id");
     }
 
     public function getStruct()
     {
-        return self::select("admin_feature_id", "feature_name", "feature_url", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "feature_name", "feature_url", "created_at", "updated_at");
     }
 }

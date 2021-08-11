@@ -33,7 +33,6 @@ class EventMobileController extends HelperController
   {
     $this->json = new JSON();
     $this->termii = new TermiiAPI();
-    $this->log = new UserActivityModel();
   }
 
   public function GetEvents(Request $request, ResponseInterface $response, array $args): ResponseInterface
@@ -43,6 +42,7 @@ class EventMobileController extends HelperController
     $ticket_db = new EventTicketModel();
     $event_db = new EventModel();
     $event_control_db = new EventControlModel();
+    $log = new UserActivityModel();
 
 
     $response_data = [];
@@ -109,7 +109,7 @@ class EventMobileController extends HelperController
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_EVENTS
     ]);
@@ -120,6 +120,7 @@ class EventMobileController extends HelperController
   public function DoEventFavourite(Request $request, ResponseInterface $response): ResponseInterface
   {
     $favourite_db = new FavouriteModel();
+    $log = new UserActivityModel();
 
     $data = $request->getParsedBody();
 
@@ -147,7 +148,7 @@ class EventMobileController extends HelperController
       $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Deleted"];
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_SET_FAVOURITE
     ]);
@@ -160,6 +161,7 @@ class EventMobileController extends HelperController
     //declare needed class objects
     $db = new EventTicketModel();
     $access_db = new EventAccessModel();
+    $log = new UserActivityModel();
 
     $response_data = [];
 
@@ -195,7 +197,7 @@ class EventMobileController extends HelperController
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_TICKET
     ]);
@@ -212,6 +214,7 @@ class EventMobileController extends HelperController
     $event_db = new EventModel();
     $access_db = new EventAccessModel();
     $invitation_db = new InvitationModel();
+    $log = new UserActivityModel();
 
     $data = $request->getParsedBody();
 
@@ -343,7 +346,7 @@ class EventMobileController extends HelperController
       $user_subscribe = $this->subcribeUser($eventCode, $fcm_token);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_ATTEND_EVENT
     ]);
@@ -359,6 +362,7 @@ class EventMobileController extends HelperController
     $event_ticket_db = new EventTicketModel();
     $event_db = new EventModel();
     $invitation_db = new InvitationModel();
+    $log = new UserActivityModel();
 
     $data = $request->getParsedBody();
 
@@ -457,7 +461,7 @@ class EventMobileController extends HelperController
 
     $payload = ["statusCode" => 200, "data" => $payment_data];
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_CHECK_PAYMENT
     ]);
@@ -469,6 +473,7 @@ class EventMobileController extends HelperController
     //declare needed class objects
     $db = new FavouriteModel();
     $ticket_db = new EventTicketModel();
+    $log = new UserActivityModel();
 
 
     $response_data = [];
@@ -522,7 +527,7 @@ class EventMobileController extends HelperController
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_FAVOURITE
     ]);
@@ -535,6 +540,7 @@ class EventMobileController extends HelperController
     $access_db = new EventAccessModel();
     $event_db = new EventModel();
     $invitation_db = new InvitationModel();
+    $log = new UserActivityModel();
 
 
     $data = $request->getParsedBody();
@@ -595,7 +601,7 @@ class EventMobileController extends HelperController
       ]);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_EVENTS_ACCESS
     ]);
@@ -694,6 +700,7 @@ class EventMobileController extends HelperController
     $event_db = new EventModel();
     $ticket_db = new EventTicketModel();
     $ticket_user_db = new EventTicketUserModel();
+    $log = new UserActivityModel();
 
     $data = $request->getParsedBody();
 
@@ -753,7 +760,7 @@ class EventMobileController extends HelperController
       $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->update(["invitee_can_invite_count" => $invite_count]);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_DELETE_INVITATION
     ]);
@@ -768,6 +775,7 @@ class EventMobileController extends HelperController
     $invitation_db = new InvitationModel();
     $user_db = new UserModel();
     $control_db = new EventControlModel();
+    $log = new UserActivityModel();
 
     $eligible_phone_starting = array("06", "07", "08", "09");
 
@@ -863,7 +871,7 @@ class EventMobileController extends HelperController
       }
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_SEND_INVITATION
     ]);
@@ -1064,6 +1072,7 @@ class EventMobileController extends HelperController
     $db = new EventTicketModel();
     $invitation_db = new InvitationModel();
     $user_db = new UserModel();
+    $log = new UserActivityModel();
 
 
     $response_data = [];
@@ -1120,7 +1129,7 @@ class EventMobileController extends HelperController
       array_push($response_data, $tmp);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_EVENT_HISTORY
     ]);
@@ -1135,6 +1144,7 @@ class EventMobileController extends HelperController
     $db = new EventTicketUserModel();
     $user_db = new UserModel();
     $event_db = new EventModel();
+    $log = new UserActivityModel();
 
     $data = $request->getParsedBody();
 
@@ -1194,7 +1204,7 @@ class EventMobileController extends HelperController
       $unsubscribe = $this->unSubcribeUser($event_code, $fcm_token);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_RECALL_TICKET
     ]);
@@ -1209,6 +1219,7 @@ class EventMobileController extends HelperController
     $db = new EventTicketUserModel();
     $user_db = new UserModel();
     $event_db = new EventModel();
+    $log = new UserActivityModel();
 
     $eligible_phone_starting = array("6", "7", "8", "9");
 
@@ -1368,7 +1379,7 @@ class EventMobileController extends HelperController
       $this->sendMobileNotification(Constants::NOTIFICATION_ONE_USER, $notification_title, $notification_message, $receiver_fcm_token);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_TRANSFER_TICKET
     ]);
@@ -1417,6 +1428,7 @@ class EventMobileController extends HelperController
   {
     //declare needed class objects
     $timeline_db = new TimelineMediaModel();
+    $log = new UserActivityModel();
 
     $response_data = [];
 
@@ -1442,7 +1454,7 @@ class EventMobileController extends HelperController
       array_push($response_data, $tmp);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_TIMELINE
     ]);

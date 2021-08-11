@@ -619,7 +619,11 @@ class EventMobileController extends HelperController
 
     $invitation_count = 0;
 
-    $invitation_count = $invitation_db->where("event_invitee_user_phone", $user_phone)->where("event_invitation_status", Constants::INVITATION_PENDING)->count();
+    $invitation_count = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')
+    ->where("event_invitation.event_invitee_user_phone", $user_phone)
+    ->where("event_invitation.event_invitation_status", Constants::INVITATION_PENDING)
+    ->where("event.event_date_time",">", time())
+    ->count();
 
     $response_data = [
       "invitation_count" => intval($invitation_count)
@@ -947,7 +951,10 @@ class EventMobileController extends HelperController
         "invitee_by_pics" => $invited_by_pics,
       ];
 
-      array_push($response_data, $tmp);
+      if(intval($datetime) > time())
+      {
+        array_push($response_data, $tmp);
+      }
     }
 
     // get invitations you invited others for
@@ -993,7 +1000,10 @@ class EventMobileController extends HelperController
         "invitee_by_pics" => $invited_by_pics,
       ];
 
-      array_push($response_data, $tmp);
+      if(intval($datetime) > time())
+      {
+        array_push($response_data, $tmp);
+      }
     }
 
     $payload = ["statusCode" => 200, "data" => $response_data];

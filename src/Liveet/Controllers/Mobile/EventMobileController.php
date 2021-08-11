@@ -1133,7 +1133,7 @@ class EventMobileController extends HelperController
     $event_id = $data["event_id"];
 
     $event_details = $event_db->where("event_id", $event_id)->first();
-    $event_stop = $event_details->event_sale_stop_time;
+    $event_stop = $event_details->event_date_time;
     $event_name = $event_details->event_name;
     $event_payment = $event_details->event_payment_type;
     $event_code = $event_details->event_code;
@@ -1210,7 +1210,7 @@ class EventMobileController extends HelperController
     $event_id = $data["event_id"];
 
     $event_details = $event_db->where("event_id", $event_id)->first();
-    $event_stop = $event_details->event_sale_stop_time;
+    $event_stop = $event_details->event_date_time;
     $eventCode = $event_details->event_code;
     $event_name = $event_details->event_name;
 

@@ -8,20 +8,22 @@ use Liveet\Models\Mobile\TempsModel;
 use Liveet\Controllers\Mobile\Helper\LiveetFunction;
 use Liveet\Models\UserModel;
 use Liveet\Domain\MailHandler;
-use Liveet\Controllers\BaseController;
 use Psr\Http\Message\ResponseInterface;
 use Aws\Rekognition\RekognitionClient;
 use Aws\S3\S3Client;
 use Rashtell\Domain\KeyManager;
 use Bluerhinos\phpMQTT;
+use Illuminate\Database\Eloquent\Model;
+use Liveet\Controllers\HelperController;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class AuthController extends HelperController {
+class AuthController extends HelperController
+{
   use LiveetFunction;
 
-  public function Register (Request $request, ResponseInterface $response): ResponseInterface
+  public function Register(Request $request, ResponseInterface $response): ResponseInterface
   {
-    $eligible_phone_starting = array("6","7","8","9");
+    $eligible_phone_starting = array("6", "7", "8", "9");
 
     //declare needed class objects
     $json = new JSON();
@@ -39,27 +41,24 @@ class AuthController extends HelperController {
 
     $rest_of_phone_number = substr($phone, 4);
 
-    if(strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0")
-    {
+    if (strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0") {
       $rest_of_phone_number = substr($rest_of_phone_number, 1);
     }
 
     $phone_count = strlen($rest_of_phone_number);
 
-    if ($country_code !=="+234")
-    {
+    if ($country_code !== "+234") {
       $error = ["errorMessage" => "Selected Country not supported at the moment for now", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
     }
 
-    if($phone_count == 10 && in_array($rest_of_phone_number[0], $eligible_phone_starting))
-    {
+    if ($phone_count == 10 && in_array($rest_of_phone_number[0], $eligible_phone_starting)) {
       $country_code_clean = substr($country_code, 1);
 
-      $phone_clean = $country_code_clean.$rest_of_phone_number;
+      $phone_clean = $country_code_clean . $rest_of_phone_number;
 
-      $phone_full = $country_code.$rest_of_phone_number;
+      $phone_full = $country_code . $rest_of_phone_number;
 
       $user_count = $user_db->where('user_phone', $phone_clean)->count();
 
@@ -67,17 +66,15 @@ class AuthController extends HelperController {
       $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
 
 
-      if($for_password_reset){
-        if($user_count < 1)
-        {
+      if ($for_password_reset) {
+        if ($user_count < 1) {
           $error = ["errorMessage" => "No User Found with this Phone Number", "statusCode" => 400];
 
           return $json->withJsonResponse($response, $error);
         }
-      } else{
+      } else {
         // registration
-        if($user_count > 0)
-        {
+        if ($user_count > 0) {
           $error = ["errorMessage" => "Phone Number Already Registered", "statusCode" => 400];
 
           return $json->withJsonResponse($response, $error);
@@ -85,20 +82,18 @@ class AuthController extends HelperController {
       }
 
       // here we send sms
-      $sms_response = json_decode($this->sendSMS($phone_clean),true);
+      $sms_response = json_decode($this->sendSMS($phone_clean), true);
 
       $sms_status = $sms_response['smsStatus'];
 
-      if($sms_status !== "Message Sent")
-      {
+      if ($sms_status !== "Message Sent") {
         $error = ["errorMessage" => "Error sending SMS. Please Register Again", "statusCode" => 400];
         return $json->withJsonResponse($response, $error);
       }
 
       $sms_pin = $sms_response['pinId'];
 
-      if($temp_count < 1 && !$for_password_reset)
-      {
+      if ($temp_count < 1 && !$for_password_reset) {
         $temp_db->create(["temp_phone" => $phone_clean]);
       }
 
@@ -107,15 +102,14 @@ class AuthController extends HelperController {
       $payload = ["statusCode" => 200, "data" => $data_to_view];
 
       return $json->withJsonResponse($response, $payload);
-    }
-    else{
+    } else {
       $error = ["errorMessage" => "Phone Number Does Not Match The Number Format for Selected Country", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
     }
   }
 
-  public function Login (Request $request, ResponseInterface $response): ResponseInterface
+  public function Login(Request $request, ResponseInterface $response): ResponseInterface
   {
 
     //declare needed class objects
@@ -132,23 +126,21 @@ class AuthController extends HelperController {
 
     $rest_of_phone_number = substr($phone, 4);
 
-    if(strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0")
-    {
+    if (strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0") {
       $rest_of_phone_number = substr($rest_of_phone_number, 1);
     }
 
     $country_code_clean = substr($country_code, 1);
 
-    $phone_clean = $country_code_clean.$rest_of_phone_number;
+    $phone_clean = $country_code_clean . $rest_of_phone_number;
 
 
-    $hashed_password = hash('sha256',$password);
+    $hashed_password = hash('sha256', $password);
 
 
     $user_count = $user_db->where('user_phone', $phone_clean)->count();
 
-    if($user_count < 1)
-    {
+    if ($user_count < 1) {
       $error = ["errorMessage" => "User Not Registered. Please Try Again", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
@@ -160,8 +152,7 @@ class AuthController extends HelperController {
     $db_password = $user_data_clean->user_password;
     $email = $user_data_clean->user_email;
 
-    if($hashed_password !== $db_password)
-    {
+    if ($hashed_password !== $db_password) {
       $error = ["errorMessage" => "Password Not Correct. Please Try Again", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
@@ -180,15 +171,14 @@ class AuthController extends HelperController {
     $user_id = $user_data_clean->user_id;
     $user_picture = $user_data_clean->user_picture;
 
-    $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname,"user_id" => $user_id,"user_pics" => $user_picture];
+    $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname, "user_id" => $user_id, "user_pics" => $user_picture];
 
     $payload = ["statusCode" => 200, "data" => $data_to_view];
 
     return $json->withJsonResponse($response, $payload);
-
   }
 
-  public function VerifyOTP (Request $request, ResponseInterface $response): ResponseInterface
+  public function VerifyOTP(Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
     $json = new JSON();
@@ -204,37 +194,34 @@ class AuthController extends HelperController {
     $for_password_reset = ($resetpassword === "true") ? true : false;
 
     //verify OTP with Termii
-    $sms_response = json_decode($this->verifySMS($otp,$sms_pin),true);
+    $sms_response = json_decode($this->verifySMS($otp, $sms_pin), true);
 
     $otp_status = $sms_response['verified'];
 
     $is_accepted = ($otp_status) ? true : false;
 
-    if($is_accepted)
-    {
+    if ($is_accepted) {
       $phone_clean = substr($phone, 1);
-      if($for_password_reset) {
-        $user_details = $user_db->where("user_phone",$phone_clean)->first();
+      if ($for_password_reset) {
+        $user_details = $user_db->where("user_phone", $phone_clean)->first();
         $user_email = $user_details->user_email;
 
-        $data_to_view = ["sent_otp" => $otp, "Phone Number" => $phone, "email" =>$user_email];
-      }
-      else {
+        $data_to_view = ["sent_otp" => $otp, "Phone Number" => $phone, "email" => $user_email];
+      } else {
         $data_to_view = ["sent_otp" => $otp, "Phone Number" => $phone];
       }
 
       $payload = ["statusCode" => 200, "data" => $data_to_view];
 
       return $json->withJsonResponse($response, $payload);
-    }
-    else{
+    } else {
       $error = ["errorMessage" => "Provided OTP Not Correct.", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
     }
   }
 
-  public function ResendOTP (Request $request, ResponseInterface $response): ResponseInterface
+  public function ResendOTP(Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
     $json = new JSON();
@@ -246,12 +233,11 @@ class AuthController extends HelperController {
     $phone_clean = substr($phone, 1);
 
     // here we send sms
-    $sms_response = json_decode($this->sendSMS($phone_clean),true);
+    $sms_response = json_decode($this->sendSMS($phone_clean), true);
 
     $sms_status = $sms_response['smsStatus'];
 
-    if($sms_status !== "Message Sent")
-    {
+    if ($sms_status !== "Message Sent") {
       $error = ["errorMessage" => "Error sending SMS. Please Register Again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
@@ -264,10 +250,9 @@ class AuthController extends HelperController {
     $payload = ["statusCode" => 200, "data" => $data_to_view];
 
     return $json->withJsonResponse($response, $payload);
-
   }
 
-  public function CompleteProfile (Request $request, ResponseInterface $response): ResponseInterface
+  public function CompleteProfile(Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
     $json = new JSON();
@@ -283,7 +268,7 @@ class AuthController extends HelperController {
     $password = $data["password"];
     $repeat_password = $data["repeat_password"];
 
-    $fullname = $name." ".$last_name;
+    $fullname = $name . " " . $last_name;
 
     $phone_clean = substr($phone, 1);
 
@@ -293,22 +278,19 @@ class AuthController extends HelperController {
     $user_count = $user_db->where('user_email', $email)->count();
     $temp_count = $temp_db->where('temp_phone', $phone_clean)->count();
 
-    if ($user_count > 0)
-    {
+    if ($user_count > 0) {
       $error = ["errorMessage" => "Email already Registered. Please use another email address", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
     }
 
-    if ($temp_count < 1)
-    {
+    if ($temp_count < 1) {
       $error = ["errorMessage" => "Error Occured While Registering. Please try Registering again", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
     }
 
-    if ($password !== $repeat_password)
-    {
+    if ($password !== $repeat_password) {
       $error = ["errorMessage" => "Password & Repeat Password Do not match. Please Try Again", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
@@ -325,7 +307,7 @@ class AuthController extends HelperController {
     return $json->withJsonResponse($response, $payload);
   }
 
-  public function doPasswordReset (Request $request, ResponseInterface $response): ResponseInterface
+  public function doPasswordReset(Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
     $json = new JSON();
@@ -343,8 +325,7 @@ class AuthController extends HelperController {
 
     //checks
 
-    if ($password !== $repeat_password)
-    {
+    if ($password !== $repeat_password) {
       $error = ["errorMessage" => "Password & Repeat Password Do not match. Please Try Again", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
@@ -356,7 +337,7 @@ class AuthController extends HelperController {
 
     $user_db->where('user_phone', $phone_clean)->update(["user_password" => $crypt_password]);
 
-    $user_details = $user_db->where("user_phone",$phone_clean)->first();
+    $user_details = $user_db->where("user_phone", $phone_clean)->first();
     //get user data
     $fullname = $user_details->user_fullname;
     $user_id = $user_details->user_id;
@@ -371,14 +352,14 @@ class AuthController extends HelperController {
 
 
 
-    $data_to_view = ["email" => $user_email, "token" => $token, "name" => $fullname,"user_id" => $user_id,"user_pics" => $user_picture];
+    $data_to_view = ["email" => $user_email, "token" => $token, "name" => $fullname, "user_id" => $user_id, "user_pics" => $user_picture];
 
     $payload = ["statusCode" => 200, "data" => $data_to_view];
 
     return $json->withJsonResponse($response, $payload);
   }
 
-  public function CompleteRegistration (Request $request, ResponseInterface $response): ResponseInterface
+  public function CompleteRegistration(Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
     $json = new JSON();
@@ -392,65 +373,60 @@ class AuthController extends HelperController {
     $image = $data["image"];
 
     $byte_image = base64_decode($image);
-  	$code = rand(00000000, 99999999);
+    $code = rand(00000000, 99999999);
 
     $phone_clean = substr($phone, 1);
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
 
-    try{
+    try {
       $recognition = new RekognitionClient([
-  		    'region'  => 'us-west-2',
-  		    'version' => 'latest',
-  		    'credentials' => [
-  		        'key'    => $aws_key,
-  		        'secret' => $aws_secret,
-  		    ]
-  		]);
-    }
-    catch (\Exception $e){
+        'region'  => 'us-west-2',
+        'version' => 'latest',
+        'credentials' => [
+          'key'    => $aws_key,
+          'secret' => $aws_secret,
+        ]
+      ]);
+    } catch (\Exception $e) {
       $error = ["errorMessage" => "Error connecting to image server. Please try Registering again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-    try{
+    try {
       $s3 = new S3Client([
-  		    'region'  => 'us-west-2',
-  		    'version' => 'latest',
-  		    'credentials' => [
-  		        'key'    => $aws_key,
-  		        'secret' => $aws_secret,
-  		    ]
-  		]);
-    }
-    catch (\Exception $e){
+        'region'  => 'us-west-2',
+        'version' => 'latest',
+        'credentials' => [
+          'key'    => $aws_key,
+          'secret' => $aws_secret,
+        ]
+      ]);
+    } catch (\Exception $e) {
       $error = ["errorMessage" => "Error connecting to AWS s3. Please try Registering again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
     //check if image is good and usable
-    try{
+    try {
       $result = $recognition->detectFaces([ // REQUIRED
-  		    'Attributes' => ['ALL'],
-          'Image' => [ // REQUIRED
-            'Bytes' => $byte_image
-  		    ]
-  		]);
-    }
-    catch(\Exception $e){
+        'Attributes' => ['ALL'],
+        'Image' => [ // REQUIRED
+          'Bytes' => $byte_image
+        ]
+      ]);
+    } catch (\Exception $e) {
       $error = ["errorMessage" => "Error getting face recognition. Please try Registering again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-    if(count($result["FaceDetails"]) < 1)
-    {
+    if (count($result["FaceDetails"]) < 1) {
       $error = ["errorMessage" => "No Faces Detected. Please take a clear Selfie Again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-    if(count($result["FaceDetails"]) > 1)
-    {
+    if (count($result["FaceDetails"]) > 1) {
       $error = ["errorMessage" => "Multiple Faces Detected. Please take a clear Selfie with just your face", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
@@ -459,8 +435,7 @@ class AuthController extends HelperController {
     $confidence = $result["FaceDetails"][0]["Gender"]["Confidence"];
 
 
-    if($confidence > 85)
-    {
+    if ($confidence > 85) {
       //get temp data and delete temp data from db
       $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
       $temp_data_clean = $temp_data[0];
@@ -470,23 +445,22 @@ class AuthController extends HelperController {
       $password = $temp_data_clean->temp_password;
 
       //push image to s3
-      $key = 'user-'.$code.'-image.png';
+      $key = 'user-' . $code . '-image.png';
 
-      try{
+      try {
         $s3_result = $s3->putObject([
-            'Bucket' => 'liveet-users',
-            'Key'    => $key,
-            'Body'   => $byte_image,
-            'ACL'    => 'public-read',
-            'ContentType'    => 'image/png'
+          'Bucket' => 'liveet-users',
+          'Key'    => $key,
+          'Body'   => $byte_image,
+          'ACL'    => 'public-read',
+          'ContentType'    => 'image/png'
         ]);
-      }
-      catch (\Exception $e){
+      } catch (\Exception $e) {
         $error = ["errorMessage" => "Error posting image to S3. Please try Registering again", "statusCode" => 400];
         return $json->withJsonResponse($response, $error);
       }
 
-      $picture_url = "https://liveet-users.s3-us-west-2.amazonaws.com/".$key;
+      $picture_url = "https://liveet-users.s3-us-west-2.amazonaws.com/" . $key;
 
 
 
@@ -499,18 +473,17 @@ class AuthController extends HelperController {
       $token = $keymanager->createClaims($user_data_token);
 
       //add data to user table
-      try{
+      try {
         $user_db->create([
-            "user_fullname" => $fullname,
-            "user_phone" => $phone_clean,
-            "user_email" => $email,
-            "user_password" => $password,
-            "user_picture" => $picture_url,
-            "image_key" => $key,
+          "user_fullname" => $fullname,
+          "user_phone" => $phone_clean,
+          "user_email" => $email,
+          "user_password" => $password,
+          "user_picture" => $picture_url,
+          "image_key" => $key,
         ]);
-      }
-      catch (\Exception $e){
-        $error = ["errorMessage" => $e->message(), "statusCode" => 400];
+      } catch (\Exception $e) {
+        $error = ["errorMessage" => $e->getMessage(), "statusCode" => 400];
         return $json->withJsonResponse($response, $error);
       }
 
@@ -524,15 +497,12 @@ class AuthController extends HelperController {
       //remove record from temp db
       $temp_db->where('temp_phone', $phone_clean)->forceDelete();
 
-      $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname,"user_id" => $user_id,"user_pics" => $user_picture];
+      $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname, "user_id" => $user_id, "user_pics" => $user_picture];
 
       $payload = ["statusCode" => 200, "data" => $data_to_view];
 
       return $json->withJsonResponse($response, $payload);
-
-
-    }
-    else{
+    } else {
       $error = ["errorMessage" => "Image Not Accepted. Please take a selfie of your face alone", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
@@ -551,8 +521,8 @@ class AuthController extends HelperController {
     $topic = 'liveet/mqtt/housekeeping';
 
     if ($mqtt->connect(true, NULL, $username, $password)) {
-    	$mqtt->publish($topic,'mqtt/face/1768583/Snap', 0, false);
-    	$mqtt->close();
+      $mqtt->publish($topic, 'mqtt/face/1768583/Snap', 0, false);
+      $mqtt->close();
     } else {
       var_dump("error sending MQTT");
       die;
@@ -573,18 +543,17 @@ class AuthController extends HelperController {
     $user_id = $data["user_id"];
     $username = $data["username"];
 
-    if(strlen($username) < 2)
-    {
+    if (strlen($username) < 2) {
       $error = ["errorMessage" => "Username Empty or too short", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-    if(!$user_db->where("user_id",$user_id)->exists()){
+    if (!$user_db->where("user_id", $user_id)->exists()) {
       $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-    $user_db->where("user_id",$user_id)->update(["user_fullname" => $username]);
+    $user_db->where("user_id", $user_id)->update(["user_fullname" => $username]);
 
     $payload = ["statusCode" => 200, "successMessage" => "Username Changed Successfully"];
     return $json->withJsonResponse($response, $payload);
@@ -602,43 +571,40 @@ class AuthController extends HelperController {
     $newpassword = $data["new_password"];
     $user_id = $data["user_id"];
 
-    if(strlen($newpassword) < 2)
-    {
+    if (strlen($newpassword) < 2) {
       $error = ["errorMessage" => "New Password Empty or too short", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-    if(!$user_db->where("user_id",$user_id)->exists()){
+    if (!$user_db->where("user_id", $user_id)->exists()) {
       $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-    if($oldpassword === $newpassword)
-    {
+    if ($oldpassword === $newpassword) {
       $error = ["errorMessage" => "New Password same as old password. Please change and try Again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-    $user_details = $user_db->where("user_id",$user_id)->first();
+    $user_details = $user_db->where("user_id", $user_id)->first();
     $db_password = $user_details->user_password;
 
     $oldpasswordHash = hash('sha256', $oldpassword);
 
-    if($oldpasswordHash !== $db_password)
-    {
+    if ($oldpasswordHash !== $db_password) {
       $error = ["errorMessage" => "Password Incorrect. Please try Again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
     $newpasswordHash = hash('sha256', $newpassword);
 
-    $user_db->where("user_id",$user_id)->update(["user_password" => $newpasswordHash]);
+    $user_db->where("user_id", $user_id)->update(["user_password" => $newpasswordHash]);
 
     $payload = ["statusCode" => 200, "successMessage" => "Password Changed Successfully"];
     return $json->withJsonResponse($response, $payload);
   }
 
-  public function updateUserFcm (Request $request, ResponseInterface $response): ResponseInterface
+  public function updateUserFcm(Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
     $json = new JSON();
@@ -649,10 +615,9 @@ class AuthController extends HelperController {
     $user_id = $data["user_id"];
     $fcm_token = $data["fcm_token"];
 
-    $user_db->where("user_id",$user_id)->update(["fcm_token" => $fcm_token]);
+    $user_db->where("user_id", $user_id)->update(["fcm_token" => $fcm_token]);
 
     $payload = ["statusCode" => 200, "successMessage" => "User FCM token Update Successful"];
     return $json->withJsonResponse($response, $payload);
   }
-
 }

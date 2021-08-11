@@ -16,7 +16,7 @@ class AdminUserController extends HelperController
 
     public function loginAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return $this->login($request, $response, new AdminUserModel(), ["admin_username", "admin_password"], ["publicKeyKey" => "public_key", "passwordKey" => "admin_password"], [
+        return $this->loginSelf($request, $response, new AdminUserModel(), ["admin_username", "admin_password"], ["publicKeyKey" => "public_key", "passwordKey" => "admin_password"], [
             "dataOptions" => [
                 "overrideKeys" => [
                     // "username" => "admin_username", "password" => "admin_password"

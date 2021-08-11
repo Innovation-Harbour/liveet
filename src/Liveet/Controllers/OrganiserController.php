@@ -164,7 +164,7 @@ class OrganiserController extends HelperController
 
     public function loginOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return $this->login($request, $response, new OrganiserModel(), ["organiser_username", "organiser_password"], ["publicKeyKey" => "public_key", "passwordKey" => "organiser_password"]);
+        return $this->loginSelf($request, $response, new OrganiserModel(), ["organiser_username", "organiser_password"], ["publicKeyKey" => "public_key", "passwordKey" => "organiser_password"]);
     }
 
     public function updateOrganiser(Request $request, ResponseInterface $response): ResponseInterface

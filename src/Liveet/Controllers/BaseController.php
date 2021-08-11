@@ -993,7 +993,7 @@ abstract class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function login(Request $request, ResponseInterface $response, Model $model = null, array $inputs = [], array $queryOptions = ["passwordKey" => "password", "publicKeyKey" => "publicKey"], array $accountOptions = []): ResponseInterface
+    public function loginSelf(Request $request, ResponseInterface $response, Model $model = null, array $inputs = [], array $queryOptions = ["passwordKey" => "password", "publicKeyKey" => "publicKey"], array $accountOptions = []): ResponseInterface
     {
         $json = new JSON();
         $passwordKey = $queryOptions["passwordKey"];
@@ -1806,7 +1806,7 @@ abstract class BaseController
         return $json->withJsonResponse($response,  $payload);
     }
 
-    public function verifyUser(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function verifySelfUser(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
         $authDetails = static::getTokenInputsFromRequest($request);

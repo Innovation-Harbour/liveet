@@ -358,7 +358,7 @@ class OrganiserStaffController extends HelperController
 
     public function loginOrganiserAdminOrStaff(Request $request, ResponseInterface $response): ResponseInterface
     {
-        return $this->login(
+        return $this->loginSelf(
             $request,
             $response,
             new OrganiserStaffModel(),

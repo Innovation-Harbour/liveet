@@ -22,14 +22,16 @@ use Liveet\Controllers\HelperController;
 use Liveet\Models\TurnstileEventModel;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class OrganiserController extends HelperController {
+class OrganiserController extends HelperController
+{
   use LiveetFunction;
 
-  public function __construct (){
+  public function __construct()
+  {
     $this->json = new JSON();
   }
 
-  public function Login (Request $request, ResponseInterface $response): ResponseInterface
+  public function Login(Request $request, ResponseInterface $response): ResponseInterface
   {
 
     //declare needed class objects
@@ -44,8 +46,7 @@ class OrganiserController extends HelperController {
 
     $user_count = $organiser_db->where('organiser_email', $email)->count();
 
-    if($user_count < 1)
-    {
+    if ($user_count < 1) {
       $error = ["errorMessage" => "Email Not Registered. Please Try Again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
@@ -54,8 +55,7 @@ class OrganiserController extends HelperController {
 
     $db_password = $organiser_data->organiser_password;
 
-    if($hashed_password !== $db_password)
-    {
+    if ($hashed_password !== $db_password) {
       $error = ["errorMessage" => "Password Not Correct. Please Try Again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
@@ -64,14 +64,14 @@ class OrganiserController extends HelperController {
     $fullname = $organiser_data->organiser_name;
     $organiser_id = $organiser_data->organiser_id;
 
-    $data_to_view = ["name" => $fullname,"id" => $organiser_id];
+    $data_to_view = ["name" => $fullname, "id" => $organiser_id];
 
     $payload = ["statusCode" => 200, "data" => $data_to_view];
 
     return $this->json->withJsonResponse($response, $payload);
   }
 
-  public function getOrganiserEvent (Request $request, ResponseInterface $response, array $args): ResponseInterface
+  public function getOrganiserEvent(Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
     //declare needed class objects
     $db = new EventModel();
@@ -85,20 +85,18 @@ class OrganiserController extends HelperController {
 
     $invited_for_results = $db->where("organiser_id", $organiser_id)->offset($offset)->limit($limit)->get();
 
-    foreach($invited_for_results as $result)
-    {
+    foreach ($invited_for_results as $result) {
       $datetime = $result->event_date_time;
-      $date = date('d',$datetime);
-      $month = date('M',$datetime);
-      $month_num = date('n',$datetime);
-      $year = date('Y',$datetime);
+      $date = date('d', $datetime);
+      $month = date('M', $datetime);
+      $month_num = date('n', $datetime);
+      $year = date('Y', $datetime);
 
-      $eventdate_formatted = date('d-n-Y',$datetime);
+      $eventdate_formatted = date('d-n-Y', $datetime);
 
       $now_formatted = date('d-n-Y');
 
-      if($eventdate_formatted === $now_formatted)
-      {
+      if ($eventdate_formatted === $now_formatted) {
         $tmp = [
           "event_id" => intval($result->event_id),
           "event_image" => $result->event_multimedia,
@@ -108,7 +106,7 @@ class OrganiserController extends HelperController {
           "event_year" => $year,
         ];
 
-        array_push($response_data,$tmp);
+        array_push($response_data, $tmp);
       }
     }
 
@@ -117,7 +115,7 @@ class OrganiserController extends HelperController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
-  public function verifyUser (Request $request, ResponseInterface $response, array $args): ResponseInterface
+  public function verifyUser(Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
     //declare needed class objects
     $event_db = new EventModel();
@@ -129,13 +127,12 @@ class OrganiserController extends HelperController {
 
     $image = $data["image"];
 
-    [$is_approved,$ticketname,$user_id] = $this->checkFaceMatchForEvent($image,$event_id);
+    [$is_approved, $ticketname, $user_id] = $this->checkFaceMatchForEvent($image, $event_id);
 
-    if($is_approved && $ticketname && $user_id)
-    {
-      $user_details = $user_db->where("user_id",$user_id)->first();
+    if ($is_approved && $ticketname && $user_id) {
+      $user_details = $user_db->where("user_id", $user_id)->first();
       $fullname = $user_details->user_fullname;
-      $phone = "+".$user_details->user_phone;
+      $phone = "+" . $user_details->user_phone;
 
       $response_data = [
         "ticket_name" => $ticketname,
@@ -145,14 +142,13 @@ class OrganiserController extends HelperController {
 
       $payload = ["statusCode" => 200, "data" => $response_data];
       return $this->json->withJsonResponse($response, $payload);
-    }
-    else {
+    } else {
       $error = ["errorMessage" => "Face Not allowed access for this event", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
   }
 
-  public function turnstileVerifyUser (Request $request, ResponseInterface $response): ResponseInterface
+  public function turnstileVerifyUser(Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
     $event_db = new EventModel();
@@ -163,10 +159,10 @@ class OrganiserController extends HelperController {
     $image = $data["image"];
     $turnstile_id = $data["id"];
 
-    $exploded_image = explode(",",$image);
+    $exploded_image = explode(",", $image);
 
 
-    $is_approved = $this->checkTurnstileFaceMatchForEvent($exploded_image[1],$turnstile_id,);
+    $is_approved = $this->checkTurnstileFaceMatchForEvent($exploded_image[1], $turnstile_id,);
 
     $server = $_ENV["MQTT_SERVER"];
     $port = $_ENV["MQTT_PORT"];
@@ -176,10 +172,9 @@ class OrganiserController extends HelperController {
 
     $mqtt = new phpMQTT($server, $port, $client_id);
 
-    $topic = 'mqtt/face/'.$turnstile_id;
+    $topic = 'mqtt/face/' . $turnstile_id;
 
-    if($is_approved)
-    {
+    if ($is_approved) {
       $message = [
         "operator" => "Unlock",
         "messageId" => time(),
@@ -190,8 +185,7 @@ class OrganiserController extends HelperController {
           "result" => "ok"
         ]
       ];
-    }
-    else {
+    } else {
       $message = [
         "operator" => "Unlock",
         "messageId" => time(),
@@ -207,7 +201,7 @@ class OrganiserController extends HelperController {
     $message = json_encode($message);
 
     if ($mqtt->connect(true, NULL, $username, $password)) {
-      $mqtt->publish($topic,$message, 0, false);
+      $mqtt->publish($topic, $message, 0, false);
       $mqtt->close();
     } else {
       var_dump("error sending MQTT");
@@ -218,7 +212,7 @@ class OrganiserController extends HelperController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
-  public function manualVerifyUser (Request $request, ResponseInterface $response, array $args): ResponseInterface
+  public function manualVerifyUser(Request $request, ResponseInterface $response, array $args): ResponseInterface
   {
     //declare needed class objects
     $event_db = new EventModel();
@@ -238,21 +232,19 @@ class OrganiserController extends HelperController {
 
     $rest_of_phone_number = substr($phone, 4);
 
-    if(strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0")
-    {
+    if (strlen($rest_of_phone_number) == 11 && $rest_of_phone_number[0] === "0") {
       $rest_of_phone_number = substr($rest_of_phone_number, 1);
     }
 
     $country_code_clean = substr($country_code, 1);
 
-    $phone_clean = $country_code_clean.$rest_of_phone_number;
+    $phone_clean = $country_code_clean . $rest_of_phone_number;
 
 
 
-    $user = $user_db->where("user_phone",$phone_clean);
+    $user = $user_db->where("user_phone", $phone_clean);
 
-    if($user->count() < 1)
-    {
+    if ($user->count() < 1) {
       $error = ["errorMessage" => "User Not Found", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
@@ -263,12 +255,11 @@ class OrganiserController extends HelperController {
     $user_pics = $user_details->user_picture;
 
     $attendee_query = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
-    ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
-    ->select('event_ticket_users.event_ticket_user_id','event_ticket.ticket_name')
-    ->where("event_ticket_users.user_id",$user_id)->where("event_ticket.event_id",$event_id)->where("event_ticket_users.ownership_status",Constants::EVENT_TICKET_ACTIVE);
+      ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
+      ->select('event_ticket_users.event_ticket_user_id', 'event_ticket.ticket_name')
+      ->where("event_ticket_users.user_id", $user_id)->where("event_ticket.event_id", $event_id)->where("event_ticket_users.ownership_status", Constants::EVENT_TICKET_ACTIVE);
 
-    if($attendee_query->count() < 1)
-    {
+    if ($attendee_query->count() < 1) {
       $error = ["errorMessage" => "User Not registered for event", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }
@@ -277,7 +268,7 @@ class OrganiserController extends HelperController {
     $ticket_name = $attendee_details->ticket_name;
     $event_ticket_id = $attendee_details->event_ticket_user_id;
 
-    $event_user_db->where("event_ticket_user_id",$event_ticket_id)->update(["status" => Constants::EVENT_TICKET_USED]);
+    $event_user_db->where("event_ticket_user_id", $event_ticket_id)->update(["status" => Constants::EVENT_TICKET_USED]);
 
     $response_data = [
       "ticket_name" => $ticket_name,
@@ -289,7 +280,7 @@ class OrganiserController extends HelperController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
-  public function testFaceMachine (Request $request, ResponseInterface $response): ResponseInterface
+  public function testFaceMachine(Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
     $temp_db = new TempsModel();
@@ -306,36 +297,34 @@ class OrganiserController extends HelperController {
     ]);
 
     $byte_image = base64_decode($image);
-  	$code = rand(00000000, 99999999);
+    $code = rand(00000000, 99999999);
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
 
     //push image to s3
-    $key = 'user-'.$code.'-image.png';
+    $key = 'user-' . $code . '-image.png';
 
-    try{
+    try {
       $s3 = new S3Client([
-  		    'region'  => 'us-west-2',
-  		    'version' => 'latest',
-  		    'credentials' => [
-  		        'key'    => $aws_key,
-  		        'secret' => $aws_secret,
-  		    ]
-  		]);
-
-      $s3_result = $s3->putObject([
-          'Bucket' => 'liveet-test-facemachine',
-          'Key'    => $key,
-          'Body'   => $byte_image,
-          'ACL'    => 'public-read',
-          'ContentType'  => 'image/png'
+        'region'  => 'us-west-2',
+        'version' => 'latest',
+        'credentials' => [
+          'key'    => $aws_key,
+          'secret' => $aws_secret,
+        ]
       ]);
 
-    }
-    catch (\Exception $e){
+      $s3_result = $s3->putObject([
+        'Bucket' => 'liveet-test-facemachine',
+        'Key'    => $key,
+        'Body'   => $byte_image,
+        'ACL'    => 'public-read',
+        'ContentType'  => 'image/png'
+      ]);
+    } catch (\Exception $e) {
       $error = ["errorMessage" => "Error Occured During Test", "statusCode" => 400];
-      return $json->withJsonResponse($response, $error);
+      return (new JSON())->withJsonResponse($response, $error);
     }
 
     $response_data = [
@@ -348,7 +337,7 @@ class OrganiserController extends HelperController {
     return $this->json->withJsonResponse($response, $payload);
   }
 
-  public function detachTurnStiles (Request $request, ResponseInterface $response): ResponseInterface
+  public function detachTurnStiles(Request $request, ResponseInterface $response): ResponseInterface
   {
     //declare needed class objects
     $turnstile_db = new TurnstileEventModel();
@@ -358,18 +347,16 @@ class OrganiserController extends HelperController {
 
     $results = $turnstile_db->where("deleted_at", NULL)->get();
 
-    foreach ($results as $result)
-    {
+    foreach ($results as $result) {
       $turnstile_event_id = $result->turnstile_event_id;
       $ticket_id = $result->event_ticket_id;
 
       $event_details = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
-      ->where("event_ticket.event_ticket_id",$ticket_id)->first();
+        ->where("event_ticket.event_ticket_id", $ticket_id)->first();
 
       $event_time = intval($event_details->event_date_time);
 
-      if(time() > $event_time)
-      {
+      if (time() > $event_time) {
         $turnstile_db->where('turnstile_event_id', $turnstile_event_id)->delete();
       }
     }
@@ -377,5 +364,4 @@ class OrganiserController extends HelperController {
     $payload = ["statusCode" => 200, "successMessage" => "Turnstile Detach Successfully"];
     return $this->json->withJsonResponse($response, $payload);
   }
-
 }

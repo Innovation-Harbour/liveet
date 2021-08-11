@@ -1132,6 +1132,17 @@ class EventMobileController extends HelperController
     $ticket_id = $data["event_ticket_id"];
     $event_id = $data["event_id"];
 
+    $event_details = $event_db->where("event_id", $event_id)->first();
+    $event_stop = $event_details->event_sale_stop_time;
+    $event_name = $event_details->event_name;
+    $event_payment = $event_details->event_payment_type;
+    $event_code = $event_details->event_code;
+
+    if (time() > intval($event_stop)) {
+      $error = ["errorMessage" => "Event has Elapsed. Cannot Recall Ticket", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
+
     if ($db->where("event_ticket_user_id", $ticket_id)->where("status", Constants::EVENT_TICKET_USED)->exists()) {
       $error = ["errorMessage" => "Ticket Already used and can't be Recalled Again", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
@@ -1151,18 +1162,13 @@ class EventMobileController extends HelperController
     $user_phone = $user_data_clean->user_phone;
     $fcm_token = $user_data_clean->fcm_token;
 
-    $event_details = $event_db->where("event_id", $event_id)->first();
-
-    $event_name = $event_details->event_name;
-    $event_payment = $event_details->event_payment_type;
-    $event_code = $event_details->event_code;
     $is_free = $event_payment === Constants::PAYMENT_TYPE_FREE ? true : false;
 
     //do SMS Logic
     if ($is_free) {
       $message = "Your Ticket for the event: " . $event_name . " has been recalled successfully. No further action required";
     } else {
-      $message = "Your Ticket for the event: " . $event_name . " has been recalled successfully and payment refunds will be made to you within 14 business days.";
+      $message = "Your Ticket for the event: " . $event_name . " has been recalled successfully and payment refunds timeline will be communicated to you.";
     }
 
     //send sms
@@ -1202,6 +1208,16 @@ class EventMobileController extends HelperController
     $user_phone_full = $data["user_phone"];
     $ticket_id = $data["event_ticket_id"];
     $event_id = $data["event_id"];
+
+    $event_details = $event_db->where("event_id", $event_id)->first();
+    $event_stop = $event_details->event_sale_stop_time;
+    $eventCode = $event_details->event_code;
+    $event_name = $event_details->event_name;
+
+    if (time() > intval($event_stop)) {
+      $error = ["errorMessage" => "Event has Elapsed. Cannot Transfer Ticket", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
 
     if ($db->where("event_ticket_user_id", $ticket_id)->where("status", Constants::EVENT_TICKET_USED)->exists()) {
       $error = ["errorMessage" => "Ticket Already used and can't be Transferred Again", "statusCode" => 400];
@@ -1253,10 +1269,6 @@ class EventMobileController extends HelperController
 
       return $this->json->withJsonResponse($response, $error);
     }
-
-    $event_details = $event_db->where("event_id", $event_id)->first();
-    $eventCode = $event_details->event_code;
-    $event_name = $event_details->event_name;
 
     $ticket_details = $db->where("event_ticket_user_id", $ticket_id)->first();
     $eventTicketId = $ticket_details->event_ticket_id;

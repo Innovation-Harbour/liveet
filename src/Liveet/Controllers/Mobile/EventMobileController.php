@@ -521,7 +521,10 @@ class EventMobileController extends HelperController
       //check if the user already attending this event
       $eventQuery = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
         ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
-        ->where("event_ticket.event_id", $result->event_id)->where("event_ticket_users.user_id", $user_id)->count();
+        ->where("event_ticket.event_id", $result->event_id)
+        ->where("event_ticket_users.user_id", $user_id)
+        ->where("event_ticket_users.ownership_status", Constants::EVENT_TICKET_ACTIVE)
+        ->count();
 
       if ($eventQuery < 1 && (intval($datetime) > time())) {
         array_push($response_data, $tmp);

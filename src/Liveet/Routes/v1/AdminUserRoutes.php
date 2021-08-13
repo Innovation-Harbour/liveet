@@ -75,6 +75,21 @@ isset($v1Group) && $v1Group->group(
         require "src/Liveet/Routes/v1/PaymentRoutes.php";
 
         /**
+         * User Routes
+         */
+        require "src/Liveet/Routes/v1/UserRoutes.php";
+
+        /**
+         * Face Verification Routes
+         */
+        require "src/Liveet/Routes/v1/FaceVerificationRoutes.php";
+
+        /**
+         * Turnstile Routes
+         */
+        require "src/Liveet/Routes/v1/TurnstileRoutes.php";
+
+        /**
          * Helper Routes
          */
         require "src/Liveet/Routes/v1/HelperRoutes.php";

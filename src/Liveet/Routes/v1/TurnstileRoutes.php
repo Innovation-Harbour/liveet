@@ -13,7 +13,7 @@ isset($adminGroup) && $adminGroup->group(
     function (RouteCollectorProxy $turnstile) {
 
         $turnstile->get(
-            "/get/turnstiles[/{turnstile_id}[/{page}[/{limit}]]]",
+            "/get/turnstiles[/{turnstile_id}[/{organiser_id}[/{event_id}[/{page}[/{limit}]]]]]",
             TurnstileController::class . ":getTurnstiles"
         );
     }

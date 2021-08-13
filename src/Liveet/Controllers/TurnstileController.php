@@ -16,7 +16,7 @@ class TurnstileController extends HelperController
     {
         $this->checkAdminTurnstilePermission($request, $response);
 
-        $expectedRouteParams = ["turnstile_id"];
+        $expectedRouteParams = ["turnstile_id", "event_id", "organiser_id"];
         $routeParams = $this->getRouteParams($request);
 
         $conditions = [];
@@ -27,6 +27,29 @@ class TurnstileController extends HelperController
             }
         }
 
-        return $this->getByPage($request, $response, new TurnstileModel(), null, $conditions, ["events"]);
+        $whereHas = [];
+        if (isset($conditions["event_id"])) {
+            $event_id = $conditions["event_id"];
+
+            $whereHas["eventTickets"] = function ($query) use ($event_id) {
+                return $query->where("event_id", $event_id);
+            };
+
+            unset($conditions["event_id"]);
+        }
+
+        if (isset($conditions["organiser_id"])) {
+            $organiser_id = $conditions["organiser_id"];
+
+            $whereHas["eventTickets"] = function ($query) use ($organiser_id) {
+                return $query->whereHas("event", function ($query) use ($organiser_id) {
+                    return $query->where("organiser_id", $organiser_id);
+                });
+            };
+
+            unset($conditions["organiser_id"]);
+        }
+
+        return $this->getByPage($request, $response, new TurnstileModel(), null, $conditions, ["eventTickets"], ["whereHas" => $whereHas]);
     }
 }

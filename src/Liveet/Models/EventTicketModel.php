@@ -19,14 +19,19 @@ class EventTicketModel extends BaseModel
         return $this->belongsTo(EventModel::class, "event_id", "event_id");
     }
 
-    public function eventAccess()
+    public function turnstiles()
     {
-        return $this->hasOne(EventAccessModel::class, $this->primaryKey, $this->primaryKey);
+        return $this->belongsToMany(TurnstileModel::class, "turnstile_event", $this->primaryKey, "turnstile_id", $this->primaryKey, "turnstile_id");
     }
 
     public function users()
     {
         return $this->belongsToMany(EventModel::class, "event_ticket_users", $this->primaryKey, "user_id", $this->primaryKey, "user_id");
+    }
+
+    public function eventAccess()
+    {
+        return $this->hasOne(EventAccessModel::class, $this->primaryKey, $this->primaryKey);
     }
 
     public function payments()

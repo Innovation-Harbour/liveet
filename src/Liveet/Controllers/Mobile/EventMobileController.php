@@ -33,7 +33,6 @@ class EventMobileController extends HelperController
   {
     $this->json = new JSON();
     $this->termii = new TermiiAPI();
-    $this->log = new UserActivityModel();
   }
 
   public function GetEvents(Request $request, ResponseInterface $response, array $args): ResponseInterface
@@ -43,6 +42,7 @@ class EventMobileController extends HelperController
     $ticket_db = new EventTicketModel();
     $event_db = new EventModel();
     $event_control_db = new EventControlModel();
+    $log = new UserActivityModel();
 
 
     $response_data = [];
@@ -100,7 +100,10 @@ class EventMobileController extends HelperController
       //check if the user already attending this event
       $eventQuery = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
         ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
-        ->where("event_ticket.event_id", $result->event_id)->where("event_ticket_users.user_id", $user_id)->count();
+        ->where("event_ticket.event_id", $result->event_id)
+        ->where("event_ticket_users.user_id", $user_id)
+        ->where("event_ticket_users.ownership_status", Constants::EVENT_TICKET_ACTIVE)
+        ->count();
 
       if ($eventQuery < 1 && (intval($datetime) > time()) && $add_to_timeline) {
         array_push($response_data, $tmp);
@@ -109,7 +112,7 @@ class EventMobileController extends HelperController
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_EVENTS
     ]);
@@ -120,6 +123,7 @@ class EventMobileController extends HelperController
   public function DoEventFavourite(Request $request, ResponseInterface $response): ResponseInterface
   {
     $favourite_db = new FavouriteModel();
+    $log = new UserActivityModel();
 
     $data = $request->getParsedBody();
 
@@ -147,7 +151,7 @@ class EventMobileController extends HelperController
       $payload = ["statusCode" => 200, "successMessage" => "Event Favourite Deleted"];
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_SET_FAVOURITE
     ]);
@@ -160,6 +164,7 @@ class EventMobileController extends HelperController
     //declare needed class objects
     $db = new EventTicketModel();
     $access_db = new EventAccessModel();
+    $log = new UserActivityModel();
 
     $response_data = [];
 
@@ -195,7 +200,7 @@ class EventMobileController extends HelperController
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_TICKET
     ]);
@@ -212,6 +217,7 @@ class EventMobileController extends HelperController
     $event_db = new EventModel();
     $access_db = new EventAccessModel();
     $invitation_db = new InvitationModel();
+    $log = new UserActivityModel();
 
     $data = $request->getParsedBody();
 
@@ -343,7 +349,7 @@ class EventMobileController extends HelperController
       $user_subscribe = $this->subcribeUser($eventCode, $fcm_token);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_ATTEND_EVENT
     ]);
@@ -359,6 +365,7 @@ class EventMobileController extends HelperController
     $event_ticket_db = new EventTicketModel();
     $event_db = new EventModel();
     $invitation_db = new InvitationModel();
+    $log = new UserActivityModel();
 
     $data = $request->getParsedBody();
 
@@ -457,7 +464,7 @@ class EventMobileController extends HelperController
 
     $payload = ["statusCode" => 200, "data" => $payment_data];
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_CHECK_PAYMENT
     ]);
@@ -469,6 +476,7 @@ class EventMobileController extends HelperController
     //declare needed class objects
     $db = new FavouriteModel();
     $ticket_db = new EventTicketModel();
+    $log = new UserActivityModel();
 
 
     $response_data = [];
@@ -513,7 +521,10 @@ class EventMobileController extends HelperController
       //check if the user already attending this event
       $eventQuery = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
         ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
-        ->where("event_ticket.event_id", $result->event_id)->where("event_ticket_users.user_id", $user_id)->count();
+        ->where("event_ticket.event_id", $result->event_id)
+        ->where("event_ticket_users.user_id", $user_id)
+        ->where("event_ticket_users.ownership_status", Constants::EVENT_TICKET_ACTIVE)
+        ->count();
 
       if ($eventQuery < 1 && (intval($datetime) > time())) {
         array_push($response_data, $tmp);
@@ -522,7 +533,7 @@ class EventMobileController extends HelperController
 
     $payload = ["statusCode" => 200, "data" => $response_data];
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_FAVOURITE
     ]);
@@ -535,6 +546,7 @@ class EventMobileController extends HelperController
     $access_db = new EventAccessModel();
     $event_db = new EventModel();
     $invitation_db = new InvitationModel();
+    $log = new UserActivityModel();
 
 
     $data = $request->getParsedBody();
@@ -595,7 +607,7 @@ class EventMobileController extends HelperController
       ]);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_EVENTS_ACCESS
     ]);
@@ -619,7 +631,11 @@ class EventMobileController extends HelperController
 
     $invitation_count = 0;
 
-    $invitation_count = $invitation_db->where("event_invitee_user_phone", $user_phone)->where("event_invitation_status", Constants::INVITATION_PENDING)->count();
+    $invitation_count = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')
+    ->where("event_invitation.event_invitee_user_phone", $user_phone)
+    ->where("event_invitation.event_invitation_status", Constants::INVITATION_PENDING)
+    ->where("event.event_date_time",">", time())
+    ->count();
 
     $response_data = [
       "invitation_count" => intval($invitation_count)
@@ -690,6 +706,7 @@ class EventMobileController extends HelperController
     $event_db = new EventModel();
     $ticket_db = new EventTicketModel();
     $ticket_user_db = new EventTicketUserModel();
+    $log = new UserActivityModel();
 
     $data = $request->getParsedBody();
 
@@ -749,7 +766,7 @@ class EventMobileController extends HelperController
       $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->update(["invitee_can_invite_count" => $invite_count]);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_DELETE_INVITATION
     ]);
@@ -764,6 +781,7 @@ class EventMobileController extends HelperController
     $invitation_db = new InvitationModel();
     $user_db = new UserModel();
     $control_db = new EventControlModel();
+    $log = new UserActivityModel();
 
     $eligible_phone_starting = array("06", "07", "08", "09");
 
@@ -859,7 +877,7 @@ class EventMobileController extends HelperController
       }
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_SEND_INVITATION
     ]);
@@ -947,7 +965,10 @@ class EventMobileController extends HelperController
         "invitee_by_pics" => $invited_by_pics,
       ];
 
-      array_push($response_data, $tmp);
+      if(intval($datetime) > time())
+      {
+        array_push($response_data, $tmp);
+      }
     }
 
     // get invitations you invited others for
@@ -993,7 +1014,10 @@ class EventMobileController extends HelperController
         "invitee_by_pics" => $invited_by_pics,
       ];
 
-      array_push($response_data, $tmp);
+      if(intval($datetime) > time())
+      {
+        array_push($response_data, $tmp);
+      }
     }
 
     $payload = ["statusCode" => 200, "data" => $response_data];
@@ -1054,6 +1078,7 @@ class EventMobileController extends HelperController
     $db = new EventTicketModel();
     $invitation_db = new InvitationModel();
     $user_db = new UserModel();
+    $log = new UserActivityModel();
 
 
     $response_data = [];
@@ -1110,7 +1135,7 @@ class EventMobileController extends HelperController
       array_push($response_data, $tmp);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_EVENT_HISTORY
     ]);
@@ -1125,12 +1150,24 @@ class EventMobileController extends HelperController
     $db = new EventTicketUserModel();
     $user_db = new UserModel();
     $event_db = new EventModel();
+    $log = new UserActivityModel();
 
     $data = $request->getParsedBody();
 
     $user_id = $data["user_id"];
     $ticket_id = $data["event_ticket_id"];
     $event_id = $data["event_id"];
+
+    $event_details = $event_db->where("event_id", $event_id)->first();
+    $event_stop = $event_details->event_date_time;
+    $event_name = $event_details->event_name;
+    $event_payment = $event_details->event_payment_type;
+    $event_code = $event_details->event_code;
+
+    if (time() > intval($event_stop)) {
+      $error = ["errorMessage" => "Event has Elapsed. Cannot Recall Ticket", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
 
     if ($db->where("event_ticket_user_id", $ticket_id)->where("status", Constants::EVENT_TICKET_USED)->exists()) {
       $error = ["errorMessage" => "Ticket Already used and can't be Recalled Again", "statusCode" => 400];
@@ -1151,18 +1188,13 @@ class EventMobileController extends HelperController
     $user_phone = $user_data_clean->user_phone;
     $fcm_token = $user_data_clean->fcm_token;
 
-    $event_details = $event_db->where("event_id", $event_id)->first();
-
-    $event_name = $event_details->event_name;
-    $event_payment = $event_details->event_payment_type;
-    $event_code = $event_details->event_code;
     $is_free = $event_payment === Constants::PAYMENT_TYPE_FREE ? true : false;
 
     //do SMS Logic
     if ($is_free) {
       $message = "Your Ticket for the event: " . $event_name . " has been recalled successfully. No further action required";
     } else {
-      $message = "Your Ticket for the event: " . $event_name . " has been recalled successfully and payment refunds will be made to you within 14 business days.";
+      $message = "Your Ticket for the event: " . $event_name . " has been recalled successfully and payment refunds timeline will be communicated to you.";
     }
 
     //send sms
@@ -1178,7 +1210,7 @@ class EventMobileController extends HelperController
       $unsubscribe = $this->unSubcribeUser($event_code, $fcm_token);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_RECALL_TICKET
     ]);
@@ -1193,6 +1225,7 @@ class EventMobileController extends HelperController
     $db = new EventTicketUserModel();
     $user_db = new UserModel();
     $event_db = new EventModel();
+    $log = new UserActivityModel();
 
     $eligible_phone_starting = array("6", "7", "8", "9");
 
@@ -1202,6 +1235,16 @@ class EventMobileController extends HelperController
     $user_phone_full = $data["user_phone"];
     $ticket_id = $data["event_ticket_id"];
     $event_id = $data["event_id"];
+
+    $event_details = $event_db->where("event_id", $event_id)->first();
+    $event_stop = $event_details->event_date_time;
+    $eventCode = $event_details->event_code;
+    $event_name = $event_details->event_name;
+
+    if (time() > intval($event_stop)) {
+      $error = ["errorMessage" => "Event has Elapsed. Cannot Transfer Ticket", "statusCode" => 400];
+      return $this->json->withJsonResponse($response, $error);
+    }
 
     if ($db->where("event_ticket_user_id", $ticket_id)->where("status", Constants::EVENT_TICKET_USED)->exists()) {
       $error = ["errorMessage" => "Ticket Already used and can't be Transferred Again", "statusCode" => 400];
@@ -1253,10 +1296,6 @@ class EventMobileController extends HelperController
 
       return $this->json->withJsonResponse($response, $error);
     }
-
-    $event_details = $event_db->where("event_id", $event_id)->first();
-    $eventCode = $event_details->event_code;
-    $event_name = $event_details->event_name;
 
     $ticket_details = $db->where("event_ticket_user_id", $ticket_id)->first();
     $eventTicketId = $ticket_details->event_ticket_id;
@@ -1346,7 +1385,7 @@ class EventMobileController extends HelperController
       $this->sendMobileNotification(Constants::NOTIFICATION_ONE_USER, $notification_title, $notification_message, $receiver_fcm_token);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_TRANSFER_TICKET
     ]);
@@ -1395,6 +1434,7 @@ class EventMobileController extends HelperController
   {
     //declare needed class objects
     $timeline_db = new TimelineMediaModel();
+    $log = new UserActivityModel();
 
     $response_data = [];
 
@@ -1420,7 +1460,7 @@ class EventMobileController extends HelperController
       array_push($response_data, $tmp);
     }
 
-    $this->log->create([
+    $log->create([
       "user_id" => $user_id,
       "activity_type" => Constants::LOG_GET_TIMELINE
     ]);

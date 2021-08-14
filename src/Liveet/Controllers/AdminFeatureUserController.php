@@ -16,7 +16,10 @@ class AdminFeatureUserController extends HelperController
 
     public function assignAdminFeature(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -40,7 +43,10 @@ class AdminFeatureUserController extends HelperController
 
     public function getAssignedAdminFeatures(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $routeParams = $this->getRouteParams($request, ["admin_user_id", "admin_feature_id"]);
         $conditions = [];
@@ -63,7 +69,10 @@ class AdminFeatureUserController extends HelperController
 
     public function updateAssignedAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 

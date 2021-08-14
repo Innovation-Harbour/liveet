@@ -14,7 +14,10 @@ class PaymentController extends HelperController
 
     public function getPayments(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminPaymentPermission($request, $response);
+        $permissonResponse = $this->checkAdminPaymentPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["payment_id", "event_ticket_id", "user_id", "organiser_id"];
         $routeParams = $this->getRouteParams($request);
@@ -35,7 +38,10 @@ class PaymentController extends HelperController
 
     public function getOrganiserPayments(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserPaymentPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserPaymentPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_id = $authDetails["organiser_id"];

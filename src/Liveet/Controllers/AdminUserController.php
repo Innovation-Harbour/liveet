@@ -102,7 +102,10 @@ class AdminUserController extends HelperController
 
     public function createAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -151,21 +154,30 @@ class AdminUserController extends HelperController
     public function getAdminUsers(Request $request, ResponseInterface $response): ResponseInterface
     {
 
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPage($request, $response, new AdminUserModel(), null, null, ["adminFeatures"]);
     }
 
     public function getAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, new AdminUserModel(), null, ["adminFeatures"]);
     }
 
     public function updateAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -216,7 +228,10 @@ class AdminUserController extends HelperController
 
     public function logoutAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -227,7 +242,10 @@ class AdminUserController extends HelperController
 
     public function toggleAdminUserAccessStatusByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->toggleUserAccessStatusByPK($request, $response, new AdminUserModel());
     }

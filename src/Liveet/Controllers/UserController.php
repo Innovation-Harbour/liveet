@@ -14,7 +14,10 @@ class UserController extends HelperController
 
     public function getUsers(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminUserPermission($request, $response);
+        $permissonResponse = $this->checkAdminUserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["user_id", "user_phone", "fcm_token"];
         $routeParams = $this->getRouteParams($request);

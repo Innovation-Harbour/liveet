@@ -19,7 +19,10 @@ class OrganiserController extends HelperController
 
     public function createOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -64,21 +67,30 @@ class OrganiserController extends HelperController
 
     public function getOrganisers(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPage($request, $response, new OrganiserModel(), null, ["usertype" => Constants::USERTYPE_ORGANISER_ADMIN]);
     }
 
     public function getOrganiserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, new OrganiserModel());
     }
 
     public function updateOrganiserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -115,7 +127,10 @@ class OrganiserController extends HelperController
 
     public function logoutOrganiserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -126,7 +141,10 @@ class OrganiserController extends HelperController
 
     public function toggleOrganiserAccessStatusByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->toggleUserAccessStatusByPK($request, $response, new OrganiserModel());
     }
@@ -169,8 +187,11 @@ class OrganiserController extends HelperController
 
     public function updateOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserAdminPermission($request, $response);
-        
+        $permissonResponse = $this->checkOrganiserAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];

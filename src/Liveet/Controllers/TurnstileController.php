@@ -14,7 +14,10 @@ class TurnstileController extends HelperController
 
     public function getTurnstiles(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminTurnstilePermission($request, $response);
+        $permissonResponse = $this->checkAdminTurnstilePermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["turnstile_id", "event_id", "organiser_id"];
         $routeParams = $this->getRouteParams($request);

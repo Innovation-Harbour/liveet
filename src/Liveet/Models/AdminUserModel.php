@@ -53,7 +53,7 @@ class AdminUserModel extends BaseModel
         return ($userQuery->exists()) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
 
-    public function getDashboard($pk, $queryOptions = null, $extras = null)
+    public function getDashboard($pk, $queryOptions = null)
     {
         $adminsCount = $this->count();
         $organiserCount = (new OrganiserModel())->where("usertype", Constants::USERTYPE_ORGANISER_ADMIN)->count();

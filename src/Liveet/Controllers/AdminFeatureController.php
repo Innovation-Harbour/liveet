@@ -17,7 +17,10 @@ class AdminFeatureController extends HelperController
 
     public function createAdminFeature(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -49,21 +52,30 @@ class AdminFeatureController extends HelperController
 
     public function getAdminFeatures(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPage($request, $response, new AdminFeatureModel(), null, null, ["adminUsers"]);
     }
 
     public function getAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, new AdminFeatureModel(), null, ["adminUsers"]);
     }
 
     public function updateAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminAdminPermission($request, $response);
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 

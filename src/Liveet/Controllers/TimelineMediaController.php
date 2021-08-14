@@ -14,7 +14,11 @@ class TimelineMediaController extends HelperController
 
     public function createTimelineMedia(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $json = new JSON();
 
         $event_code = $this->getEventCode($request);
@@ -52,9 +56,10 @@ class TimelineMediaController extends HelperController
 
     public function getTimelineMedias(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["timeline_id"];
         $routeParams = $this->getRouteParams($request);
@@ -71,16 +76,20 @@ class TimelineMediaController extends HelperController
 
     public function getTimelineMediaByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, new TimelineMediaModel());
     }
 
     public function updateTimelineMediaByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $json = new JSON();
 
@@ -121,9 +130,10 @@ class TimelineMediaController extends HelperController
 
     public function deleteTimelineMediaByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->deleteByPK($request, $response, (new TimelineMediaModel()));
     }
@@ -133,7 +143,11 @@ class TimelineMediaController extends HelperController
 
     public function getOrganiserTimelineMedias(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserEventPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $expectedRouteParams = ["event_id"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];

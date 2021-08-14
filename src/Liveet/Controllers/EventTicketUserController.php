@@ -21,11 +21,15 @@ class EventTicketUserController extends HelperController
 
     public function createEventTicketUser(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "assigned an event ticket to a user"]);
 
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->createSelf(
             $request,
@@ -46,9 +50,10 @@ class EventTicketUserController extends HelperController
 
     public function getEventTicketUsers(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["event_id", "event_ticket_id", "from", "to"];
         $routeParams = $this->getRouteParams($request);
@@ -64,20 +69,24 @@ class EventTicketUserController extends HelperController
 
     public function getEventTicketUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, (new EventTicketUserModel()), null, ["user", "eventTicket"]);
     }
 
     public function transferEventTicketUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "transfered an event ticket to a user"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
             $request,
@@ -97,12 +106,15 @@ class EventTicketUserController extends HelperController
 
     public function recallEventTicketUser(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $json = new JSON();
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "recalled an event ticket from a user"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         ["event_ticket_user_id" => $event_ticket_user_id] = $this->getRouteParams($request, ["event_ticket_user_id"]);
 
@@ -123,13 +135,17 @@ class EventTicketUserController extends HelperController
 
     public function createOrganiserEventTicketUser(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
 
         (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "assigned an event ticket to a user"]);
 
-        $this->checkOrganiserEventPermission($request, $response);
 
         $postBody = $this->checkOrGetPostBody($request, ["event_ticket_id"]);
         $event_ticket_id = $postBody["event_ticket_id"];
@@ -155,9 +171,10 @@ class EventTicketUserController extends HelperController
 
     public function getOrganiserEventTicketUsers(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkOrganiserEventPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["event_id", "event_ticket_id", "from", "to"];
         $routeParams = $this->getRouteParams($request);
@@ -181,9 +198,10 @@ class EventTicketUserController extends HelperController
 
     public function getOrganiserEventTicketUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkOrganiserEventPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $routeParams = $this->getRouteParams($request, ["event_ticket_user_id"]);
         if (isset($routeParams["event_ticket_user_id"])) {
@@ -194,13 +212,16 @@ class EventTicketUserController extends HelperController
 
     public function transferOrganiserEventTicketUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $organiser_staff_id = isset($authDetails["organiser_staff_id"]) ? $authDetails["organiser_staff_id"] : OrganiserStaffModel::where("organiser_id", $authDetails["organiser_id"])->first()["organiser_staff_id"];
 
         (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "transfered an event ticket to a user"]);
-
-        $this->checkOrganiserEventPermission($request, $response);
 
         $routeParams = $this->getRouteParams($request, ["event_ticket_user_id"]);
         if (isset($routeParams["event_ticket_user_id"])) {
@@ -225,6 +246,11 @@ class EventTicketUserController extends HelperController
 
     public function recallOrganiserEventTicketUser(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $json = new JSON();
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -232,7 +258,6 @@ class EventTicketUserController extends HelperController
 
         (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "recalled an event ticket from a user"]);
 
-        $this->checkOrganiserEventPermission($request, $response);
 
         ["event_ticket_user_id" => $event_ticket_user_id] = $this->getRouteParams($request, ["event_ticket_user_id"]);
 

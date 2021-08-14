@@ -95,6 +95,11 @@ isset($v1Group) && $v1Group->group(
         require "src/Liveet/Routes/v1/TurnstileRoutes.php";
 
         /**
+         * Report Routes
+         */
+        require "src/Liveet/Routes/v1/ReportRoutes.php";
+
+        /**
          * Helper Routes
          */
         require "src/Liveet/Routes/v1/HelperRoutes.php";

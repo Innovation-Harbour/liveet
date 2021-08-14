@@ -18,21 +18,30 @@ class OrganiserStaffController extends HelperController
 
     public function getOrganiserStaffs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPage($request, $response, new OrganiserStaffModel());
     }
 
     public function getOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, new OrganiserStaffModel());
     }
 
     public function logoutOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -43,7 +52,10 @@ class OrganiserStaffController extends HelperController
 
     public function toggleOrganiserStaffAccessStatusByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->toggleUserAccessStatusByPK($request, $response, new OrganiserStaffModel());
     }
@@ -76,7 +88,10 @@ class OrganiserStaffController extends HelperController
 
     public function createOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -87,7 +102,10 @@ class OrganiserStaffController extends HelperController
 
     public function updateOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -140,7 +158,10 @@ class OrganiserStaffController extends HelperController
 
     public function createOrganiserSelfStaff(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -200,7 +221,10 @@ class OrganiserStaffController extends HelperController
 
     public function getOrganiserSelfStaffs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -211,7 +235,10 @@ class OrganiserStaffController extends HelperController
 
     public function getOrganiserSelfStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -223,7 +250,10 @@ class OrganiserStaffController extends HelperController
 
     public function updateOrganiserSelfStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -276,7 +306,10 @@ class OrganiserStaffController extends HelperController
 
     public function logoutOrganiserSelfStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -292,7 +325,10 @@ class OrganiserStaffController extends HelperController
 
     public function updateOrganiserAdmin(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserAdminPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -346,7 +382,10 @@ class OrganiserStaffController extends HelperController
 
     public function toggleOrganiserSelfStaffAccessStatusByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminOrganiserPermission($request, $response);
+        $permissonResponse = $this->checkAdminOrganiserPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_id = $authDetails["organiser_id"];

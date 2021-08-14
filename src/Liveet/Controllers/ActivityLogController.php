@@ -15,8 +15,6 @@ class ActivityLogController extends HelperController
 
     public function getSelfActivityLogs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        // $this->checkAdminActivityLogPermission($request, $response);
-
         $authDetails = static::getTokenInputsFromRequest($request);
         $admin_user_id = $authDetails["admin_user_id"];
 
@@ -27,9 +25,10 @@ class ActivityLogController extends HelperController
 
     public function getActivityLogs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminActivityLogPermission($request, $response);
-
-        $authDetails = static::getTokenInputsFromRequest($request);
+        $permissonResponse = $this->checkAdminActivityLogPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["admin_user_id"];
         $routeParams = $this->getRouteParams($request);
@@ -45,7 +44,10 @@ class ActivityLogController extends HelperController
 
     public function getOrganiserActivityLogs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminActivityLogPermission($request, $response);
+        $permissonResponse = $this->checkAdminActivityLogPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -73,8 +75,6 @@ class ActivityLogController extends HelperController
 
     public function getSelfOrganiserStaffActivityLogs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        // $this->checkOrganiserActivityLogPermission($request, $response);
-
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_staff_id = $authDetails["organiser_staff_id"];
         $conditions = ["organiser_staff_id" => $organiser_staff_id];
@@ -84,7 +84,10 @@ class ActivityLogController extends HelperController
 
     public function getOrganiserStaffActivityLogs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserActivityLogPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserActivityLogPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_id = $authDetails["organiser_id"];

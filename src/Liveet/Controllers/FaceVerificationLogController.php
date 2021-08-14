@@ -14,7 +14,10 @@ class FaceVerificationLogController extends HelperController
 
     public function getFaceVerificationLogs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminFaceVerificationLogPermission($request, $response);
+        $permissonResponse = $this->checkAdminFaceVerificationLogPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["verification_log_id", "event_id", "user_id", "organiser_id"];
         $routeParams = $this->getRouteParams($request);
@@ -53,7 +56,10 @@ class FaceVerificationLogController extends HelperController
 
     public function getOrganiserFaceVerificationLogs(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserFaceVerificationLogPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserFaceVerificationLogPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_id = $authDetails["organiser_id"];

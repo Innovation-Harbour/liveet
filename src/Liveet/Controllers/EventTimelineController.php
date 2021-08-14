@@ -21,7 +21,10 @@ class EventTimelineController extends HelperController
 
     public function createEventTimeline(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $json = new JSON();
 
@@ -66,9 +69,10 @@ class EventTimelineController extends HelperController
 
     public function getEventTimelines(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["event_id"];
         $routeParams = $this->getRouteParams($request);
@@ -85,20 +89,24 @@ class EventTimelineController extends HelperController
 
     public function getEventTimelineByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, new EventTimelineModel(), null, ["timelineMedia"]);
     }
 
     public function updateEventTimelineByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an event timeline"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
             $request,
@@ -120,11 +128,14 @@ class EventTimelineController extends HelperController
 
     public function deleteEventTimelineByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deleted an event timeline"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->deleteByPK($request, $response, (new EventTimelineModel()));
     }
@@ -134,7 +145,11 @@ class EventTimelineController extends HelperController
 
     public function getOrganiserEventTimelines(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserEventPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $expectedRouteParams = ["event_id"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];

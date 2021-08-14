@@ -19,13 +19,15 @@ class EventTicketController extends HelperController
 
     public function createEventTicket(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an event ticket"]);
 
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->createSelf(
             $request,
@@ -46,11 +48,10 @@ class EventTicketController extends HelperController
 
     public function getEventTickets(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["event_id"];
         $routeParams = $this->getRouteParams($request);
@@ -67,22 +68,25 @@ class EventTicketController extends HelperController
 
     public function getEventTicketByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, new EventTicketModel(), null);
     }
 
     public function updateEventTicketByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an event ticket"]);
 
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
             $request,
@@ -102,11 +106,15 @@ class EventTicketController extends HelperController
 
     public function deleteEventTicketByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deleted an event ticket"]);
 
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->deleteByPK($request, $response, (new EventTicketModel()));
     }
@@ -115,11 +123,15 @@ class EventTicketController extends HelperController
 
     public function getOrganiserEventTickets(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $json = new JSON();
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $this->checkOrganiserEventPermission($request, $response);
         $organiser_id = $authDetails["organiser_id"];
         $event_ids = (new EventModel())->select("event_id")->where("organiser_id", $organiser_id)->without("eventControl", "eventTickets")->get();
         $whereInEventIds = [];

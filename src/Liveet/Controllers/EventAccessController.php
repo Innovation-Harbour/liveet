@@ -21,13 +21,15 @@ class EventAccessController extends HelperController
 
     public function createEventAccess(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an event accesses"]);
 
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->createSelf(
             $request,
@@ -48,7 +50,11 @@ class EventAccessController extends HelperController
 
     public function getEventAccessGroup(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         ["event_id" => $event_id] = $this->getRouteParams($request, ["event_id"]);
 
         return $this->getSelfDashboard($request, $response, new EventAccessModel(), [], ["event_id" => $event_id, "hasKey" => false]);
@@ -56,11 +62,10 @@ class EventAccessController extends HelperController
 
     public function getEventAccesses(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["event_ticket_id"];
         $routeParams = $this->getRouteParams($request);
@@ -77,22 +82,24 @@ class EventAccessController extends HelperController
 
     public function getEventAccessByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, new EventAccessModel(), null);
     }
 
     public function assignEventAccessByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "assigned an event access"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
             $request,
@@ -112,22 +119,28 @@ class EventAccessController extends HelperController
 
     public function deleteEventAccessByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deleted an event access"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->deleteByPK($request, $response, (new EventAccessModel()));
     }
 
     public function deleteEventAccessByPKs(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deleted event acesses"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->deleteManyByPK($request, $response, (new EventAccessModel()));
     }
@@ -136,8 +149,12 @@ class EventAccessController extends HelperController
 
     public function getOrganiserEventAccesses(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $json = new JSON();
-        $this->checkOrganiserEventPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_id = $authDetails["organiser_id"];
@@ -180,8 +197,12 @@ class EventAccessController extends HelperController
 
     public function assignOrganiserEventAccessByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $json = new JSON();
-        $this->checkOrganiserEventPermission($request, $response);
 
         $authDetails = static::getTokenInputsFromRequest($request);
 

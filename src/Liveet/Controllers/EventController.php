@@ -18,13 +18,13 @@ class EventController extends HelperController
 
     public function createEvent(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an event"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->createSelf(
             $request,
@@ -50,7 +50,7 @@ class EventController extends HelperController
             ],
             [
                 "mediaOptions" => [
-                    ["mediaKey" => "event_multimedia"], "folder"=>"events",
+                    ["mediaKey" => "event_multimedia"], "folder" => "events",
                     "clientOptions" => [
                         "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
                     ]
@@ -61,11 +61,10 @@ class EventController extends HelperController
 
     public function getEvents(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["event_id", "event_code", "event_type", "payment_type", "organiser_id"];
         $routeParams = $this->getRouteParams($request);
@@ -82,22 +81,24 @@ class EventController extends HelperController
 
     public function getEventByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, new EventModel(), null, ["eventTickets", "eventControl"]);
     }
 
     public function updateEventByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an event details"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
             $request,
@@ -125,11 +126,14 @@ class EventController extends HelperController
 
     public function deleteEventByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deletd an event"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->deleteByPK($request, $response, (new EventModel()));
     }
@@ -138,11 +142,13 @@ class EventController extends HelperController
 
     public function getOrganiserEvents(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
-        $this->checkOrganiserEventPermission($request, $response);
         $organiser_id = $authDetails["organiser_id"];
         $expectedRouteParams = ["event_id", "event_code", "event_type", "payment_type"];
         $routeParams = $this->getRouteParams($request);

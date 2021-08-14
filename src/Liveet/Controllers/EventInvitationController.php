@@ -21,13 +21,14 @@ class EventInvitationController extends HelperController
 
     public function createEventInvitation(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "created an event invitation"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->createSelf(
             $request,
@@ -48,11 +49,10 @@ class EventInvitationController extends HelperController
 
     public function getEventInvitations(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $expectedRouteParams = ["event_id"];
         $routeParams = $this->getRouteParams($request);
@@ -69,22 +69,24 @@ class EventInvitationController extends HelperController
 
     public function getEventInvitationByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkAdminEventPermission($request, $response);
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         return $this->getByPK($request, $response, new EventInvitationModel(), null);
     }
 
     public function updateEventInvitationByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "updated an event invitation"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->updateByPK(
             $request,
@@ -105,11 +107,14 @@ class EventInvitationController extends HelperController
 
     public function deleteEventInvitationByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkAdminEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
         $authDetails = static::getTokenInputsFromRequest($request);
 
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "deleted an event invitation"]);
-
-        $this->checkAdminEventPermission($request, $response);
 
         return $this->deleteByPK($request, $response, (new EventInvitationModel()));
     }
@@ -118,7 +123,10 @@ class EventInvitationController extends HelperController
 
     public function createOrganiserEventInvitation(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserEventPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -150,9 +158,12 @@ class EventInvitationController extends HelperController
 
     public function getOrganiserEventInvitations(Request $request, ResponseInterface $response): ResponseInterface
     {
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+        
         $authDetails = static::getTokenInputsFromRequest($request);
-
-        $this->checkOrganiserEventPermission($request, $response);
 
         $expectedRouteParams = ["event_id"];
         $routeParams = $this->getRouteParams($request);
@@ -177,9 +188,10 @@ class EventInvitationController extends HelperController
 
     public function getOrganiserEventInvitationByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserEventPermission($request, $response);
-
-        $authDetails = static::getTokenInputsFromRequest($request);
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $routeParams = $this->getRouteParams($request, ["event_invitation_id"]);
         if (isset($routeParams["event_invitation_id"])) {
@@ -190,7 +202,10 @@ class EventInvitationController extends HelperController
 
     public function updateOrganiserEventInvitationByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserEventPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $authDetails = static::getTokenInputsFromRequest($request);
 
@@ -220,7 +235,10 @@ class EventInvitationController extends HelperController
 
     public function deleteOrganiserEventInvitationByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->checkOrganiserEventPermission($request, $response);
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
 
         $json = new JSON();
         $authDetails = static::getTokenInputsFromRequest($request);

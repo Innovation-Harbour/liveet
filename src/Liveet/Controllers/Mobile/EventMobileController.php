@@ -322,7 +322,11 @@ class EventMobileController extends HelperController
       "user_face_id" => $face_id,
     ];
 
-    $addTicketUser = $ticket_db->createSelf($db_details);
+    if ($ticket_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->exists()) {
+      $ticket_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->update(["ownership_status" => Constants::EVENT_TICKET_ACTIVE]);
+    } else {
+      $addTicketUser = $ticket_db->createSelf($db_details);
+    }
 
     if (!$isFree) {
       try {

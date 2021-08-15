@@ -230,47 +230,78 @@ class OrganiserModel extends BaseModel
         return ["data" => $model["data"], "error" => $model["error"]];
     }
 
-    public function getDashboard($pk, $queryOptions = null)
+    public function changeArrayKey($arr, $oldKey, $newkey)
     {
-        // $organiserStaff =  $this->where($this->primaryKey, $pk)->first();
-        // $organiser_id = $organiserStaff["organiser_id"];
-        $organiser_id = $pk;
+        $newArr =  $arr;
 
-        $staffCount = OrganiserStaffModel::where("organiser_id", $organiser_id)->count();
+        foreach ($arr as $key => $value) {
+            $changedKey = $key;
 
-        $eventCount = EventModel::where("organiser_id", $organiser_id)->count();
-        $publicEventCount = EventModel::where("organiser_id", $organiser_id)->where("event_type", Constants::EVENT_TYPE_PUBLIC)->count();
-        $privateEventCount = EventModel::where("organiser_id", $organiser_id)->where("event_type", Constants::EVENT_TYPE_PRIVATE)->count();
-        $freeEventCount = EventModel::where("organiser_id", $organiser_id)->where("event_payment_type", Constants::PAYMENT_TYPE_FREE)->count();
-        $paidEventCount = EventModel::where("organiser_id", $organiser_id)->where("event_payment_type", Constants::PAYMENT_TYPE_PAID)->count();
 
-        $eventTicketTypesCount = EventTicketModel::join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->count();
+            if (gettype($key) === "string" && $key == $oldKey) {
+                $newArr[$newkey] = $value;
+                $changedKey = $newkey;
 
-        $totalEventTicketCount = EventTicketModel::join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->sum("ticket_population");
+                unset($newArr[$oldKey]);
+            }
+
+            if (gettype($key) === "integer" && gettype($value) != "array"  && $value == $oldKey) {
+                $newArr[$key] = $newkey;
+            }
+
+            if (gettype($value) === "array") {
+                $newArr[$changedKey] = $this->changeArrayKey($value, $oldKey, $newkey);
+            }
+        }
+
+        return $newArr;
+    }
+
+    public function getDashboard($conditions, $queryOptions = null)
+    {
+        $staffCount = OrganiserStaffModel::where($conditions)->count();
+
+        $newConditions =  $this->changeArrayKey($conditions, "created_at", "event.created_at");
+
+        $eventCount = EventModel::where($newConditions)->count();
+        $publicEventCount = EventModel::where($newConditions)->where("event_type", Constants::EVENT_TYPE_PUBLIC)->count();
+        $privateEventCount = EventModel::where($newConditions)->where("event_type", Constants::EVENT_TYPE_PRIVATE)->count();
+        $freeEventCount = EventModel::where($newConditions)->where("event_payment_type", Constants::PAYMENT_TYPE_FREE)->count();
+        $paidEventCount = EventModel::where($newConditions)->where("event_payment_type", Constants::PAYMENT_TYPE_PAID)->count();
+
+        $newConditions =  $this->changeArrayKey($conditions, "created_at", "event_ticket.created_at");
+
+        $eventTicketTypesCount = EventTicketModel::join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->count();
+
+        $totalEventTicketCount = EventTicketModel::join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->sum("ticket_population");
         $totalExpectedTicketRevenue = EventTicketModel::selectRaw('SUM(ticket_population * ticket_cost) as totalExpectedTicketRevenue')
-            ->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->first()["totalExpectedTicketRevenue"];
+            ->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->first()["totalExpectedTicketRevenue"];
+
+        $newConditions =  $this->changeArrayKey($conditions, "created_at", "event_ticket_users.created_at");
 
         $totalBoughtTicketByTicketCount = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")
-            ->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->count();
-        $totalBoughtTicketByTicketSum = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->sum("ticket_cost");
+            ->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->count();
+        $totalBoughtTicketByTicketSum = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->sum("ticket_cost");
 
-        $totalUsedTicketByTicketCount = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->where("status", Constants::EVENT_TICKET_USED)->count();
-        $totalUsedTicketByTicketSum = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->where("status", Constants::EVENT_TICKET_USED)->sum("ticket_cost");
+        $totalUsedTicketByTicketCount = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->where("status", Constants::EVENT_TICKET_USED)->count();
+        $totalUsedTicketByTicketSum = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->where("status", Constants::EVENT_TICKET_USED)->sum("ticket_cost");
 
-        $totalUnusedTicketByTicketCount = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->where("status", Constants::EVENT_TICKET_UNUSED)->count();
-        $totalUnusedTicketByTicketSum = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->where("status", Constants::EVENT_TICKET_UNUSED)->sum("ticket_cost");
+        $totalUnusedTicketByTicketCount = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->where("status", Constants::EVENT_TICKET_UNUSED)->count();
+        $totalUnusedTicketByTicketSum = EventTicketUserModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_ticket_users.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->where("status", Constants::EVENT_TICKET_UNUSED)->sum("ticket_cost");
 
-        $totalGeneratedAccessCodeCount = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->count();
-        $totalGeneratedAccessCodeSum = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->sum("ticket_cost");
+        $newConditions =  $this->changeArrayKey($conditions, "created_at", "event_access.created_at");
 
-        $totalAssignedAccessCodeCount = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->where("event_access_used_status", Constants::EVENT_ACCESS_ASSIGNED)->count();
-        $totalAssignedAccessCodeSum = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->where("event_access_used_status", Constants::EVENT_ACCESS_ASSIGNED)->sum("ticket_cost");
+        $totalGeneratedAccessCodeCount = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->count();
+        $totalGeneratedAccessCodeSum = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->sum("ticket_cost");
 
-        $totalUnassignedAccessCodeCount = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->where("event_access_used_status", Constants::EVENT_ACCESS_UNASSIGNED)->count();
-        $totalUnassignedAccessCodeSum = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->where("event_access_used_status", Constants::EVENT_ACCESS_UNASSIGNED)->sum("ticket_cost");
+        $totalAssignedAccessCodeCount = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->where("event_access_used_status", Constants::EVENT_ACCESS_ASSIGNED)->count();
+        $totalAssignedAccessCodeSum = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->where("event_access_used_status", Constants::EVENT_ACCESS_ASSIGNED)->sum("ticket_cost");
 
-        $totalUsedAccessCodeCount = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->where("event_access_used_status", Constants::EVENT_ACCESS_USED)->count();
-        $totalUsedAccessCodeSum = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->where("event_access_used_status", Constants::EVENT_ACCESS_USED)->sum("ticket_cost");
+        $totalUnassignedAccessCodeCount = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->where("event_access_used_status", Constants::EVENT_ACCESS_UNASSIGNED)->count();
+        $totalUnassignedAccessCodeSum = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->where("event_access_used_status", Constants::EVENT_ACCESS_UNASSIGNED)->sum("ticket_cost");
+
+        $totalUsedAccessCodeCount = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->where("event_access_used_status", Constants::EVENT_ACCESS_USED)->count();
+        $totalUsedAccessCodeSum = EventAccessModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "event_access.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->where("event_access_used_status", Constants::EVENT_ACCESS_USED)->sum("ticket_cost");
 
         $totalPredictedUsedTicketCount = $totalBoughtTicketByTicketCount + $totalUsedAccessCodeCount + $totalAssignedAccessCodeCount;
         $totalPreredictedRevenue = $totalBoughtTicketByTicketSum + $totalUsedAccessCodeSum + $totalAssignedAccessCodeSum;
@@ -278,16 +309,25 @@ class OrganiserModel extends BaseModel
         $totalMinimumUsedTicketCount = $totalUsedTicketByTicketCount + $totalUsedAccessCodeCount;
         $totalMinimumPossibleRevenue = $totalUsedTicketByTicketSum + $totalUsedAccessCodeSum;
 
-        $totalGeneratedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalGeneratedInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where("organiser_id", $organiser_id)->first()["totalGeneratedInvitations"];
-        $totalAcceptedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalAcceptedInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where("organiser_id", $organiser_id)->where("event_invitation_status", Constants::INVITATION_ACCEPT)->first()["totalAcceptedInvitations"];
-        $totalPendingInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalPendingInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where("organiser_id", $organiser_id)->where("event_invitation_status", Constants::INVITATION_PENDING)->first()["totalPendingInvitations"];
-        $totalRejectedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalRejectedInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where("organiser_id", $organiser_id)->where("event_invitation_status", Constants::INVITATION_PENDING)->first()["totalRejectedInvitations"];
+        $newConditions =  $this->changeArrayKey($conditions, "created_at", "event_invitation.created_at");
 
-        $eventTimelinesCount = EventTimelineModel::join("event", "event.event_id", "=", "event_timeline.event_id")->where("organiser_id", $organiser_id)->count();
-        $evnetTimelinMediaCount = TimelineMediaModel::join("event_timeline", "event_timeline.timeline_id", "=", "timeline_media.timeline_id")->join("event", "event.event_id", "=", "event_timeline.event_id")->where("organiser_id", $organiser_id)->count();
+        $totalGeneratedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalGeneratedInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where($newConditions)->first()["totalGeneratedInvitations"];
+        $totalAcceptedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalAcceptedInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where($newConditions)->where("event_invitation_status", Constants::INVITATION_ACCEPT)->first()["totalAcceptedInvitations"];
+        $totalPendingInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalPendingInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where($newConditions)->where("event_invitation_status", Constants::INVITATION_PENDING)->first()["totalPendingInvitations"];
+        $totalRejectedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalRejectedInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where($newConditions)->where("event_invitation_status", Constants::INVITATION_PENDING)->first()["totalRejectedInvitations"];
 
-        $paymentCount = PaymentModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "payment.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->count();
-        $paymentSum = PaymentModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "payment.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where("organiser_id", $organiser_id)->sum("ticket_cost");
+        $newConditions =  $this->changeArrayKey($conditions, "created_at", "event_timeline.created_at");
+
+        $eventTimelinesCount = EventTimelineModel::join("event", "event.event_id", "=", "event_timeline.event_id")->where($newConditions)->count();
+
+        $newConditions =  $this->changeArrayKey($conditions, "created_at", "timeline_media.created_at");
+
+        $evnetTimelinMediaCount = TimelineMediaModel::join("event_timeline", "event_timeline.timeline_id", "=", "timeline_media.timeline_id")->join("event", "event.event_id", "=", "event_timeline.event_id")->where($newConditions)->count();
+
+        $newConditions =  $this->changeArrayKey($conditions, "created_at", "payment.created_at");
+
+        $paymentCount = PaymentModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "payment.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->count();
+        $paymentSum = PaymentModel::join("event_ticket", "event_ticket.event_ticket_id", "=", "payment.event_ticket_id")->join("event", "event.event_id", "=", "event_ticket.event_id")->where($newConditions)->sum("ticket_cost");
 
         $dashboard = [
             "staffCount" => $staffCount ?? 0,

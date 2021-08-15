@@ -1055,7 +1055,7 @@ abstract class BaseController
 
         $pk = $authDetails[$model->primaryKey];
 
-        $data = $model->getDashboard($pk, $queryOptions);
+        $data = $model->getDashboard([$model->primaryKey => $pk], $queryOptions);
         if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);
 
@@ -1067,22 +1067,11 @@ abstract class BaseController
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function getDashboardByPK(Request $request, ResponseInterface $response, $model, array $accountOptions = [], $queryOptions = []): ResponseInterface
+    public function getDashboardByConditions(Request $request, ResponseInterface $response, $model, $conditions = [], array $accountOptions = [], $queryOptions = []): ResponseInterface
     {
         $json = new JSON();
-        $pk = NULL;
 
-        if (isset($accountOptions["pk"])) {
-            $pk = $accountOptions["pk"];
-        } else {
-
-            [$model->primaryKey => $pk, "error" => $error] = $this->getRouteParams($request, [$model->primaryKey]);
-            if ($error) {
-                return $json->withJsonResponse($response, $error);
-            }
-        }
-
-        $data = $model->getDashboard($pk, $queryOptions);
+        $data = $model->getDashboard($conditions, $queryOptions);
 
         if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
             $payload = array("errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400);

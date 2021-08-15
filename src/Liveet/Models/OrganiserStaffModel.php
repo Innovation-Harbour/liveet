@@ -128,11 +128,12 @@ class OrganiserStaffModel extends BaseModel
         return ["data" => $organiserStaff, "error" => ""];
     }
 
-    public function getDashboard($pk, $queryOptions = null)
+    public function getDashboard($conditions, $queryOptions = null)
     {
-        $organiser_id = $this->find($pk)["organiser_id"];
+        $organiser_staff_id = $conditions["organiser_staff_id"];
+        $organiser_id = $this->find($organiser_staff_id)["organiser_id"];
 
-        return (new OrganiserModel())->getDashboard($organiser_id, $queryOptions);
+        return (new OrganiserModel())->getDashboard(["organiser_id" => $organiser_id], $queryOptions);
     }
 
     public function getStruct()

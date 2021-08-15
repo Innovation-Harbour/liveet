@@ -271,7 +271,7 @@ class EventMobileController extends HelperController
       return $this->json->withJsonResponse($response, $error);
     }
 
-    if ($ticket_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->exists()) {
+    if ($ticket_db->where("event_ticket_id", $ticket_id)->where("user_id", $user_id)->where("ownership_status", Constants::EVENT_TICKET_ACTIVE)->exists()) {
       $error = ["errorMessage" => "User already registered for event", "statusCode" => 400];
       return $this->json->withJsonResponse($response, $error);
     }

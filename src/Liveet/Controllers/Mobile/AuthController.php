@@ -510,25 +510,51 @@ class AuthController extends HelperController
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
-    $server = $_ENV["MQTT_SERVER"];
-    $port = $_ENV["MQTT_PORT"];
-    $username = $_ENV["MQTT_USER"];
-    $password = $_ENV["MQTT_PASSWORD"];
-    $client_id = 'liveet_mqtt_subscriber_2';
+    $json = new JSON();
+    $temp_db = new TempsModel();
 
-    $mqtt = new phpMQTT($server, $port, $client_id);
+    $temp_details = $temp_db->first();
+    $base64 = $temp_details->base_64;
 
-    $topic = 'liveet/mqtt/housekeeping';
+    $byte_image = base64_decode($base64);
 
-    if ($mqtt->connect(true, NULL, $username, $password)) {
-      $mqtt->publish($topic, 'mqtt/face/1768583/Snap', 0, false);
-      $mqtt->close();
-    } else {
-      var_dump("error sending MQTT");
-      die;
+    $aws_key = $_ENV["AWS_KEY"];
+    $aws_secret = $_ENV["AWS_SECRET"];
+
+    $code = rand(00000000, 99999999);
+
+    try {
+      $s3 = new S3Client([
+        'region'  => 'us-west-2',
+        'version' => 'latest',
+        'credentials' => [
+          'key'    => $aws_key,
+          'secret' => $aws_secret,
+        ]
+      ]);
+    } catch (\Exception $e) {
+      $error = ["errorMessage" => "Error connecting to AWS s3. Please try Registering again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
     }
 
-    $payload = ["statusCode" => 200, "successMessage" => "MQTT publish Successfully"];
+    //push image to s3
+    $key = 'user-' . $code . '-image.png';
+
+    try {
+      $s3_result = $s3->putObject([
+        'Bucket' => 'liveet-test-user-bucket',
+        'Key'    => $key,
+        'Body'   => $byte_image,
+        'ACL'    => 'public-read',
+        'ContentType'    => 'image/png'
+      ]);
+    } catch (\Exception $e) {
+      $error = ["errorMessage" => "Error posting image to S3. Please try Registering again", "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+
+    $payload = ["statusCode" => 200, "successMessage" => "IMAGE UPLOAD  Successfully"];
     return $json->withJsonResponse($response, $payload);
   }
 

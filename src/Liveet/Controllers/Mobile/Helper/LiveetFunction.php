@@ -355,7 +355,8 @@ trait LiveetFunction
     ->select('event_ticket.event_ticket_id','event_ticket.event_id')
     ->where("turnstile.turnstile_name",$turnstile_id)->where("turnstile_event.deleted_at",NULL);
 
-
+    var_dump($turnstile_query);
+    die;
 
     if($turnstile_query->count() < 1)
     {

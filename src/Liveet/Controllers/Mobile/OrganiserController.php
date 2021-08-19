@@ -157,10 +157,6 @@ class OrganiserController extends HelperController
 
     $exploded_image = explode(",", $image);
 
-    var_dump($exploded_image[1]);
-    die;
-
-
     $is_approved = $this->checkTurnstileFaceMatchForEvent($exploded_image[1], $turnstile_id);
 
     $server = $_ENV["MQTT_SERVER"];

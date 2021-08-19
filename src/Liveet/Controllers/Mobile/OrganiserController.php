@@ -155,10 +155,10 @@ class OrganiserController extends HelperController
     $image = $data["image"];
     $turnstile_id = $data["id"];
 
-    var_dump($image,$turnstile_id);
-    die;
-
     $exploded_image = explode(",", $image);
+
+    var_dump($exploded_image[1]);
+    die;
 
 
     $is_approved = $this->checkTurnstileFaceMatchForEvent($exploded_image[1], $turnstile_id);

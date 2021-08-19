@@ -348,15 +348,12 @@ trait LiveetFunction
     $event_db = new EventModel();
     $event_user_db = new EventTicketUserModel();
     $turnstile_db = new TurnstileEventModel();
-    $log = new VerificationLogModel();
+    $log = new FaceVerificationLogModel();
 
     $turnstile_query = $turnstile_db->join('turnstile', 'turnstile_event.turnstile_id', '=', 'turnstile.turnstile_id')
     ->join('event_ticket', 'turnstile_event.event_ticket_id', '=', 'event_ticket.event_ticket_id')
     ->select('event_ticket.event_ticket_id','event_ticket.event_id')
     ->where("turnstile.turnstile_name",$turnstile_id)->where("turnstile_event.deleted_at",NULL);
-
-    var_dump($turnstile_query);
-    die;
 
     if($turnstile_query->count() < 1)
     {

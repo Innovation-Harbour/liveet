@@ -150,14 +150,13 @@ class OrganiserController extends HelperController
 
   public function turnstileVerifyUser(Request $request, ResponseInterface $response): ResponseInterface
   {
-    //declare needed class objects
-    $event_db = new EventModel();
-    $user_db = new UserModel();
-
     $data = $request->getParsedBody();
 
     $image = $data["image"];
     $turnstile_id = $data["id"];
+
+    var_dump($image,$turnstile_id);
+    die;
 
     $exploded_image = explode(",", $image);
 

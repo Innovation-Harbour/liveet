@@ -104,7 +104,7 @@ class Constants
   const NOTIFICATION_USER_GROUP = "USER_GROUP";
 
 
-  const MOBILE_APP_DOWNLOAD_URL = "https://bit.ly/liveet";
+  const MOBILE_APP_DOWNLOAD_URL = "https://liveet.co";
 
   const TIMELINE_NOTIFICATION_TITLE = "Timeline";
   const TIMELINE_NOTIFICATION_MESSAGE = "A new timeline was uploaded";

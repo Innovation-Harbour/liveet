@@ -51,8 +51,9 @@ class EventModel extends BaseModel
     }
 
     public function turnstiles()
-    {
-        return $this->belongsToMany(TurnstileModel::class, "turnstile_event", $this->primaryKey, "turnstile_id", $this->primaryKey, "turnstile_id");
+    {        
+        // $query = (new EventTicketModel());
+        // return $this->belongsToMany(TurnstileModel::class, "turnstile_event", $this->primaryKey, "turnstile_id", $this->primaryKey, "turnstile_id");
     }
 
     public function userFavourites()

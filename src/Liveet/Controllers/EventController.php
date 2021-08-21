@@ -76,7 +76,7 @@ class EventController extends HelperController
             }
         }
 
-        return $this->getByPage($request, $response, new EventModel(), null, $conditions, ["eventTickets", "eventControl", "turnstiles"]);
+        return $this->getByPage($request, $response, new EventModel(), null, $conditions, ["eventTickets", "eventControl"]);
     }
 
     public function getEventByPK(Request $request, ResponseInterface $response): ResponseInterface

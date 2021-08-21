@@ -4,6 +4,7 @@ namespace Liveet\Models;
 
 use Rashtell\Domain\KeyManager;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use Liveet\Controllers\BaseController;
 use Liveet\Domain\Constants;
 
@@ -25,8 +26,7 @@ class BaseModel extends Model
         $userQuery =  $this::where("publicKey", $publicKey)
             ->where("username", "=", $username)
             ->where("usertype", "=", $usertype)
-            ->where("accessStatus", Constants::USER_ENABLED)
-        ;
+            ->where("accessStatus", Constants::USER_ENABLED);
 
         return ($userQuery->exists()) ? ["isAuthenticated" => true, "error" => ""] : ["isAuthenticated" => false, "error" => "Expired session"];
     }
@@ -285,7 +285,14 @@ class BaseModel extends Model
             $query = $query->with($relationships);
         }
 
-        $allmodels = $query->get();
+        $allmodels = [];
+        try {
+            $allmodels = $query->get();
+        } catch (QueryException $e) {
+            error_log($e->getMessage());
+            return ["error" => "Service unavailable", "data" => null];
+        }
+
         $total = count($allmodels);
 
         return ["data" => ["total" => $total, "all" => $allmodels,], "error" => ""];
@@ -339,7 +346,13 @@ class BaseModel extends Model
             $query = $query->with($relationships);
         }
 
-        $allmodels = $query->get();
+        $allmodels = [];
+        try {
+            $allmodels = $query->get();
+        } catch (QueryException $e) {
+            error_log($e->getMessage());
+            return ["error" => "Service unavailable", "data" => null];
+        }
         $total = count($allmodels);
 
         return ["data" => ["total" => $total, "all" => $allmodels], "error" => ""];
@@ -359,7 +372,13 @@ class BaseModel extends Model
             $query = $query->with($relationships);
         }
 
-        $model = $query->first();
+        $model = [];
+        try {
+            $model = $query->first();
+        } catch (QueryException $e) {
+            error_log($e->getMessage());
+            return ["error" => "Service unavailable", "data" => null];
+        }
 
         return ["data" => $model, "error" => ""];
     }
@@ -406,9 +425,15 @@ class BaseModel extends Model
             $query = $query->with($relationships);
         }
 
-        $model = $query->get();
+        $allmodels = [];
+        try {
+            $allmodels = $query->get();
+        } catch (QueryException $e) {
+            error_log($e->getMessage());
+            return ["error" => "Service unavailable", "data" => null];
+        }
 
-        return ["data" => $model, "error" => ""];
+        return ["data" => $allmodels, "error" => ""];
     }
 
     public function updateByPK($pk, $allInputs, $checks = [], $queryOptions = [])

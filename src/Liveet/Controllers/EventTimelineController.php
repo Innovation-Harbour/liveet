@@ -59,7 +59,7 @@ class EventTimelineController extends HelperController
                     [
                         "mediaKey" => "timeline_media", "multiple" => true, "folder" => "timelines/$event_code",
                         "clientOptions" => [
-                            "containerName" => "liveet-media", "mediaName" => $event_code . "-" . rand(00000000, 99999999)
+                            "containerName" => "liveet-prod-media", "mediaName" => $event_code . "-" . rand(00000000, 99999999)
                         ]
                     ]
                 ]

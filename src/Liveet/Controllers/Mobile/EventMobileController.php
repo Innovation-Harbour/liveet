@@ -299,7 +299,7 @@ class EventMobileController extends HelperController
         'DetectionAttributes' => ['ALL'],
         'Image' => [ // REQUIRED
           'S3Object' => [
-            'Bucket' => 'liveet-users',
+            'Bucket' => 'liveet-prod-users',
             'Name' => $user_image_key,
           ]
         ]
@@ -1336,7 +1336,7 @@ class EventMobileController extends HelperController
         'DetectionAttributes' => ['ALL'],
         'Image' => [ // REQUIRED
           'S3Object' => [
-            'Bucket' => 'liveet-users',
+            'Bucket' => 'liveet-prod-users',
             'Name' => $user_image_key,
           ]
         ]

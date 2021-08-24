@@ -48,7 +48,7 @@ class AuthController extends HelperController
     $phone_count = strlen($rest_of_phone_number);
 
     if ($country_code !== "+234") {
-      $error = ["errorMessage" => "Selected Country not supported at the moment for now", "statusCode" => 400];
+      $error = ["errorMessage" => "Selected Country not supported at the moment", "statusCode" => 400];
 
       return $json->withJsonResponse($response, $error);
     }
@@ -449,7 +449,7 @@ class AuthController extends HelperController
 
       try {
         $s3_result = $s3->putObject([
-          'Bucket' => 'liveet-users',
+          'Bucket' => 'liveet-prod-users',
           'Key'    => $key,
           'Body'   => $byte_image,
           'ACL'    => 'public-read',
@@ -460,7 +460,7 @@ class AuthController extends HelperController
         return $json->withJsonResponse($response, $error);
       }
 
-      $picture_url = "https://liveet-users.s3-us-west-2.amazonaws.com/" . $key;
+      $picture_url = "https://liveet-prod-users.s3-us-west-2.amazonaws.com/" . $key;
 
 
 

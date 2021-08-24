@@ -51,7 +51,7 @@ class EventModel extends BaseModel
     }
 
     public function turnstiles()
-    {        
+    {
         // $query = (new EventTicketModel());
         // return $this->belongsToMany(TurnstileModel::class, "turnstile_event", $this->primaryKey, "turnstile_id", $this->primaryKey, "turnstile_id");
     }
@@ -92,9 +92,10 @@ class EventModel extends BaseModel
         $tickets = $details["tickets"];
 
         $event_can_invite = $details["event_can_invite"];
-        $event_sale_stop_time = $details["event_sale_stop_time"];
         $event_can_transfer_ticket = $details["event_can_transfer_ticket"];
         $event_can_recall = $details["event_can_recall"];
+        $event_sale_stop_time = $details["event_sale_stop_time"];
+        $event_stop_time = $details["event_stop_time"];
 
         $status = ""; // "done" on success, "error" on failure
         $i = 0;
@@ -133,7 +134,7 @@ class EventModel extends BaseModel
 
         //create event controls
         $eventControlModel = (new EventControlModel());
-        $eventControlModel->create([$this->primaryKey => $event_id, "event_can_invite" => $event_can_invite, "event_sale_stop_time" => $event_sale_stop_time, "event_can_transfer_ticket" => $event_can_transfer_ticket, "event_can_recall" => $event_can_recall]);
+        $eventControlModel->create([$this->primaryKey => $event_id, "event_can_invite" => $event_can_invite, "event_can_transfer_ticket" => $event_can_transfer_ticket, "event_can_recall" => $event_can_recall, "event_sale_stop_time" => $event_sale_stop_time, "event_stop_time" => $event_stop_time]);
 
         $eventReturn = $this->getByPK($event_id)["data"];
         // $eventControls = $eventControlModel->getStruct()->where($this->primaryKey, $event_id)->latest($eventControlModel->primaryKey)->first();

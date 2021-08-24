@@ -35,7 +35,7 @@ class EventController extends HelperController
                     "organiser_id",
                     "event_name", "event_desc", "event_type", "event_venue", "event_date_time", "event_payment_type",
                     "tickets",
-                    "event_can_invite", "event_sale_stop_time", "event_can_transfer_ticket", "event_can_recall"
+                    "event_can_invite", "event_can_transfer_ticket", "event_can_recall", "event_sale_stop_time", "event_stop_time"
                 ],
 
                 "expected" => [
@@ -45,7 +45,7 @@ class EventController extends HelperController
                     //     "ticket_name", "ticket_desc", "ticket_cost", "ticket_population", "ticket_discount",
                     // ]
                     ,
-                    "event_can_invite", "event_sale_stop_time", "event_can_transfer_ticket", "event_can_recall",
+                    "event_can_invite", "event_can_transfer_ticket", "event_can_recall", "event_sale_stop_time", "event_stop_time"
                 ],
             ],
             [

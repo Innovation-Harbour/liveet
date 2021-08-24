@@ -6,6 +6,10 @@
 
 ## Development
 
+### Tools
+
+- [Documenter link](https://documenter.getpostman.com/view/8498400/TzeZFnBF)
+
 ## TODO
 
 - deleting a ticket type should delete all its access codes
@@ -53,18 +57,17 @@
 
 - accountOptions :array
   - dataOptions :array
-    - overrideKeys  :array
+    - overrideKeys :array
       - $inputName => $columnName
   - mediaOptions :multi-dimensional-array
     - mediaKey :string
     - multiple :boolean
     - folder :string || function
     - clientOptions :array
-      - containerName :string 
+      - containerName :string
       - baseUrl :string
       - mediaName :string
   - responseMessage :string
-  
 - queryOptions :array
   - idKey :string
   - whereIn :multi-dimensional-array
@@ -76,6 +79,6 @@
   - orderBy :array ["columnName" => "ASC" | "DESC" ]
   - whereHas :array ["relationshipName"=> function($query){return $query;}]
   - latest :boolean | string
-  - useParentModel  :boolean
+  - useParentModel :boolean
 - checks :array
   - [primaryKey :boolean, detailsKey :string, columnName :string, errorText :string ]

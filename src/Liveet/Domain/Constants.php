@@ -63,7 +63,7 @@ class Constants
   const IMAGE_RESIZE_MAX_HEIGHT = 1200;
   const IMAGE_RESIZE_QUALITY = 90;
 
-  const AWS_S3_BASE_URL = "https://liveet-media.s3-us-west-2.amazonaws.com/";
+  const AWS_S3_BASE_URL = "https://liveet-prod-media.s3-us-west-2.amazonaws.com/";
 
   const EVENT_ACCESS_ASSIGNED = "ASSIGNED";
   const EVENT_ACCESS_UNASSIGNED = "UNASSIGNED";

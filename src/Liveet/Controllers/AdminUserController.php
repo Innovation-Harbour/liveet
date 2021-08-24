@@ -61,7 +61,7 @@ class AdminUserController extends HelperController
                     [
                         "mediaKey" => "admin_profile_picture", "folder" => "admins",
                         "clientOptions" => [
-                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                            "containerName" => "liveet-prod-media", "mediaName" => rand(00000000, 99999999)
                         ]
                     ]
                 ]
@@ -143,7 +143,7 @@ class AdminUserController extends HelperController
                     [
                         "mediaKey" => "admin_profile_picture", "folder" => "admins",
                         "clientOptions" => [
-                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                            "containerName" => "liveet-prod-media", "mediaName" => rand(00000000, 99999999)
                         ]
                     ]
                 ]
@@ -202,7 +202,7 @@ class AdminUserController extends HelperController
                     [
                         "mediaKey" => "admin_profile_picture", "folder" => "admins",
                         "clientOptions" => [
-                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                            "containerName" => "liveet-prod-media", "mediaName" => rand(00000000, 99999999)
                         ]
                     ]
                 ]

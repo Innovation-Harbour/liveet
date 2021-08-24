@@ -862,7 +862,7 @@ abstract class BaseController
      * @param ResponseInterface $response
      * @param Model $model
      * @param Array $inputs
-     * @param Arrat $accountOptions = []
+     * @param Array $accountOptions = []
      * 
      */
 

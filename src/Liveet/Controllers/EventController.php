@@ -53,7 +53,7 @@ class EventController extends HelperController
                     [
                         "mediaKey" => "event_multimedia", "folder" => "events",
                         "clientOptions" => [
-                            "containerName" => "liveet-media", "mediaName" => rand(00000000, 99999999)
+                            "containerName" => "liveet-prod-media", "mediaName" => rand(00000000, 99999999)
                         ]
                     ]
                 ]

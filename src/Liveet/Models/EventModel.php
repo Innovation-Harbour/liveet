@@ -108,9 +108,9 @@ class EventModel extends BaseModel
         }
 
         $cordinates = $this->getCoordinates($event_venue);
-        $address_found = $cordinates["address_found"];
-        $longitude = $cordinates["longitude"];
-        $latitude = $cordinates["latitude"];
+        $address_found = $cordinates[0];
+        $longitude = $cordinates[1];
+        $latitude = $cordinates[2];
         // [$address_found, $latitude, $longitude] = $this->getCoordinates($event_venue);
         //["address_found" => $address_found, "longitude" => $longitude, "latitude" => $latitude] = $cordinates;
 
@@ -176,9 +176,9 @@ class EventModel extends BaseModel
         $event_can_recall = $details["event_can_recall"];
 
         $cordinates = $this->getCoordinates($event_venue);
-        $address_found = $cordinates["address_found"];
-        $longitude = $cordinates["longitude"];
-        $latitude = $cordinates["latitude"];
+        $address_found = $cordinates[0];
+        $longitude = $cordinates[1];
+        $latitude = $cordinates[2];
 
         //create event
         $this->find($pk)->update(["event_name" => $event_name, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type, "location_lat" => $latitude, "location_long" => $longitude, "event_stop_time" => $event_stop_time]);

@@ -88,6 +88,7 @@ class EventModel extends BaseModel
         $event_date_time = $details["event_date_time"];
         $event_payment_type = $details["event_payment_type"];
         $event_code = $this->generateEventCode($event_name);
+        $event_stop_time = $details["event_stop_time"];
 
         $tickets = $details["tickets"];
 
@@ -95,7 +96,6 @@ class EventModel extends BaseModel
         $event_can_transfer_ticket = $details["event_can_transfer_ticket"];
         $event_can_recall = $details["event_can_recall"];
         $event_sale_stop_time = $details["event_sale_stop_time"];
-        $event_stop_time = $details["event_stop_time"];
 
         $status = ""; // "done" on success, "error" on failure
         $i = 0;
@@ -112,7 +112,7 @@ class EventModel extends BaseModel
 
         //create event
         $this->create([
-            "organiser_id" => $organiser_id, "event_name" => $event_name, "event_code" => $event_code, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type, "location_lat" => $latitude, "location_long" => $longitude
+            "organiser_id" => $organiser_id, "event_name" => $event_name, "event_code" => $event_code, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type, "location_lat" => $latitude, "location_long" => $longitude, "event_stop_time" => $event_stop_time
         ]);
 
         //Get event id
@@ -134,7 +134,7 @@ class EventModel extends BaseModel
 
         //create event controls
         $eventControlModel = (new EventControlModel());
-        $eventControlModel->create([$this->primaryKey => $event_id, "event_can_invite" => $event_can_invite, "event_can_transfer_ticket" => $event_can_transfer_ticket, "event_can_recall" => $event_can_recall, "event_sale_stop_time" => $event_sale_stop_time, "event_stop_time" => $event_stop_time]);
+        $eventControlModel->create([$this->primaryKey => $event_id, "event_can_invite" => $event_can_invite, "event_can_transfer_ticket" => $event_can_transfer_ticket, "event_can_recall" => $event_can_recall, "event_sale_stop_time" => $event_sale_stop_time]);
 
         $eventReturn = $this->getByPK($event_id)["data"];
         // $eventControls = $eventControlModel->getStruct()->where($this->primaryKey, $event_id)->latest($eventControlModel->primaryKey)->first();
@@ -150,7 +150,7 @@ class EventModel extends BaseModel
 
     public function getStruct()
     {
-        return $this->select($this->primaryKey, "event_name", "event_code", "event_desc", "event_multimedia", "event_type", "event_venue", "event_date_time", "event_payment_type", "location_lat", "location_long", "organiser_id", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "event_name", "event_code", "event_desc", "event_multimedia", "event_type", "event_venue", "event_date_time", "event_payment_type", "location_lat", "location_long", "organiser_id", "event_stop_time", "created_at", "updated_at");
     }
 
     public function updateByPK($pk, $details, $checks = [], $queryOptions = [])
@@ -162,6 +162,7 @@ class EventModel extends BaseModel
         $event_venue = $details["event_venue"];
         $event_date_time = $details["event_date_time"];
         $event_payment_type = $details["event_payment_type"];
+        $event_stop_time = $details["event_stop_time"];
 
         $tickets = $details["tickets"];
 
@@ -174,7 +175,7 @@ class EventModel extends BaseModel
         ["address_found" => $address_found, "longitude" => $longitude, "latitude" => $latitude] = $cordinates;
 
         //create event
-        $this->find($pk)->update(["event_name" => $event_name, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type, "location_lat" => $latitude, "location_long" => $longitude]);
+        $this->find($pk)->update(["event_name" => $event_name, "event_desc" => $event_desc, "event_multimedia" => $event_multimedia, "event_type" => $event_type, "event_venue" => $event_venue, "event_date_time" => $event_date_time, "event_payment_type" => $event_payment_type, "location_lat" => $latitude, "location_long" => $longitude, "event_stop_time" => $event_stop_time]);
 
         //Get event id
         $event_id = $pk;

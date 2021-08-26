@@ -33,19 +33,19 @@ class EventController extends HelperController
             [
                 "required" => [
                     "organiser_id",
-                    "event_name", "event_desc", "event_type", "event_venue", "event_date_time", "event_payment_type",
+                    "event_name", "event_desc", "event_type", "event_venue", "event_date_time", "event_payment_type", "event_stop_time",
                     "tickets",
-                    "event_can_invite", "event_can_transfer_ticket", "event_can_recall", "event_sale_stop_time", "event_stop_time"
+                    "event_can_invite", "event_can_transfer_ticket", "event_can_recall", "event_sale_stop_time"
                 ],
 
                 "expected" => [
                     "event_name", "event_desc", "event_multimedia", "event_type", "event_venue", "event_date_time", "event_payment_type", "organiser_id",
-                    "tickets"
+                    "tickets", "event_stop_time"
                     // => [
                     //     "ticket_name", "ticket_desc", "ticket_cost", "ticket_population", "ticket_discount",
                     // ]
                     ,
-                    "event_can_invite", "event_can_transfer_ticket", "event_can_recall", "event_sale_stop_time", "event_stop_time"
+                    "event_can_invite", "event_can_transfer_ticket", "event_can_recall", "event_sale_stop_time"
                 ],
             ],
             [
@@ -108,13 +108,13 @@ class EventController extends HelperController
             new EventModel(),
             [
                 "required" => [
-                    "event_name", "event_desc", "event_type", "event_venue", "event_date_time", "event_payment_type",
+                    "event_name", "event_desc", "event_type", "event_venue", "event_date_time", "event_payment_type", "event_stop_time",
                     "tickets",
                     "event_can_invite", "event_sale_stop_time", "event_can_transfer_ticket", "event_can_recall"
                 ],
 
                 "expected" => [
-                    "event_name", "event_desc", "event_multimedia", "event_type", "event_venue", "event_date_time", "event_payment_type", "organiser_id",
+                    "event_name", "event_desc", "event_multimedia", "event_type", "event_venue", "event_date_time", "event_payment_type", "organiser_id", "event_stop_time",
                     "tickets"
                     // => [
                     //     "ticket_name", "ticket_desc", "ticket_cost", "ticket_population", "ticket_discount",

@@ -32,7 +32,7 @@ class TimelineMediaModel extends BaseModel
         $timeline_media = $details["timeline_media"];
 
         foreach ($timeline_media as $media) {
-            $this->create(["timeline_id" => $timeline_id, "timeline_media" => $media["path"] ?? $media["url"], "media_type" => $media["type"] ?? ""]);
+            $this->create(["timeline_id" => $timeline_id, "timeline_media" => $media["path"] ?? $media["url"], "media_type" => $media["type"] != Constants::MEDIA_TYPE_APPLICATION ? $media["type"] : Constants::MEDIA_TYPE_PDF]);
         }
 
 
@@ -56,6 +56,7 @@ class TimelineMediaModel extends BaseModel
         $timeline_id = $allInputs["timeline_id"];
         $timeline_media = $allInputs["timeline_media"];
         $timeline_media_type = $allInputs["timeline_mediaType"];
+        $timeline_media_type =  $timeline_media_type != Constants::MEDIA_TYPE_APPLICATION ? $timeline_media_type : Constants::MEDIA_TYPE_PDF;
 
         $this->where($this->primaryKey, $pk)->update(["timeline_id" => $timeline_id, "timeline_media" => $timeline_media, "media_type" => $timeline_media_type]);
 
@@ -64,18 +65,19 @@ class TimelineMediaModel extends BaseModel
         return ["data" => $model["data"], "error" => $model["error"]];
     }
 
-    public function getMobileTimeline($user_id, $offset, $limit){
-      $sql = "
+    public function getMobileTimeline($user_id, $offset, $limit)
+    {
+        $sql = "
               SELECT
               DISTINCT timeline_media,event_multimedia,event_name,media_type, timeline_desc
               FROM  timeline_media
               LEFT JOIN event_timeline ON timeline_media.timeline_id = event_timeline.timeline_id
               LEFT JOIN event on event_timeline.event_id = event.event_id
               LEFT JOIN (SELECT event_id,user_id FROM event_ticket INNER JOIN event_ticket_users ON event_ticket.event_ticket_id = event_ticket_users.event_ticket_id) X ON event.event_id = X.event_id
-              WHERE timeline_media.deleted_at IS NULL AND (event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND X.user_id = ".$user_id."))
-              ORDER BY media_datetime DESC LIMIT ".$offset.", ".$limit."
+              WHERE timeline_media.deleted_at IS NULL AND (event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND X.user_id = " . $user_id . "))
+              ORDER BY media_datetime DESC LIMIT " . $offset . ", " . $limit . "
               ";
-      $result = $this->getConnection()->select($sql);
-      return $result;
+        $result = $this->getConnection()->select($sql);
+        return $result;
     }
 }

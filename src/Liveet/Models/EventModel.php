@@ -107,7 +107,11 @@ class EventModel extends BaseModel
             return ["data" => null, "error" => "An error occured while creating aws event"];
         }
 
-        [$address_found, $latitude, $longitude] = $this->getCoordinates($event_venue);
+        $cordinates = $this->getCoordinates($event_venue);
+        $address_found = $cordinates["address_found"];
+        $longitude = $cordinates["longitude"];
+        $latitude = $cordinates["latitude"];
+        // [$address_found, $latitude, $longitude] = $this->getCoordinates($event_venue);
         //["address_found" => $address_found, "longitude" => $longitude, "latitude" => $latitude] = $cordinates;
 
         //create event

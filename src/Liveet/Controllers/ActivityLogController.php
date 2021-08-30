@@ -79,7 +79,7 @@ class ActivityLogController extends HelperController
         $organiser_staff_id = $authDetails["organiser_staff_id"];
         $conditions = ["organiser_staff_id" => $organiser_staff_id];
 
-        return $this->getByDate($request, $response, new OrganiserActivityLogModel(), null, $conditions, ["organiserStaff"]);
+        return $this->getByDate($request, $response, new OrganiserActivityLogModel(), null, $conditions, ["organiserStaff"], ["dateCreatedColumn" => "created_at"]);
     }
 
     public function getOrganiserStaffActivityLogs(Request $request, ResponseInterface $response): ResponseInterface

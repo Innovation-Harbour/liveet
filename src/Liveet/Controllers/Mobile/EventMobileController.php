@@ -909,6 +909,7 @@ class EventMobileController extends HelperController
     $user_details = $user_db->where("user_id", $user_id)->first();
     $user_phone_number = $user_details->user_phone;
     $user_pics = $user_details->user_picture;
+    $invited_by_pics = "https://liveet-prod-media.s3.us-west-2.amazonaws.com/liveet-static/user.png";
 
     // get invitations invited for
     $invited_for_results = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_invitee_user_phone", $user_phone_number)->where("event_invitation_status", Constants::INVITATION_PENDING)->get();
@@ -934,11 +935,9 @@ class EventMobileController extends HelperController
       }
 
       $invited_by_name = "Admin";
-      $invited_by_pics = "https://s3.amazonaws.com/livvi.media/user.png";
 
       if ($result->event_inviter_user_id !== null) {
         $invited_by_name = $result_first_name;
-        $invited_by_pics = $result_userpics;
       }
 
 
@@ -989,7 +988,6 @@ class EventMobileController extends HelperController
       $invitee_count = $invitation_db->where("event_id", $result->event_id)->where("event_inviter_user_id", $user_id)->count();
 
       $invited_by_name = "Me";
-      $invited_by_pics = $user_pics;
 
       $can_invite = false;
       $is_free = ($result->event_payment_type === "FREE") ? true : false;
@@ -1056,14 +1054,21 @@ class EventMobileController extends HelperController
         $user_details = $user_db->where("user_phone", $user_phone)->first();
         $user_pics = $user_details->user_picture;
         $user_name = $user_details->user_fullname;
+        if(strlen($user_name) > 2)
+        {
+          $shortname = substr($user_name, 0, 2);
+        } else {
+          $shortname = "NN";
+        }
+        
       }
 
       $tmp = [
         "invitation_id" => intval($result->event_invitation_id),
         "invitee_name" => ($userCount > 0) ? $user_name : $user_phone,
         "invitee_number" => $user_phone,
-        "invitee_pics" => ($userCount > 0) ? $user_pics : null,
-        "invitee_shortname" => ($userCount > 0) ? "" : "NN",
+        "invitee_pics" => null,
+        "invitee_shortname" => ($userCount > 0) ? strtoupper($shortname) : "NN",
         "invitee_status" => strtolower($result->event_invitation_status),
         "can_close" => true,
       ];

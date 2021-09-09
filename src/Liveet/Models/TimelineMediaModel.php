@@ -32,9 +32,10 @@ class TimelineMediaModel extends BaseModel
         $timeline_media = $details["timeline_media"];
 
         foreach ($timeline_media as $media) {
-            $this->create(["timeline_id" => $timeline_id, "timeline_media" => $media["path"] ?? $media["url"], "media_type" => $media["type"] != Constants::MEDIA_TYPE_APPLICATION ? $media["type"] : Constants::MEDIA_TYPE_PDF]);
-        }
+            $mediaType = $media["type"] == Constants::MEDIA_TYPE_APPLICATION ? Constants::MEDIA_TYPE_PDF : $media["type"];
 
+            $this->create(["timeline_id" => $timeline_id, "timeline_media" => $media["path"] ?? $media["url"], "media_type" => $mediaType]);
+        }
 
         return (new EventTimelineModel())->getByPK($timeline_id, null, ["timelineMedia"]);
     }
@@ -56,7 +57,7 @@ class TimelineMediaModel extends BaseModel
         $timeline_id = $allInputs["timeline_id"];
         $timeline_media = $allInputs["timeline_media"];
         $timeline_media_type = $allInputs["timeline_mediaType"];
-        $timeline_media_type =  $timeline_media_type != Constants::MEDIA_TYPE_APPLICATION ? $timeline_media_type : Constants::MEDIA_TYPE_PDF;
+        $timeline_media_type =  $timeline_media_type == Constants::MEDIA_TYPE_APPLICATION ? Constants::MEDIA_TYPE_PDF : $timeline_media_type;
 
         $this->where($this->primaryKey, $pk)->update(["timeline_id" => $timeline_id, "timeline_media" => $timeline_media, "media_type" => $timeline_media_type]);
 

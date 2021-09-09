@@ -3,6 +3,7 @@
 namespace Liveet\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Liveet\APIs\TermiiAPI;
 use Liveet\Domain\Constants;
 
 class EventInvitationModel extends BaseModel
@@ -31,6 +32,15 @@ class EventInvitationModel extends BaseModel
         $event_inviter_user_id = $details["event_inviter_user_id"];
         $event_invitee_user_phone = $details["event_invitee_user_phone"];
 
+        $event = EventModel::find($event_id);
+        if (!$event_id) {
+            return ["data" => null, "error" => "Event not found"];
+        }
+
+        if ($event["event_type"] == Constants::EVENT_TYPE_PUBLIC) {
+            $details["invitee_can_invite_count"] = 0;
+        }
+
         if ($event_inviter_user_id) {
             $inviter = UserModel::find($event_inviter_user_id);
             if (!$inviter) {
@@ -40,20 +50,18 @@ class EventInvitationModel extends BaseModel
 
         $inviteeQuery = UserModel::where("user_phone", $event_invitee_user_phone);
         if (!$inviteeQuery->exists()) {
-            return ["data" => null, "error" => "Invitee not found"];
-        }
-        $invitee = $inviteeQuery->first();
+            $appDownloadLink = Constants::MOBILE_APP_DOWNLOAD_URL;
+            $eventName = $event->event_name;
 
-        if ($invitee["user_id"] == $inviter["user_id"]) {
-            return ["data" => null, "error" => "You cannot invite yourself"];
-        }
+            $termiiResponse = (new TermiiAPI())->sendSMS($event_invitee_user_phone, "An invitation has been sent to you for $eventName event. Kindly download the Liveet app at $appDownloadLink to accept the invitation.");
 
-        $event = EventModel::find($event_id);
-        if (!$event_id) {
-            return ["data" => null, "error" => "Event not found"];
-        }
-        if ($event["event_type"] == Constants::EVENT_TYPE_PUBLIC) {
-            $details["invitee_can_invite_count"] = 0;
+            // return ["data" => null, "error" => "Invitee not found"];
+        } else {
+            $invitee = $inviteeQuery->first();
+
+            if ($invitee["user_id"] == $inviter["user_id"]) {
+                return ["data" => null, "error" => "You cannot invite yourself"];
+            }
         }
 
         if ($this->where(["event_id" => $event_id, "event_inviter_user_id" => $event_inviter_user_id, "event_invitee_user_phone" => $event_invitee_user_phone])->exists()) {

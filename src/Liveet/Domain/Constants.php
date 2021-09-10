@@ -59,6 +59,11 @@ class Constants
   const MEDIA_TYPE_APPLICATION = "APPLICATION";
   const MEDIA_TYPE_PDF = "PDF";
 
+  /**
+   * value "local" | "s3Bucket" | "azure"
+   */
+  const CDN = ["local" => "handleParseMedia", "s3Bucket" => "handleS3ParseMedia", "azure" => "handleAzureParseMedia"];
+
   const IMAGE_RESIZE_MAX_WIDTH = 1200;
   const IMAGE_RESIZE_MAX_HEIGHT = 1200;
   const IMAGE_RESIZE_QUALITY = 90;

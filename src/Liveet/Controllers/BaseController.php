@@ -227,7 +227,7 @@ abstract class BaseController
             foreach ($accountOptions["mediaOptions"] as $mediaOptions) {
 
                 $mediaKey = $mediaOptions["mediaKey"];
-                $cdn = $mediaOptions["cdn"] ?? Constants::CDN["local"];
+                $cdn = $mediaOptions["cdn"] ?? Constants::CDN["s3Bucket"];
 
                 if (!isset($data[$mediaKey])) {
 

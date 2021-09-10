@@ -67,7 +67,7 @@ class TimelineMediaController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["timeline_id", "event_id"];
+        $expectedRouteParams = ["timeline_media_id", "timeline_id", "event_id", "organiser_id"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];
 
@@ -78,6 +78,18 @@ class TimelineMediaController extends HelperController
         }
 
         $whereHas = [];
+        if (isset($conditions["organiser_id"])) {
+            $organiser_id = $conditions["organiser_id"];
+
+            $whereHas["eventTimeline"] = function ($query) use ($organiser_id) {
+                return $query->whereHas("event", function ($query) use ($organiser_id) {
+                    return $query->where("organiser_id", $organiser_id);
+                });
+            };
+
+            unset($conditions["organiser_id"]);
+        }
+
         if (isset($conditions["event_id"])) {
             $event_id = $conditions["event_id"];
 
@@ -227,7 +239,6 @@ class TimelineMediaController extends HelperController
         }
 
         $authDetails = static::getTokenInputsFromRequest($request);
-        $organiser_staff_id = $authDetails["organiser_staff_id"];
         $organiser_id = $authDetails["organiser_id"];
 
         $expectedRouteParams = ["timeline_media_id", "timeline_id", "event_id"];

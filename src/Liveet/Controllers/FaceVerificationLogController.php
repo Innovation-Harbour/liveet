@@ -30,22 +30,15 @@ class FaceVerificationLogController extends HelperController
             }
         }
 
-        $organiser_id = $routeParams["organiser_id"];
+        $whereHas = [];
+        if (isset($conditions["organiser_id"])) {
+            $organiser_id = $conditions["organiser_id"];
 
-        if ($organiser_id && $organiser_id != "-") {
-            return $this->getByPage(
-                $request,
-                $response,
-                new FaceVerificationLogModel(),
-                null,
-                $conditions,
-                ["user", "event"],
-                ["whereHas" => [
-                    "event" => function ($query) use ($organiser_id) {
-                        return $query->where("organiser_id", $organiser_id);
-                    }
-                ]]
-            );
+            $whereHas["event"] = function ($query) use ($organiser_id) {
+                return $query->where("organiser_id", $organiser_id);
+            };
+
+            unset($conditions["organiser_id"]);
         }
 
         return $this->getByPage($request, $response, new FaceVerificationLogModel(), null, $conditions, ["user", "event"]);
@@ -74,12 +67,10 @@ class FaceVerificationLogController extends HelperController
             }
         }
 
-        return $this->getByPage($request, $response, new FaceVerificationLogModel(), null, $conditions, ["user", "event"], [
-            "whereHas" => [
-                "event" => function ($query) use ($organiser_id) {
-                    return $query->where("organiser_id", $organiser_id);
-                }
-            ]
-        ]);
+        $whereHas["event"] = function ($query) use ($organiser_id) {
+            return $query->where("organiser_id", $organiser_id);
+        };
+
+        return $this->getByPage($request, $response, new FaceVerificationLogModel(), null, $conditions, ["user", "event"], ["whereHas" => $whereHas]);
     }
 }

@@ -21,6 +21,16 @@ class EventInvitationModel extends BaseModel
         return $this->belongsTo(EventModel::class, "event_id", "event_id");
     }
 
+    public function inviter()
+    {
+        return $this->belongsTo(UserModel::class, "event_inviter_user_id", "user_id");
+    }
+
+    public function invitee()
+    {
+        return $this->belongsTo(UserModel::class, "event_invitee_user_phone", "user_phone");
+    }
+
     public function getStruct()
     {
         return $this->select($this->primaryKey, "event_id", "invitation_name", "event_inviter_user_id", "event_invitee_user_phone", "invitee_can_invite_count", "event_invitation_status", "created_at", "updated_at");

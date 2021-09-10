@@ -152,6 +152,7 @@ class EventController extends HelperController
         $authDetails = static::getTokenInputsFromRequest($request);
 
         $organiser_id = $authDetails["organiser_id"];
+        
         $expectedRouteParams = ["event_id", "event_code", "event_type", "payment_type"];
         $routeParams = $this->getRouteParams($request);
         $conditions = ["organiser_id" => $organiser_id];

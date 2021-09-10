@@ -13,13 +13,13 @@ isset($adminGroup) && $adminGroup->group(
     function (RouteCollectorProxy $reportGroup) {
 
         $reportGroup->get(
-            "/get/organiser/summary/{organiser_id}",
-            ReportController::class . ":getOrganiserTimelySummary"
+            "/get/organiser/summary/{organiser_id}[/{event_id}]",
+            ReportController::class . ":getOrganiserSummary"
         );
 
         $reportGroup->get(
-            "/get/organiser/timely-summary/{organiser_id}/{from}/{to}/{interval}",
-            ReportController::class . ":getOrganiserSummaryByInterval"
+            "/get/organiser/timely-summary/{organiser_id}/{from}/{to}/{interval}[/{event_id}]",
+            ReportController::class . ":getOrganiserTimelySummary"
         );
     }
 );
@@ -32,7 +32,7 @@ isset($organiserStaffGroup) && $organiserStaffGroup->group(
     function (RouteCollectorProxy $reportGroup) {
 
         $reportGroup->get(
-            "/get/organiser/timely-summary/{from}/{to}/{interval}",
+            "/get/organiser/timely-summary/{from}/{to}/{interval}[/{event_id}]",
             ReportController::class . ":getOrganiserSelfTimelySummary"
         );
     }

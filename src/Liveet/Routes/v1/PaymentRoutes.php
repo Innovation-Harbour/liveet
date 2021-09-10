@@ -13,7 +13,7 @@ isset($adminGroup) && $adminGroup->group(
     function (RouteCollectorProxy $paymentGroup) {
 
         $paymentGroup->get(
-            "/get/payments[/{payment_id}[/{event_ticket_id}[/{user_id}[/{organiser_id}[/{from}[/{to}]]]]]]",
+            "/get/payments[/{payment_id}[/{event_ticket_id}[/{user_id}[/{organiser_id}[/{from}[/{to}[/{event_id}]]]]]]]",
             PaymentController::class . ":getPayments"
         );
     }
@@ -27,7 +27,7 @@ isset($organiserStaffGroup) && $organiserStaffGroup->group(
     function (RouteCollectorProxy $paymentGroup) {
 
         $paymentGroup->get(
-            "/get/payments[/{payment_id}[/{event_ticket_id}[/{user_id}[/{from}[/{to}]]]]]",
+            "/get/payments[/{payment_id}[/{event_ticket_id}[/{user_id}[/{from}[/{to}[/{event_id}]]]]]]",
             PaymentController::class . ":getOrganiserPayments"
         );
     }

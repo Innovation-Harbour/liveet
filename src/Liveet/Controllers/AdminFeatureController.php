@@ -13,7 +13,7 @@ use Liveet\Models\AdminFeatureModel;
 class AdminFeatureController extends HelperController
 {
 
-    /** admin User */
+    /** Admin */
 
     public function createAdminFeature(Request $request, ResponseInterface $response): ResponseInterface
     {
@@ -57,7 +57,28 @@ class AdminFeatureController extends HelperController
             return $permissonResponse;
         }
 
-        return $this->getByPage($request, $response, new AdminFeatureModel(), null, null, ["adminUsers"]);
+        $expectedRouteParams = ["admin_feature_id", "admin_user_id"];
+        $routeParams = $this->getRouteParams($request);
+        $conditions = [];
+
+        foreach ($routeParams as $key => $value) {
+            if (in_array($key, $expectedRouteParams) && $value != "-") {
+                $conditions[$key] = $value;
+            }
+        }
+
+        $whereHas = [];
+        if (isset($conditions["admin_user_id"])) {
+            $admin_user_id = $conditions["admin_user_id"];
+
+            $whereHas["adminUsers"] = function ($query) use ($admin_user_id) {
+                return $query->where("admin_user.admin_user_id", $admin_user_id);
+            };
+
+            unset($conditions["admin_user_id"]);
+        }
+
+        return $this->getByPage($request, $response, new AdminFeatureModel(), null, $conditions, ["adminUsers"], ["whereHas" => $whereHas]);
     }
 
     public function getAdminFeatureByPK(Request $request, ResponseInterface $response): ResponseInterface

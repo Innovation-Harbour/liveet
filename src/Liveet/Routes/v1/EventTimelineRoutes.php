@@ -18,7 +18,7 @@ isset($adminGroup) && $adminGroup->group(
         );
 
         $timelineGroup->get(
-            "/get/timelines[/{event_id}[/{page}[/{limit}]]]",
+            "/get/timelines[/{event_id}[/{page}[/{limit}[/{organiser_id}[/{timeline_id}]]]]]",
             EventTimelineController::class . ":getEventTimelines"
         );
 
@@ -52,7 +52,7 @@ isset($organiserStaffGroup) && $organiserStaffGroup->group(
         );
 
         $timelineGroup->get(
-            "/get/timelines[/{event_id}[/{page}[/{limit}]]]",
+            "/get/timelines[/{event_id}[/{page}[/{limit}[/{timeline_id}]]]]",
             EventTimelineController::class . ":getOrganiserEventTimelines"
         );
 

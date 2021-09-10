@@ -30,5 +30,10 @@ isset($v1Group) && $v1Group->group(
             var_dump("testing");
             return $res;
         });
+
+        $testGroup->post(
+            "/generate/hash",
+            AdminUserController::class . ":generateHash"
+        );
     }
 );

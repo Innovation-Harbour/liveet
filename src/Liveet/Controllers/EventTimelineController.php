@@ -75,7 +75,7 @@ class EventTimelineController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["event_id"];
+        $expectedRouteParams = ["event_id", "organiser_id", "timeline_id"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];
 
@@ -85,7 +85,18 @@ class EventTimelineController extends HelperController
             }
         }
 
-        return $this->getByPage($request, $response, new EventTimelineModel(), null, $conditions, ["timelineMedia"]);
+        $whereHas = [];
+        if (isset($conditions["organiser_id"])) {
+            $organiser_id = $conditions["organiser_id"];
+
+            $whereHas["event"] = function ($query) use ($organiser_id) {
+                return $query->where("organiser_id", $organiser_id);
+            };
+
+            unset($conditions["organiser_id"]);
+        }
+
+        return $this->getByPage($request, $response, new EventTimelineModel(), null, $conditions, ["timelineMedia"], ["whereHas" => $whereHas]);
     }
 
     public function getEventTimelineByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -205,7 +216,10 @@ class EventTimelineController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["event_id"];
+        $authDetails = static::getTokenInputsFromRequest($request);
+        $organiser_id = $authDetails["organiser_id"];
+
+        $expectedRouteParams = ["event_id", "timeline_id"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];
 
@@ -213,11 +227,11 @@ class EventTimelineController extends HelperController
             if (in_array($key, $expectedRouteParams) && $value != "-") {
                 $conditions[$key] = $value;
             }
-        }
+        };
 
-        if (isset($conditions["event_id"])) {
-            $this->eventBelongsToOrganiser($request, $response, $conditions["event_id"]);
-        }
+        $whereHas["event"] = function ($query) use ($organiser_id) {
+            return $query->where("organiser_id", $organiser_id);
+        };
 
         return $this->getByPage($request, $response, new EventTimelineModel(), null, $conditions, ["timelineMedia"]);
     }

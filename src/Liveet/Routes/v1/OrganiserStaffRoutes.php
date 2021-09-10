@@ -142,15 +142,6 @@ isset($v1Group) && $v1Group->group(
             OrganiserStaffController::class . ":toggleOrganiserSelfStaffAccessStatusByPK"
         );
 
-        /**
-         * TODO 
-         * convert to disable
-         * 
-        $organiserStaffGroup->delete(
-            "/delete/organiser",
-            OrganiserStaffController::class . ":deleteOrganiserStaff"
-        );
-         */
 
         /** Organiser Admin */
 
@@ -160,7 +151,7 @@ isset($v1Group) && $v1Group->group(
         );
 
         $organiserStaffGroup->get(
-            "/get/organiser-staffs[/{page}[/{limit}]]",
+            "/get/organiser-staffs[/{page}[/{limit}[/{organiser_staff_id}]]]",
             OrganiserStaffController::class . ":getOrganiserSelfStaffs"
         );
 
@@ -179,22 +170,6 @@ isset($v1Group) && $v1Group->group(
             OrganiserStaffController::class . ":logoutOrganiserSelfStaffByPK"
         );
 
-        /** 
-         * TODO
-         * 
-         * Convert delete to disable
-         * work on reset password 
-        
-        $organiserStaffGroup->put(
-            "/reset/organiser/password",
-            OrganiserStaffController::class . ":resetOrganiserStaffPassword"
-        );
-
-        $organiserStaffGroup->delete(
-            "/delete/organiser/{organiser_user_id}",
-            OrganiserStaffController::class . ":deleteOrganiserStaffByPK"
-        );
-         */
     }
 )
     ->addMiddleware(new AuthenticationMiddleware((new OrganiserStaffModel())));
@@ -208,7 +183,7 @@ isset($adminGroup) && $adminGroup->group(
     function (RouteCollectorProxy $organiserStaffGroup) {
 
         $organiserStaffGroup->get(
-            "/get/organiser-staffs[/{page}[/{limit}]]",
+            "/get/organiser-staffs[/{page}[/{limit}[/{organiser_staff_id}[/{organiser_id}]]]]",
             OrganiserStaffController::class . ":getOrganiserStaffs"
         );
 

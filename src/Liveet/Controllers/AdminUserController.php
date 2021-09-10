@@ -14,6 +14,8 @@ use Liveet\Models\EventModel;
 class AdminUserController extends HelperController
 {
 
+    /** 755 */
+
     public function loginAdminUser(Request $request, ResponseInterface $response): ResponseInterface
     {
         return $this->loginSelf($request, $response, new AdminUserModel(), ["admin_username", "admin_password"], ["publicKeyKey" => "public_key", "passwordKey" => "admin_password"], [
@@ -87,6 +89,16 @@ class AdminUserController extends HelperController
         (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "changed password"]);
 
         return $this->updatePassword($request, $response, new AdminUserModel());
+    }
+
+    public function disableAdminAccessStatus(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $authDetails = static::getTokenInputsFromRequest($request);
+        $adminID = $authDetails["admin_user_id"];
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $adminID, "activity_log_desc" => "disabled account"]);
+
+        return $this->updateByConditions($request, $response, new AdminUserModel(), [], ["admin_user_id" => $adminID], [], ["accessStatus" => Constants::USER_DISABLED], ["responseMessage" => "Admin account was disabled successfully"]);
     }
 
     public function logoutAdminUser(Request $request, ResponseInterface $response): ResponseInterface
@@ -226,6 +238,20 @@ class AdminUserController extends HelperController
         );
     }
 
+    public function resetAdminUserPasswordByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $permissonResponse = $this->checkAdminAdminPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+
+        (new AdminActivityLogModel())->createSelf(["admin_user_id" => $authDetails["admin_user_id"], "activity_log_desc" => "resetted an admin password"]);
+
+        return $this->resetPassword($request, $response, new AdminUserModel(), [], ["passwordKey" => "admin_password", "publicKeyKey" => "public_key"]);
+    }
+
     public function logoutAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
         $permissonResponse = $this->checkAdminAdminPermission($request, $response);
@@ -250,75 +276,5 @@ class AdminUserController extends HelperController
         return $this->toggleUserAccessStatusByPK($request, $response, new AdminUserModel());
     }
 
-    /**
 
-    //super admin exclusive
-    public function resetAdminUserPassword(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-
-        if (!in_array(Constants::PRIVILEDGE_RESET_PASSWORDS, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient privelege to perform this action", "statusCode", "errorStatus" => 1, "statusCode" => 406];
-
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return $this->resetPassword($request, $response, new AdminUserModel());
-    }
-
-    public function deleteAdminUser(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return $this->deleteSelf($request, $response, new AdminUserModel());
-    }
-
-    //super admin exclusive
-    public function deleteAdminUserByPK(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $ownerPriviledges = isset($authDetails["admin_priviledges"]) ? json_decode($authDetails["admin_priviledges"]) : [];
-
-        if (!in_array(Constants::PRIVILEDGE_DELETE_ANY_ADMIN, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient privelege to perform this action", "statusCode", "errorStatus" => 1, "statusCode" => 406];
-
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return $this->deleteByPK($request, $response, new AdminUserModel());
-    }
-
-     **/
-
-    public function generateHash(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-        $model = new AdminUserModel();
-        $inputs = [];
-        $options = ["isAccount" => true];
-        $override = [];
-
-        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
-        if ($error) {
-            return $json->withJsonResponse($response, $error);
-        }
-
-        $allInputs = $this->valuesExistsOrError($data, $inputs);
-        if ($allInputs["error"]) {
-            return $json->withJsonResponse($response, $allInputs["error"]);
-        }
-
-        $allInputs = $this->appendSecurity($allInputs, $options);
-
-        $data = $allInputs["password"];
-
-        $payload = ["successMessage" => "Generated successfully", "statusCode" => 200, "data" => $data];
-
-        return $json->withJsonResponse($response, $payload);
-    }
 }

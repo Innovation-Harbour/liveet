@@ -72,7 +72,28 @@ class OrganiserController extends HelperController
             return $permissonResponse;
         }
 
-        return $this->getByPage($request, $response, new OrganiserModel(), null, ["usertype" => Constants::USERTYPE_ORGANISER_ADMIN]);
+        $expectedRouteParams = ["organiser_staff_id", "organiser_id"];
+        $routeParams = $this->getRouteParams($request);
+        $conditions = ["usertype" => Constants::USERTYPE_ORGANISER_ADMIN];
+
+        foreach ($routeParams as $key => $value) {
+            if (in_array($key, $expectedRouteParams) && $value != "-") {
+                $conditions[$key] = $value;
+            }
+        }
+
+        $whereHas = [];
+        if (isset($conditions["organiser_staff_id"])) {
+            $organiser_staff_id = $conditions["organiser_staff_id"];
+
+            $whereHas["organiserStaffs"] = function ($query) use ($organiser_staff_id) {
+                return $query->where("organiser_staff_id", $organiser_staff_id);
+            };
+
+            unset($conditions["organiser_staff_id"]);
+        }
+
+        return $this->getByPage($request, $response, new OrganiserModel(), null, $conditions, null, ["whereHas" => $whereHas]);
     }
 
     public function getOrganiserByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -148,34 +169,6 @@ class OrganiserController extends HelperController
 
         return $this->toggleUserAccessStatusByPK($request, $response, new OrganiserModel());
     }
-
-    /**
-     *
-
-    public function deleteOrganiser(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return $this->deleteSelf($request, $response, new OrganiserModel());
-    }
-
-    public function deleteOrganiserByPK(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $ownerPriviledges = isset($authDetails["organiser_priviledges"]) ? json_decode($authDetails["organiser_priviledges"]) : [];
-
-        if (!in_array(Constants::PRIVILEDGE_DELETE_ANY_ORGANISER, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient privelege to perform this action", "statusCode", "errorStatus" => 1, "statusCode" => 406];
-
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return $this->deleteByPK($request, $response, new OrganiserModel());
-    }
-
-     **/
-
 
 
     /** Organiser Admin */

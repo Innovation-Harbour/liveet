@@ -19,7 +19,7 @@ class PaymentController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["payment_id", "event_ticket_id", "user_id", "organiser_id"];
+        $expectedRouteParams = ["payment_id", "event_ticket_id", "user_id", "organiser_id", "event_id"];
         $routeParams = $this->getRouteParams($request);
 
         $conditions = [];
@@ -30,7 +30,30 @@ class PaymentController extends HelperController
             }
         }
 
-        return $this->getByDate($request, $response, new PaymentModel(), null, $conditions, ["user", "eventTicket"], ["dateCreatedColumn" => "created_at"]);
+        $whereHas = [];
+        if (isset($conditions["organiser_id"])) {
+            $organiser_id = $conditions["organiser_id"];
+
+            $whereHas["eventTicket"] = function ($query) use ($organiser_id) {
+                return $query->whereHas("event", function ($query) use ($organiser_id) {
+                    return $query->where("organiser_id", $organiser_id);
+                });
+            };
+
+            unset($conditions["organiser_id"]);
+        }
+
+        if (isset($conditions["event_id"])) {
+            $event_id = $conditions["event_id"];
+
+            $whereHas["eventTicket"] = function ($query) use ($event_id) {
+                return $query->where("event_id", $event_id);
+            };
+
+            unset($conditions["event_id"]);
+        }
+
+        return $this->getByDate($request, $response, new PaymentModel(), null, $conditions, ["user", "eventTicket"], ["dateCreatedColumn" => "created_at", "whereHas" => $whereHas]);
     }
 
 
@@ -46,7 +69,7 @@ class PaymentController extends HelperController
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_id = $authDetails["organiser_id"];
 
-        $expectedRouteParams = ["payment_id", "event_ticket_id", "user_id"];
+        $expectedRouteParams = ["payment_id", "event_ticket_id", "user_id", "event_id"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];
 
@@ -56,15 +79,25 @@ class PaymentController extends HelperController
             }
         }
 
+        $whereHas["eventTicket"] = function ($query) use ($organiser_id) {
+            return $query->whereHas("event", function ($query) use ($organiser_id) {
+                return $query->where("organiser_id", $organiser_id);
+            });
+        };
+
+        if (isset($conditions["event_id"])) {
+            $event_id = $conditions["event_id"];
+
+            $whereHas["eventTicket"] = function ($query) use ($event_id) {
+                return $query->where("event_id", $event_id);
+            };
+
+            unset($conditions["event_id"]);
+        }
+
         return $this->getByDate($request, $response, new PaymentModel(), null, $conditions, ["user", "eventTicket"], [
             "dateCreatedColumn" => "created_at",
-            "whereHas" => [
-                "eventTicket" => function ($query) use ($organiser_id) {
-                    return $query->whereHas("event", function ($queryy) use ($organiser_id) {
-                        return $queryy->where("organiser_id", $organiser_id);
-                    });
-                }
-            ]
+            "whereHas" => $whereHas
         ]);
     }
 }

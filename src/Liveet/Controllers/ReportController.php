@@ -20,7 +20,7 @@ class ReportController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["organiser_id"];
+        $expectedRouteParams = ["organiser_id", "event_id"];
         $routeParams = $this->getRouteParams($request);
 
         $conditions = [];
@@ -41,7 +41,7 @@ class ReportController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["organiser_id", "from", "to", "interval"];
+        $expectedRouteParams = ["organiser_id", "from", "to", "interval", "event_id"];
         $routeParams = $this->getRouteParams($request);
 
         $conditions = [];
@@ -99,7 +99,7 @@ class ReportController extends HelperController
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_id = $authDetails["organiser_id"];
 
-        $expectedRouteParams = ["from", "to", "interval"];
+        $expectedRouteParams = ["from", "to", "interval", "event_id"];
         $routeParams = $this->getRouteParams($request);
 
         $conditions = ["organiser_id" => $organiser_id];

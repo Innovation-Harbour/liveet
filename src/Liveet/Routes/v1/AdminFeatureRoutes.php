@@ -21,7 +21,7 @@ isset($adminGroup) && $adminGroup->group(
         );
 
         $adminFeatureGroup->get(
-            "/get/features[/{page}[/{limit}]]",
+            "/get/features[/{admin_feature_id}[/{admin_user_id}[/{page}[/{limit}]]]]",
             AdminFeatureController::class . ":getAdminFeatures"
         );
 

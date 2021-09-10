@@ -23,7 +23,7 @@ isset($adminGroup) && $adminGroup->group(
         );
 
         $eventAccessGroup->get(
-            "/get/accesses[/{event_ticket_id}[/{page}[/{limit}]]]",
+            "/get/accesses[/{event_ticket_id}[/{page}[/{limit}[/{organiser_id}[/{event_id}[/{event_access_id}[/{user_id}]]]]]]]",
             EventAccessController::class . ":getEventAccesses"
         );
 
@@ -57,7 +57,7 @@ isset($organiserStaffGroup) && $organiserStaffGroup->group(
     function (RouteCollectorProxy $eventAccessGroup) {
 
         $eventAccessGroup->get(
-            "/get/accesses[/{event_ticket_id}[/{page}[/{limit}]]]",
+            "/get/accesses[/{event_ticket_id}[/{page}[/{limit}[/{event_id}[/{event_access_id}[/{user_id}]]]]]]",
             EventAccessController::class . ":getOrganiserEventAccesses"
         );
 

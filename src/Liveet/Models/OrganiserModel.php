@@ -259,7 +259,34 @@ class OrganiserModel extends BaseModel
 
     public function getDashboard($conditions, $queryOptions = null)
     {
-        $staffCount = OrganiserStaffModel::where($conditions)->count();
+        $organiser_id = null;
+        $event_id = null;
+
+        foreach ($conditions as $key => $condition) {
+            if ($key == "organiser_id") {
+                $organiser_id = $condition;
+            }
+
+            if ($condition[0] == "organiser_id") {
+                $organiser_id = $condition[2];
+            }
+            
+            if ($key == "event_id") {
+                $event_id = $condition;
+            }
+
+            if ($condition[0] == "event_id") {
+                $event_id = $condition[2];
+            }
+        }
+
+        $organiserCondition = $organiser_id ? ["organiser_id" => $organiser_id] : [];
+        
+        $staffCount = OrganiserStaffModel::where($organiserCondition)->count();
+
+        if ($event_id) {
+            $conditions =  $this->changeArrayKey($conditions, "event_id", "event.event_id");
+        }
 
         $newConditions =  $this->changeArrayKey($conditions, "created_at", "event.created_at");
 

@@ -54,7 +54,7 @@ class EventInvitationController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["event_id"];
+        $expectedRouteParams = ["event_id", "organiser_id", "event_invitation_id", "event_inviter_user_id", "event_invitee_user_id", "event_invitee_user_phone"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];
 
@@ -64,7 +64,28 @@ class EventInvitationController extends HelperController
             }
         }
 
-        return $this->getByPage($request, $response, new EventInvitationModel(), null, $conditions);
+        $whereHas = [];
+        if (isset($conditions["organiser_id"])) {
+            $organiser_id = $conditions["organiser_id"];
+
+            $whereHas["event"] = function ($query) use ($organiser_id) {
+                return $query->where("organiser_id", $organiser_id);
+            };
+
+            unset($conditions["organiser_id"]);
+        }
+
+        if (isset($conditions["event_invitee_user_id"])) {
+            $event_invitee_user_id = $conditions["event_invitee_user_id"];
+
+            $whereHas["invitee"] = function ($query) use ($event_invitee_user_id) {
+                return $query->where("user_id", $event_invitee_user_id);
+            };
+
+            unset($conditions["event_invitee_user_id"]);
+        }
+
+        return $this->getByPage($request, $response, new EventInvitationModel(), null, $conditions, ["event", "inviter", "invitee"], ["whereHas" => $whereHas]);
     }
 
     public function getEventInvitationByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -162,28 +183,35 @@ class EventInvitationController extends HelperController
         if ($permissonResponse != null) {
             return $permissonResponse;
         }
-        
-        $authDetails = static::getTokenInputsFromRequest($request);
 
-        $expectedRouteParams = ["event_id"];
+        $authDetails = static::getTokenInputsFromRequest($request);
+        $organiser_id = $authDetails["organiser_id"];
+
+        $expectedRouteParams = ["event_id", "organiser_id", "event_invitation_id", "event_inviter_user_id", "event_invitee_user_id", "event_invitee_user_phone"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];
+
         foreach ($routeParams as $key => $value) {
             if (in_array($key, $expectedRouteParams) && $value != "-") {
                 $conditions[$key] = $value;
             }
         }
 
-        if (isset($conditions["event_id"])) {
-            $this->eventBelongsToOrganiser($request, $response, $conditions["event_id"]);
+        $whereHas["event"] = function ($query) use ($organiser_id) {
+            return $query->where("organiser_id", $organiser_id);
+        };
 
-            return $this->getByPage($request, $response, new EventInvitationModel(), null, $conditions);
+        if (isset($conditions["event_invitee_user_id"])) {
+            $event_invitee_user_id = $conditions["event_invitee_user_id"];
+
+            $whereHas["invitee"] = function ($query) use ($event_invitee_user_id) {
+                return $query->where("user_id", $event_invitee_user_id);
+            };
+
+            unset($conditions["event_invitee_user_id"]);
         }
 
-        $organiser_id = $authDetails["organiser_id"];
-        $event_ids = $this->getEventIdsOfOrganiser($organiser_id);
-
-        return $this->getByPage($request, $response, new EventInvitationModel(), null, null, null, ["whereIn" => [["event_id" => $event_ids]]]);
+        return $this->getByPage($request, $response, new EventInvitationModel(), null, $conditions, ["event", "inviter", "invitee"], ["whereHas" => $whereHas]);
     }
 
     public function getOrganiserEventInvitationByPK(Request $request, ResponseInterface $response): ResponseInterface

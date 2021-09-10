@@ -18,6 +18,14 @@ use Liveet\Domain\Constants;
 use Liveet\Models\EventModel;
 use Psr\Http\Message\UploadedFileInterface;
 
+use MicrosoftAzure\Storage\Blob\BlobRestProxy;
+use MicrosoftAzure\Storage\Blob\Models\CreateBlockBlobOptions;
+use MicrosoftAzure\Storage\Common\Exceptions\ServiceException;
+use MicrosoftAzure\Storage\Blob\Models\ListBlobsOptions;
+use MicrosoftAzure\Storage\Blob\Models\CreateContainerOptions;
+use MicrosoftAzure\Storage\Blob\Models\PublicAccessType;
+use MicrosoftAzure\Storage\Common\Exceptions\InvalidArgumentTypeException;
+
 abstract class BaseController
 {
     protected function getValidJsonOrError($request)
@@ -219,6 +227,7 @@ abstract class BaseController
             foreach ($accountOptions["mediaOptions"] as $mediaOptions) {
 
                 $mediaKey = $mediaOptions["mediaKey"];
+                $cdn = $mediaOptions["cdn"] ?? Constants::CDN["local"];
 
                 if (!isset($data[$mediaKey])) {
 
@@ -241,14 +250,15 @@ abstract class BaseController
 
                         $mediaOptions["clientOptions"]["index"] = $index;
 
-                        $return[] = $this->handleS3ParseMedia($mediaOptions, $media);
+
+                        $return[] = $this->$cdn($mediaOptions, $media);
 
                         $index++;
                     }
 
                     $data[$mediaKey] = $return;
                 } else {
-                    $return = $this->handleS3ParseMedia($mediaOptions, $data[$mediaKey]);
+                    $return = $this->$cdn($mediaOptions, $data[$mediaKey]);
 
                     $data[$mediaKey] = $return["url"] ?? $return["path"]  ?? "";
 
@@ -322,112 +332,110 @@ abstract class BaseController
         return $return;
     }
 
-    #region
-    // public function handleAzureParseMedia($mediaOptions, $media, $azureOptions = [])
-    // {
-    //     $return = $this->handleParseMedia($mediaOptions, $media);
+    public function handleAzureParseMedia($mediaOptions, $media, $azureOptions = [])
+    {
+        $return = $this->handleParseMedia($mediaOptions, $media);
 
-    //     $name = $return["name"] ?? "";
-    //     $ext = $return["ext"] ?? "";
-    //     $type = $return["type"] ?? "";
-    //     $path = $return["path"] ?? "";
-    //     $url = $return["url"] ?? "";
-    //     $error = $return["error"] ?? "";
+        $name = $return["name"] ?? "";
+        $ext = $return["ext"] ?? "";
+        $type = $return["type"] ?? "";
+        $path = $return["path"] ?? "";
+        $url = $return["url"] ?? "";
+        $error = $return["error"] ?? "";
 
-    //     $mediaKey = $mediaOptions["mediaKey"];
-    //     $folderName = $mediaOptions["folder"] ?? "";
-    //     $clientOptions = isset($mediaOptions["clientOptions"]) && $mediaOptions["clientOptions"];
+        $mediaKey = $mediaOptions["mediaKey"];
+        $folderName = $mediaOptions["folder"] ?? "";
+        $clientOptions = isset($mediaOptions["clientOptions"]) && $mediaOptions["clientOptions"];
 
-    //     if ($path) {
-    //         $connectionString = $_ENV["AZURE_STORAGE_CONNECTION_STRING"];
+        if ($path) {
+            $connectionString = $_ENV["AZURE_STORAGE_CONNECTION_STRING"];
 
-    //         // Create blob client.
-    //         $blobClient = BlobRestProxy::createBlobService($connectionString);
+            // Create blob client.
+            $blobClient = BlobRestProxy::createBlobService($connectionString);
 
-    //         $createContainerOptions = new CreateContainerOptions();
-    //         $createContainerOptions->setPublicAccess(PublicAccessType::CONTAINER_AND_BLOBS);
-    //         // $createContainerOptions->setDecodeContent();
+            $createContainerOptions = new CreateContainerOptions();
+            $createContainerOptions->setPublicAccess(PublicAccessType::CONTAINER_AND_BLOBS);
+            // $createContainerOptions->setDecodeContent();
 
 
-    //         $containerName = isset($clientOptions["containerName"]) ? $clientOptions["containerName"] : "static";
+            $containerName = isset($clientOptions["containerName"]) ? $clientOptions["containerName"] : "static";
 
-    //         try {
-    //             // Create container.
-    //             // $blobClient->createContainer($containerName, $createContainerOptions);
+            try {
+                // Create container.
+                // $blobClient->createContainer($containerName, $createContainerOptions);
 
-    //             // Getting local file so that we can upload it to Azure
-    //             // $myfile = fopen($path, "w");
-    //             // fclose($myfile);
+                // Getting local file so that we can upload it to Azure
+                // $myfile = fopen($path, "w");
+                // fclose($myfile);
 
-    //             $content = fopen($path, "r");
+                $content = fopen($path, "r");
 
-    //             $blobName = strtolower($type) . "/$folderName/$name.$ext";
+                $blobName = strtolower($type) . "/$folderName/$name.$ext";
 
-    //             $mimetype = $this->getContentType($ext, $type);
+                $mimetype = $this->getContentType($ext, $type);
 
-    //             $blobOptions = new CreateBlockBlobOptions();
-    //             $blobOptions->setContentType($mimetype);
+                $blobOptions = new CreateBlockBlobOptions();
+                $blobOptions->setContentType($mimetype);
 
-    //             //Upload blob
-    //             $blobClient->createBlockBlob($containerName, $blobName, $content, $blobOptions);
+                //Upload blob
+                $blobClient->createBlockBlob($containerName, $blobName, $content, $blobOptions);
 
-    //             $url = $_ENV["AZURE_STORAGE_BASE_URL"] . "$containerName/$blobName";
-    //             fclose($content);
-    //             unlink($path);
+                $url = $_ENV["AZURE_STORAGE_BASE_URL"] . "$containerName/$blobName";
+                fclose($content);
+                unlink($path);
 
-    //             return ["name" => $name, "ext" => $ext, "type" => $type, "url" => $url, "error" => $error];
+                return ["name" => $name, "ext" => $ext, "type" => $type, "url" => $url, "error" => $error];
 
-    //             #region
-    //             // List blobs.
-    //             $listBlobsOptions = new ListBlobsOptions();
-    //             // $listBlobsOptions->setPrefix("HelloWorld");
+                #region
+                // List blobs.
+                $listBlobsOptions = new ListBlobsOptions();
+                // $listBlobsOptions->setPrefix("HelloWorld");
 
-    //             echo "These are the blobs present in the container: ";
+                echo "These are the blobs present in the container: ";
 
-    //             do {
-    //                 $result = $blobClient->listBlobs($containerName, $listBlobsOptions);
-    //                 foreach ($result->getBlobs() as $blob) {
-    //                     echo $blob->getName() . ": " . $blob->getUrl() . "<br />";
-    //                 }
+                do {
+                    $result = $blobClient->listBlobs($containerName, $listBlobsOptions);
+                    foreach ($result->getBlobs() as $blob) {
+                        echo $blob->getName() . ": " . $blob->getUrl() . "<br />";
+                    }
 
-    //                 $listBlobsOptions->setContinuationToken($result->getContinuationToken());
-    //             } while ($result->getContinuationToken());
-    //             echo "<br />";
+                    $listBlobsOptions->setContinuationToken($result->getContinuationToken());
+                } while ($result->getContinuationToken());
+                echo "<br />";
 
-    //             // Get blob.
-    //             echo "This is the content of the blob uploaded: ";
-    //             $blob = $blobClient->getBlob($containerName, $blobName);
-    //             fpassthru($blob->getContentStream());
-    //             echo "<br />";
-    //             #endregion
-    //         } catch (ServiceException $e) {
-    //             // Handle exception based on error codes and messages.
-    //             // Error codes and messages are here:
-    //             // http://msdn.microsoft.com/library/azure/dd179439.aspx
-    //             $code = $e->getCode();
-    //             $error_message = $e->getMessage();
+                // Get blob.
+                echo "This is the content of the blob uploaded: ";
+                $blob = $blobClient->getBlob($containerName, $blobName);
+                fpassthru($blob->getContentStream());
+                echo "<br />";
+                #endregion
+            } catch (ServiceException $e) {
+                // Handle exception based on error codes and messages.
+                // Error codes and messages are here:
+                // http://msdn.microsoft.com/library/azure/dd179439.aspx
+                $code = $e->getCode();
+                $error_message = $e->getMessage();
 
-    //             // echo $code . ": " . $error_message . "<br />";
+                // echo $code . ": " . $error_message . "<br />";
 
-    //             $return["error"] .= $return["error"] ? ". $error_message" : "$error_message";
-    //         } catch (InvalidArgumentTypeException $e) {
-    //             // Handle exception based on error codes and messages.
-    //             // Error codes and messages are here:
-    //             // http://msdn.microsoft.com/library/azure/dd179439.aspx
-    //             $code = $e->getCode();
-    //             $error_message = $e->getMessage();
+                $return["error"] .= $return["error"] ? ". $error_message" : "$error_message";
+            } catch (InvalidArgumentTypeException $e) {
+                // Handle exception based on error codes and messages.
+                // Error codes and messages are here:
+                // http://msdn.microsoft.com/library/azure/dd179439.aspx
+                $code = $e->getCode();
+                $error_message = $e->getMessage();
 
-    //             // echo $code . ": " . $error_message . "<br />";
+                // echo $code . ": " . $error_message . "<br />";
 
-    //             $return["error"] .= $return["error"] ? ". $error_message" : "$error_message";
-    //         }
+                $return["error"] .= $return["error"] ? ". $error_message" : "$error_message";
+            }
 
-    //         return $return;
-    //     }
+            return $return;
+        }
 
-    //     return $return;
-    // }
-    #endregion
+        return $return;
+    }
 
     public function handleParseMedia($mediaOptions, $media)
     {
@@ -535,7 +543,7 @@ abstract class BaseController
         $data["ext"] = $mediaExt;
         $data["type"] = $mediaType;
         $data["path"] = $resizedMediaPath ?? $newMediaPath;
-        $data["url"] = $_ENV["HTTP_PROTOCOL"] . "://" . $_ENV["MEDIA_HOST"] . $_ENV["BASE_PATH"] . "/" . ($resizedMediaPath ?? $newMediaPath);
+        $data["url"] = $_ENV["HTTP_PROTOCOL"] . "://" . ($_ENV["MEDIA_HOST"] ?? $_SERVER["HTTP_HOST"]) . $_ENV["BASE_PATH"] . "/" . ($resizedMediaPath ?? $newMediaPath);
 
         return $data;
     }
@@ -791,34 +799,31 @@ abstract class BaseController
 
     public function sendMail($allInputs, $accountOptions = [])
     {
-        $success = "";
-        $error = "";
+        $return = [];
 
-        if (isset($accountOptions["emailOptions"])) {
-            foreach ($accountOptions["emailOptions"] as $emailOptions) {
-                if (isset($allInputs[$emailOptions["emailKey"]])) {
-                    $emailKey = $emailOptions["emailKey"];
-                    $nameKey = $emailOptions["nameKey"];
+        if (isset($accountOptions["mailOptions"])) {
+
+            foreach ($accountOptions["mailOptions"] as $mailOption) {
+
+                if (isset($allInputs[$mailOption["emailKey"]])) {
+
+                    $emailKey = $mailOption["emailKey"];
+                    $nameKey = $mailOption["nameKey"];
 
                     $emailVerificationToken = (new MCrypt())->mCryptThis(time() * rand(111111111, 999999999));
                     // $emailVerificationToken = (new KeyManager)->createClaims(["email" => $allInputs[$emailKey], "name" => $allInputs[$nameKey]], true);
 
-                    $allInputs["emailVerificationToken"] = $emailVerificationToken;
-
                     //Send and email with the emailVerificationToken
-                    $mail = new MailHandler($emailOptions["mailtype"], $emailOptions["usertype"], $allInputs[$emailKey], ["username" => $allInputs[$nameKey], "emailVerificationToken" => $allInputs["emailVerificationToken"]]);
+                    $mail = new MailHandler($mailOption["mailtype"], $mailOption["usertype"], $allInputs[$emailKey], ["username" => $allInputs[$nameKey], "emailVerificationToken" => $emailVerificationToken]);
 
                     ["error" => $error, "success" => $success] = $mail->sendMail();
 
-                    if ($error) {
-                        continue;
-                    }
+                    $return[] = ["error" => $error, "success" => $success, $emailKey . "VerificationToken" => $emailVerificationToken, "mailOption" => $mailOption];
                 }
             }
         }
 
-
-        return ["success" => $success, "error" => $error, "allInputs" => $allInputs];
+        return $return;
     }
 
     public function modifyInputKeys($allInputs, $accountOptions)
@@ -862,7 +867,7 @@ abstract class BaseController
      * @param ResponseInterface $response
      * @param Model $model
      * @param Array $inputs
-     * @param Array $accountOptions = []
+     * @param Arrat $accountOptions = []
      * 
      */
 
@@ -892,12 +897,25 @@ abstract class BaseController
         if ($allInputs["error"]) {
             return $json->withJsonResponse($response, $allInputs["error"]);
         }
-        $mailResponse = $this->sendMail($allInputs, $accountOptions);
-        if ($mailResponse["error"]) {
-        }
+        $mailResponses = $this->sendMail($allInputs, $accountOptions);
+        $mailResponseSuccess = "";
+        $mailResponseError = "";
+        foreach ($mailResponses as $mailResponse) {
 
-        $allInputs = $mailResponse["allInputs"];
-        $mailResponseSuccess =  $mailResponse["success"];
+            $tokenKey = $mailResponse["mailOption"]["emailKey"] . "VerificationToken";
+
+            $allInputs[$tokenKey] = $mailResponse[$tokenKey];
+
+            $mailResponseSuccess .=  $mailResponse["success"] . ". ";
+
+            $mailResponseError .=  $mailResponse["error"] . ". ";
+
+            if ($mailResponse["error"] && isset($mailResponse["mailOption"]["strict"]) && $mailResponse["mailOption"]["strict"]) {
+                $error = ["errorMessage" => $mailResponse["error"], "errorStatus" => 1, "statusCode" => 406];
+
+                return $json->withJsonResponse($response, $error);
+            }
+        }
 
         $newAllInputs = [];
         if (isset($inputs["expected"])) {
@@ -908,8 +926,8 @@ abstract class BaseController
             $newAllInputs = $allInputs;
         }
 
-        foreach ($override as $ovrKey => $value) {
-            $newAllInputs[$ovrKey] = $value;
+        foreach ($override as $overrideKey => $overrideValue) {
+            $newAllInputs[$overrideKey] = $overrideValue;
         }
 
         $data = $model->createSelf($newAllInputs, $checks);
@@ -919,7 +937,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Created successfully. " . $mailResponseSuccess, "statusCode" => 201, "data" => $data["data"], "errorMessage" => $mailResponse["error"]];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Created successfully", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $mailResponseError];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -957,12 +975,28 @@ abstract class BaseController
                 $returnData[$key] = $allInputs["error"];
                 continue;
             }
-            $mailResponse = $this->sendMail($allInputs, $accountOptions);
-            if ($mailResponse["error"]) {
-            }
+            $mailResponses = $this->sendMail($allInputs, $accountOptions);
+            $mailResponseSuccess = "";
+            $continue = false;
+            foreach ($mailResponses as $mailResponse) {
 
-            $allInputs = $mailResponse["allInputs"];
-            $mailResponseSuccess =  $mailResponse["success"];
+                $tokenKey = $mailResponse["mailOption"]["emailKey"] . "VerificationToken";
+
+                $allInputs[$tokenKey] = $mailResponse[$tokenKey];
+
+                $mailResponseSuccess .=  $mailResponse["success"] . ". ";
+
+
+                if ($mailResponse["error"] && isset($mailResponse["mailOption"]["strict"]) && $mailResponse["mailOption"]["strict"]) {
+
+                    $returnData[$key] = $mailResponse["error"];
+                    $continue = true;
+                    break;
+                }
+            }
+            if ($continue) {
+                continue;
+            }
 
             $newAllInputs = [];
             if (isset($inputs["expected"])) {
@@ -973,8 +1007,8 @@ abstract class BaseController
                 $newAllInputs = $allInputs;
             }
 
-            foreach ($override as $ovrKey => $value) {
-                $newAllInputs[$ovrKey] = $value;
+            foreach ($override as $overrideKey => $overrideValue) {
+                $newAllInputs[$overrideKey] = $overrideValue;
             }
 
             $modelData = method_exists($model, "createManySelfs") ? $model->createManySelfs($newAllInputs, $checks) : $model->createSelf($newAllInputs, $checks);
@@ -1248,7 +1282,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1301,13 +1335,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = [
-            "successMessage" => $accountOptions["responseMessage"] ?? "Update success",
-            "statusCode" => 201,
-            "data" => $data["data"],
-            "errorMessage" => $data["error"] ?? "",
-            "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0
-        ];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1353,8 +1381,8 @@ abstract class BaseController
 
             $pk = $newAllInputs[$model->primaryKey] ?? 0;
 
-            foreach ($override as $ovrKey => $value) {
-                $newAllInputs[$ovrKey] = $value;
+            foreach ($override as $overrideKey => $overrideValue) {
+                $newAllInputs[$overrideKey] = $overrideValue;
             }
 
             $modelData = $model->updateByPK($pk, $newAllInputs, $checks);
@@ -1417,7 +1445,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1632,7 +1660,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
 
         return $json->withJsonResponse($response,  $payload);
     }
@@ -1649,7 +1677,7 @@ abstract class BaseController
         $kmg = new KeyManager();
         $encryptedPassword = $kmg->getDigest($newPassword);
 
-        $data = $model->resetPassword($pk, $encryptedPassword);
+        $data = $model->resetPassword($pk, $encryptedPassword, $queryOptions);
 
         if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
             $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 400];
@@ -1657,7 +1685,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password reset to default: " . Constants::DEFAULT_RESET_PASSWORD, "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password reset to default: " . Constants::DEFAULT_RESET_PASSWORD, "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
 
         return $json->withJsonResponse($response,  $payload);
     }
@@ -1682,7 +1710,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Email verification success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Email verification success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
 
         //TODO redirect to login
         return $json->withJsonResponse($response, $payload);
@@ -1723,7 +1751,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password reset link sent to your email", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password reset link sent to your email", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1796,7 +1824,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password change success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password change success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
 
         return $json->withJsonResponse($response,  $payload);
     }
@@ -1828,15 +1856,15 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "User verification success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "User verified successfully", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
 
         return $json->withJsonResponse($response, $payload);
     }
 
-    public function toggleUserAccessStatusByPK(Request $request, ResponseInterface $response, $model, $inputs = ["required" => ["status"], "expected" => ["accessStatus"]], $conditions = [], $accountOptions = []): ResponseInterface
+    public function toggleUserAccessStatusByPK(Request $request, ResponseInterface $response, $model, $inputs = ["required" => ["accessStatus"], "expected" => ["accessStatus"]], $conditions = [], $accountOptions = []): ResponseInterface
     {
-        if ($inputs == null) {
-            $inputs = ["required" => ["status"], "expected" => ["accessStatus"]];
+        if (!$inputs) {
+            $inputs = ["required" => ["accessStatus"], "expected" => ["accessStatus"]];
         }
 
         $statusInputKey = $inputs["required"][0];
@@ -1849,7 +1877,7 @@ abstract class BaseController
 
         $json = new JSON();
         $body = $this->checkOrGetPostBody($request, [$statusInputKey]);
-        if (!$body) {
+        if (!$body || !isset($body[$statusInputKey])) {
             $error = ["errorMessage" => "Invalid status", "errorStatus" => 1, "statusCode" => 406];
 
             return $json->withJsonResponse($response, $error);
@@ -1883,7 +1911,7 @@ abstract class BaseController
                     "overrideKeys" => [$statusInputKey => $statusColumnKey]
                 ]
             ],
-            ["useParentModel" => true]
+            ["parent" => true]
         );
     }
 
@@ -1904,7 +1932,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Delete success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Deleted successfully", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1930,7 +1958,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Delete success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Deleted successfully", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1960,7 +1988,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Delete success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Deleted successfully", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -2003,7 +2031,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Logout success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Logout successfully", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -2026,7 +2054,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Logout success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Logout successfully", "statusCode" => 200, "data" => $data["data"]);
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -2042,7 +2070,98 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Logout success", "statusCode" => 200, "data" => $data["data"]);
+        $payload = array("successMessage" => $accountOptions["responseMessage"] ?? "Logout successfully", "statusCode" => 200, "data" => $data["data"]);
+
+        return $json->withJsonResponse($response, $payload);
+    }
+
+    public function toggleAssign(
+        Request $request,
+        ResponseInterface $response,
+        $model,
+        $inputs = ["required" => [], "expected" => []],
+        $accountOptions = [],
+        $queryOptions = [],
+        $override = []
+    ): ResponseInterface {
+
+        $json = new JSON();
+
+        $keys = $accountOptions["keys"] ?? [
+            "toggleKey" => null, "parentKey" => null, "relationKey" => null, "pivotMethodName" => null
+        ];
+
+        $parentKey = $keys["parentKey"] ?? $model->primaryKey;
+        $relationKey = $keys["relationKey"] ?? [];
+        $pivotMethodName = $keys["pivotMethodName"] ?? "";
+        $toggleKey = $keys["toggleKey"] ?? "toggle";
+
+        $assignOptions = [];
+        $assignOptions["parentKey"] = $parentKey;
+        $assignOptions["relationKey"] = $relationKey;
+        $assignOptions["pivotMethodName"] = $pivotMethodName;
+
+        $queryOptions["assignOptions"] = $assignOptions;
+
+        if (!$parentKey || !$relationKey || !$pivotMethodName) {
+            $error = ["errorMessage" => "An error occured while changing assign status", "errorStatus" => 1, "statusCode" => 406];
+
+            return $json->withJsonResponse($response, $error);
+        }
+
+        ["data" => $data, "error" => $error] = $this->getValidJsonOrError($request);
+        if ($error) {
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $allInputs = $this->valuesExistsOrError($data, isset($inputs["required"]) ? $inputs["required"] : $inputs);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
+        }
+
+        $allInputs = $this->parseMedia($allInputs, $accountOptions);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
+        }
+        $allInputs = $this->modifyInputKeys($allInputs, $accountOptions);
+        if ($allInputs["error"]) {
+            return $json->withJsonResponse($response, $allInputs["error"]);
+        }
+
+        $newAllInputs = [];
+        if (isset($inputs["expected"])) {
+            foreach ($inputs["expected"] as $key) {
+                $newAllInputs[$key] = $allInputs[$key] ?? null;
+            }
+        } else {
+            $newAllInputs = $allInputs;
+        }
+
+        foreach ($override as $overrideKey => $overrideValue) {
+            $newAllInputs[$overrideKey] = $overrideValue;
+        }
+
+        $pk = $newAllInputs[$parentKey];
+        $relationKeys = $newAllInputs[$relationKey];
+        $toggle = $newAllInputs[$toggleKey] ?? Constants::ASSIGN;
+
+        unset($newAllInputs[$parentKey]);
+        unset($newAllInputs[$relationKey]);
+
+        $data = [];
+        if ($toggle == Constants::ASSIGN) {
+            $data = $model->assign($pk, $relationKeys, $pivotMethodName, $newAllInputs, $queryOptions);
+        } elseif ($toggle == Constants::UNASSIGN) {
+            $data = $model->unassign($pk, $relationKeys, $pivotMethodName, $queryOptions);
+        }
+
+        if (isset($data["error"]) && $data["error"] && (!isset($data["data"]) || !$data["data"])) {
+            $error = ["errorMessage" => $data["error"], "errorStatus" => 1, "statusCode" => 406];
+
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Action done successfully. ", "statusCode" => 201, "data" => $data["data"], "errorMessage" => ""];
 
         return $json->withJsonResponse($response, $payload);
     }

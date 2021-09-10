@@ -17,6 +17,6 @@ class TurnstileEventModel extends BaseModel
 
 
     public function getStruct(){
-        return $this->select($this->primaryKey, "turnstile_id", "event_ticket_it", "created_at", "updated_at");
+        return $this->select($this->primaryKey, "turnstile_id", "event_ticket_id", "created_at", "updated_at");
     }
 }

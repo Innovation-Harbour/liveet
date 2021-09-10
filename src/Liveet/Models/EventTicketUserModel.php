@@ -91,13 +91,6 @@ class EventTicketUserModel extends HelperModel
             $whereConditions[] = ["dateCreated", "<=", $to];
         }
 
-        if (isset($conditions["event_id"])) {
-            $event_id = $conditions["event_id"];
-            unset($conditions["event_id"]);
-            $event_ticket_ids = (new HelperController())->getEventTicketIdsOfEvent([$event_id]);
-            $queryOptions["whereIn"][] = ["event_ticket_id" => $event_ticket_ids];
-        }
-
         foreach ($conditions as $conditionKey => $conditionValue) {
             $whereConditions[] = [$conditionKey, "=", $conditionValue];
         }

@@ -18,7 +18,7 @@ isset($adminGroup) && $adminGroup->group(
         );
 
         $invitationGroup->get(
-            "/get/invitations[/{event_id}[/{page}[/{limit}]]]",
+            "/get/invitations[/{event_id}[/{page}[/{limit}[/{organiser_id}[/{event_invitation_id}[/{event_inviter_user_id}[/{event_invitee_user_id}[/{event_invitee_user_phone}]]]]]]]]",
             EventInvitationController::class . ":getEventInvitations"
         );
 
@@ -52,7 +52,7 @@ isset($organiserStaffGroup) && $organiserStaffGroup->group(
         );
 
         $invitationGroup->get(
-            "/get/invitations[/{event_id}[/{page}[/{limit}]]]",
+            "/get/invitations[/{event_id}[/{page}[/{limit}[/{event_invitation_id}[/{event_inviter_user_id}[/{event_invitee_user_id}[/{event_invitee_user_phone}]]]]]]]",
             EventInvitationController::class . ":getOrganiserEventInvitations"
         );
 

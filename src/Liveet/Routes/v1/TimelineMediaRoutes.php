@@ -18,7 +18,7 @@ isset($adminGroup) && $adminGroup->group(
         );
 
         $timelineMediaGroup->get(
-            "/get/timeline-medias[/{timeline_media_id}[/{timeline_id}[/{event_id}[/{page}[/{limit}]]]]]",
+            "/get/timeline-medias[/{timeline_media_id}[/{timeline_id}[/{event_id}[/{page}[/{limit}[/{organiser_id}]]]]]]",
             TimelineMediaController::class . ":getTimelineMedias"
         );
 

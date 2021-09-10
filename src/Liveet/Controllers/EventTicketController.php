@@ -53,8 +53,9 @@ class EventTicketController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["event_id"];
+        $expectedRouteParams = ["event_id", "event_ticket_id", "organiser_id"];
         $routeParams = $this->getRouteParams($request);
+
         $conditions = [];
 
         foreach ($routeParams as $key => $value) {
@@ -63,7 +64,18 @@ class EventTicketController extends HelperController
             }
         }
 
-        return $this->getByPage($request, $response, new EventTicketModel(), null, $conditions);
+        $whereHas = [];
+        if (isset($conditions["organiser_id"])) {
+            $organiser_id = $conditions["organiser_id"];
+
+            $whereHas["event"] = function ($query) use ($organiser_id) {
+                return $query->where("organiser_id", $organiser_id);
+            };
+
+            unset($conditions["organiser_id"]);
+        }
+
+        return $this->getByPage($request, $response, new EventTicketModel(), null, $conditions, null, ["whereHas" => $whereHas]);
     }
 
     public function getEventTicketByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -128,48 +140,34 @@ class EventTicketController extends HelperController
             return $permissonResponse;
         }
 
-        $json = new JSON();
-
         $authDetails = static::getTokenInputsFromRequest($request);
-
         $organiser_id = $authDetails["organiser_id"];
-        $event_ids = (new EventModel())->select("event_id")->where("organiser_id", $organiser_id)->without("eventControl", "eventTickets")->get();
-        $whereInEventIds = [];
-        foreach ($event_ids as $event_id_value) {
-            $whereInEventIds[] = $event_id_value["event_id"];
-        }
 
+        $expectedRouteParams = ["event_id", "event_ticket_id", "organiser_id"];
         $routeParams = $this->getRouteParams($request);
-        if (isset($routeParams["event_id"]) && $routeParams["event_id"] != "-") {
-            $conditions["event_id"] = $routeParams["event_id"];
 
-            if (in_array($routeParams["event_id"], $whereInEventIds)) {
-                return $this->getByPage(
-                    $request,
-                    $response,
-                    (new EventTicketModel()),
-                    null,
-                    $conditions
-                );
+        $conditions = [];
+
+        foreach ($routeParams as $key => $value) {
+            if (in_array($key, $expectedRouteParams) && $value != "-") {
+                $conditions[$key] = $value;
             }
-
-            $payload = array("errorMessage" => "No tickets for this event yet", "errorStatus" => "1", "statusCode" => 400);
-
-            return $json->withJsonResponse($response, $payload);
         }
+
+        $whereHas = [];
+
+        $whereHas["event"] = function ($query) use ($organiser_id) {
+            return $query->where("organiser_id", $organiser_id);
+        };
 
         return $this->getByPage(
             $request,
             $response,
             (new EventTicketModel()),
             null,
+            $conditions,
             null,
-            null,
-            [
-                "whereIn" => [
-                    ["event_id" => $whereInEventIds],
-                ]
-            ]
+            ["whereHas" => $whereHas]
         );
     }
 }

@@ -9,17 +9,14 @@ use Liveet\Models\BaseModel;
 
 class ReportModel extends BaseModel
 {
-    use SoftDeletes;
-
-    // protected $table = "report";
-    // public $primaryKey = "report_id";
-
-
-
 
     public function getDashboard($conditions, $queryOptions = null)
     {
-        $staffCount = OrganiserStaffModel::where($conditions)->count();
+        $organiser_id = $conditions["organiser_id"];
+        $event_id = $conditions["event_id"] ?? null;
+
+
+        $staffCount = OrganiserStaffModel::where(["organiser_id" => $organiser_id])->count();
 
         $eventCount = EventModel::where($conditions)->count();
         $publicEventCount = EventModel::where($conditions)->where("event_type", Constants::EVENT_TYPE_PUBLIC)->count();

@@ -55,8 +55,9 @@ class EventTicketUserController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["event_id", "event_ticket_id", "from", "to"];
+        $expectedRouteParams = ["event_id", "event_ticket_id", "from", "to", "event_ticket_user_id", "organiser_id", "user_id"];
         $routeParams = $this->getRouteParams($request);
+
         $conditions = [];
         foreach ($routeParams as $key => $value) {
             if (in_array($key, $expectedRouteParams) && $value != "-") {
@@ -64,7 +65,41 @@ class EventTicketUserController extends HelperController
             }
         }
 
-        return $this->getByPage($request, $response, new EventTicketUserModel(), null, $conditions, ["user", "eventTicket"]);
+        $whereHas = [];
+        if (isset($conditions["event_id"])) {
+            $event_id = $conditions["event_id"];
+
+            $whereHas["eventTicket"] = function ($query) use ($event_id) {
+                return $query->where("event_id", $event_id);
+            };
+
+            unset($conditions["event_id"]);
+        }
+
+        if (isset($conditions["organiser_id"])) {
+            $organiser_id = $conditions["organiser_id"];
+
+            $whereHas["eventTicket"] = function ($query) use ($organiser_id) {
+                return $query->whereHas("event", function ($query) use ($organiser_id) {
+                    return $query->where("organiser_id", $organiser_id);
+                });
+            };
+
+            unset($conditions["organiser_id"]);
+        }
+
+        if (isset($conditions["user_id"])) {
+            $user_id = $conditions["user_id"];
+
+            $whereHas["user"] = function ($query) use ($user_id) {
+                return $query->where("user_id", $user_id);
+            };
+
+            unset($conditions["user_id"]);
+        }
+
+
+        return $this->getByPage($request, $response, new EventTicketUserModel(), null, $conditions, ["user", "eventTicket"], ["whereHas" => $whereHas]);
     }
 
     public function getEventTicketUserByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -176,8 +211,12 @@ class EventTicketUserController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["event_id", "event_ticket_id", "from", "to"];
+        $authDetails = static::getTokenInputsFromRequest($request);
+        $organiser_id = $authDetails["organiser_id"];
+
+        $expectedRouteParams = ["event_id", "event_ticket_id", "from", "to", "event_ticket_user_id", "organiser_id", "user_id"];
         $routeParams = $this->getRouteParams($request);
+
         $conditions = [];
         foreach ($routeParams as $key => $value) {
             if (in_array($key, $expectedRouteParams) && $value != "-") {
@@ -185,15 +224,33 @@ class EventTicketUserController extends HelperController
             }
         }
 
+        $whereHas["eventTicket"] = function ($query) use ($organiser_id) {
+            return $query->whereHas("event", function ($query) use ($organiser_id) {
+                return $query->where("organiser_id", $organiser_id);
+            });
+        };
+
         if (isset($conditions["event_id"])) {
-            $this->eventBelongsToOrganiser($request, $response, $conditions["event_id"]);
+            $event_id = $conditions["event_id"];
+
+            $whereHas["eventTicket"] = function ($query) use ($event_id) {
+                return $query->where("event_id", $event_id);
+            };
+
+            unset($conditions["event_id"]);
         }
 
-        if (isset($conditions["event_ticket_id"])) {
-            $this->eventTicketBelongsToOrganiser($request, $response, $conditions["event_ticket_id"]);
+        if (isset($conditions["user_id"])) {
+            $user_id = $conditions["user_id"];
+
+            $whereHas["user"] = function ($query) use ($user_id) {
+                return $query->where("user_id", $user_id);
+            };
+
+            unset($conditions["user_id"]);
         }
 
-        return $this->getByPage($request, $response, new EventTicketUserModel(), null, $conditions, ["user", "eventTicket"]);
+        return $this->getByPage($request, $response, new EventTicketUserModel(), null, $conditions, ["user", "eventTicket"], ["whereHas" => $whereHas]);
     }
 
     public function getOrganiserEventTicketUserByPK(Request $request, ResponseInterface $response): ResponseInterface

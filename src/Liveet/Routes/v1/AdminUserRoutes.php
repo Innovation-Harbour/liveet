@@ -122,20 +122,15 @@ isset($v1Group) && $v1Group->group(
             AdminUserController::class . ":updateAdminUser"
         );
 
+        $adminGroup->put(
+            "/disable/admin/access-status",
+            AdminUserController::class . ":disableAdminAccessStatus"
+        );
+
         $adminGroup->post(
             "/logout/admin",
             AdminUserController::class . ":logoutAdminUser"
         );
-
-        /**
-         * TODO 
-         * convert to disable
-         * 
-        $adminGroup->delete(
-            "/delete/admin",
-            AdminUserController::class . ":deleteAdminUser"
-        );
-         */
 
 
         /**ADMIN Priviledge */
@@ -160,6 +155,11 @@ isset($v1Group) && $v1Group->group(
             AdminUserController::class . ":updateAdminUserByPK"
         );
 
+        $adminGroup->put(
+            "/reset/admin/password/{admin_user_id}",
+            AdminUserController::class . ":resetAdminUserPasswordByPK"
+        );
+
         $adminGroup->post(
             "/logout/admin/{admin_user_id}",
             AdminUserController::class . ":logoutAdminUserByPK"
@@ -168,28 +168,6 @@ isset($v1Group) && $v1Group->group(
         $adminGroup->put(
             "/toggle/admin/access/{admin_user_id}",
             AdminUserController::class . ":toggleAdminUserAccessStatusByPK"
-        );
-
-        /** 
-         * TODO
-         * 
-         * Convert delete to disable
-         * work on reset password 
-        
-        $adminGroup->put(
-            "/reset/admin/password",
-            AdminUserController::class . ":resetAdminUserPassword"
-        );
-
-        $adminGroup->delete(
-            "/delete/admin/{admin_user_id}",
-            AdminUserController::class . ":deleteAdminUserByPK"
-        );
-         */
-
-        $adminGroup->post(
-            "/generate/hash",
-            AdminUserController::class . ":generateHash"
         );
     }
 )

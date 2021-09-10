@@ -20,7 +20,7 @@ isset($adminGroup) && $adminGroup->group(
         );
 
         $organiserGroup->get(
-            "/get/organisers[/{page}[/{limit}]]",
+            "/get/organisers[/{page}[/{limit}[/{organiser_id}[/{organiser_staff_id}]]]]",
             OrganiserController::class . ":getOrganisers"
         );
 

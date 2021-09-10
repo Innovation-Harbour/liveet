@@ -23,7 +23,17 @@ class OrganiserStaffController extends HelperController
             return $permissonResponse;
         }
 
-        return $this->getByPage($request, $response, new OrganiserStaffModel());
+        $expectedRouteParams = ["organiser_staff_id", "organiser_id"];
+        $routeParams = $this->getRouteParams($request);
+        $conditions = [];
+
+        foreach ($routeParams as $key => $value) {
+            if (in_array($key, $expectedRouteParams) && $value != "-") {
+                $conditions[$key] = $value;
+            }
+        }
+
+        return $this->getByPage($request, $response, new OrganiserStaffModel(), null, $conditions);
     }
 
     public function getOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
@@ -60,31 +70,7 @@ class OrganiserStaffController extends HelperController
         return $this->toggleUserAccessStatusByPK($request, $response, new OrganiserStaffModel());
     }
 
-    /**
-     *
-    public function deleteOrganiserStaff(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        return $this->deleteSelf($request, $response, new OrganiserStaffModel());
-    }
-
-    public function deleteOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $json = new JSON();
-
-        $authDetails = static::getTokenInputsFromRequest($request);
-
-        $ownerPriviledges = isset($authDetails["organiser_staff_priviledges"]) ? json_decode($authDetails["organiser_staff_priviledges"]) : [];
-
-        if (!in_array(Constants::PRIVILEDGE_DELETE_ANY_ORGANISER, $ownerPriviledges)) {
-            $error = ["errorMessage" => "You do not have sufficient privelege to perform this action", "statusCode", "errorStatus" => 1, "statusCode" => 406];
-
-            return $json->withJsonResponse($response, $error);
-        }
-
-        return $this->deleteByPK($request, $response, new OrganiserStaffModel());
-    }
-
-     **/
+    /**   */
 
     public function createOrganiser(Request $request, ResponseInterface $response): ResponseInterface
     {
@@ -99,6 +85,8 @@ class OrganiserStaffController extends HelperController
 
         return (new OrganiserController())->createOrganiser($request, $response);
     }
+
+    /** */
 
     public function updateOrganiserStaffByPK(Request $request, ResponseInterface $response): ResponseInterface
     {
@@ -220,7 +208,7 @@ class OrganiserStaffController extends HelperController
     }
 
     public function getOrganiserSelfStaffs(Request $request, ResponseInterface $response): ResponseInterface
-    {
+    {   
         $permissonResponse = $this->checkOrganiserOrganiserPermission($request, $response);
         if ($permissonResponse != null) {
             return $permissonResponse;
@@ -230,7 +218,17 @@ class OrganiserStaffController extends HelperController
 
         $organiser_id = $authDetails["organiser_id"];
 
-        return $this->getByConditions($request, $response, new OrganiserStaffModel(), ["organiser_id" => $organiser_id]);
+        $expectedRouteParams = ["organiser_staff_id"];
+        $routeParams = $this->getRouteParams($request);
+        $conditions = ["organiser_id" => $organiser_id];
+
+        foreach ($routeParams as $key => $value) {
+            if (in_array($key, $expectedRouteParams) && $value != "-") {
+                $conditions[$key] = $value;
+            }
+        }
+
+        return $this->getByConditions($request, $response, new OrganiserStaffModel(), $conditions);
     }
 
     public function getOrganiserSelfStaffByPK(Request $request, ResponseInterface $response): ResponseInterface

@@ -10,39 +10,39 @@ use Liveet\Controllers\EventAccessController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $eventAccessGroup) {
 
-        $eventGroup->post(
+        $eventAccessGroup->post(
             "/create/access",
             EventAccessController::class . ":createEventAccess"
         );
 
-        $eventGroup->get(
+        $eventAccessGroup->get(
             "/get/accesses/group/{event_id}[/{page}[/{limit}]]",
             EventAccessController::class . ":getEventAccessGroup"
         );
 
-        $eventGroup->get(
+        $eventAccessGroup->get(
             "/get/accesses[/{event_ticket_id}[/{page}[/{limit}]]]",
             EventAccessController::class . ":getEventAccesses"
         );
 
-        $eventGroup->get(
+        $eventAccessGroup->get(
             "/get/access/{event_access_id}",
             EventAccessController::class . ":getEventAccessByPK"
         );
 
-        $eventGroup->put(
+        $eventAccessGroup->put(
             "/assign/access/{event_access_id}",
             EventAccessController::class . ":assignEventAccessByPK"
         );
 
-        $eventGroup->delete(
+        $eventAccessGroup->delete(
             "/delete/access/{event_access_id}",
             EventAccessController::class . ":deleteEventAccessByPK"
         );
 
-        $eventGroup->delete(
+        $eventAccessGroup->delete(
             "/delete/accesses",
             EventAccessController::class . ":deleteEventAccessByPKs"
         );
@@ -54,14 +54,14 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $eventAccessGroup) {
 
-        $eventGroup->get(
+        $eventAccessGroup->get(
             "/get/accesses[/{event_ticket_id}[/{page}[/{limit}]]]",
             EventAccessController::class . ":getOrganiserEventAccesses"
         );
 
-        $eventGroup->put(
+        $eventAccessGroup->put(
             "/assign/access/{event_access_id}",
             EventAccessController::class . ":assignOrganiserEventAccessByPK"
         );

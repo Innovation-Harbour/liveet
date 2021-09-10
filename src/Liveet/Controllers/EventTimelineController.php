@@ -11,6 +11,7 @@ use Liveet\Controllers\BaseController;
 use Liveet\Models\AdminActivityLogModel;
 use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketModel;
+use Liveet\Models\OrganiserActivityLogModel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -143,6 +144,60 @@ class EventTimelineController extends HelperController
 
     /** Organiser Staff */
 
+    public function organiserCreateEventTimeline(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
+        $eventDoesNotBelongsToOrganiser = $this->eventBelongsToOrganiser($request, $response);
+        if ($eventDoesNotBelongsToOrganiser) {
+            return $eventDoesNotBelongsToOrganiser;
+        }
+
+        $json = new JSON();
+
+        $event_code = $this->getEventCode($request);
+        if (!$event_code) {
+            $error = ["errorMessage" => "Invalid event selected", "errorStatus" => 1, "statusCode" => 406];
+
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+        $organiser_staff_id = $authDetails["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "created an event timeline"]);
+
+        return $this->createSelf(
+            $request,
+            $response,
+            new EventTimelineModel(),
+            [
+                "required" => [
+                    "event_id",
+                    "timeline_desc", "timeline_media"
+                ],
+
+                "expected" => [
+                    "event_id",
+                    "timeline_desc", "timeline_media"
+                ],
+            ],
+            [
+                "mediaOptions" => [
+                    [
+                        "mediaKey" => "timeline_media", "multiple" => true, "folder" => "timelines/$event_code",
+                        "clientOptions" => [
+                            "containerName" => "liveet-prod-media", "mediaName" => $event_code . "-" . rand(00000000, 99999999)
+                        ]
+                    ]
+                ]
+            ]
+        );
+    }
+
     public function getOrganiserEventTimelines(Request $request, ResponseInterface $response): ResponseInterface
     {
         $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
@@ -165,5 +220,71 @@ class EventTimelineController extends HelperController
         }
 
         return $this->getByPage($request, $response, new EventTimelineModel(), null, $conditions, ["timelineMedia"]);
+    }
+
+    public function organiserUpdateEventTimelineByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
+        $routeParams = $this->getRouteParams($request);
+        $timeline_id = $routeParams["timeline_id"];
+
+        $eventTimelineDoesNotBelongsToOrganiser =   $this->eventTimelineBelongsToOrganiser($request, $response, $timeline_id);
+        if ($eventTimelineDoesNotBelongsToOrganiser) {
+            return $eventTimelineDoesNotBelongsToOrganiser;
+        }
+
+        $eventDoesNotBelongsToOrganiser = $this->eventBelongsToOrganiser($request, $response);
+        if ($eventDoesNotBelongsToOrganiser) {
+            return $eventDoesNotBelongsToOrganiser;
+        }
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+        $organiser_staff_id = $authDetails["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "updated an event timeline"]);
+
+        return $this->updateByPK(
+            $request,
+            $response,
+            new EventTimelineModel(),
+            [
+                "required" => [
+                    "event_id",
+                    "timeline_desc"
+                ],
+
+                "expected" => [
+                    "event_id",
+                    "timeline_desc"
+                ]
+            ]
+        );
+    }
+
+    public function organiserDeleteEventTimelineByPK(Request $request, ResponseInterface $response): ResponseInterface
+    {
+        $permissonResponse = $this->checkOrganiserEventPermission($request, $response);
+        if ($permissonResponse != null) {
+            return $permissonResponse;
+        }
+
+        $routeParams = $this->getRouteParams($request);
+        $timeline_id = $routeParams["timeline_id"];
+
+        $eventTimelineDoesNotBelongsToOrganiser =   $this->eventTimelineBelongsToOrganiser($request, $response, $timeline_id);
+        if ($eventTimelineDoesNotBelongsToOrganiser) {
+            return $eventTimelineDoesNotBelongsToOrganiser;
+        }
+
+        $authDetails = static::getTokenInputsFromRequest($request);
+        $organiser_staff_id = $authDetails["organiser_staff_id"];
+
+        (new OrganiserActivityLogModel())->createSelf(["organiser_staff_id" => $organiser_staff_id, "activity_log_desc" => "deleted an event timeline"]);
+
+        return $this->deleteByPK($request, $response, (new EventTimelineModel()));
     }
 }

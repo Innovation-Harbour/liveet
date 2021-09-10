@@ -10,9 +10,9 @@ use Liveet\Controllers\FaceVerificationLogController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $faceverificationlog) {
+    function (RouteCollectorProxy $faceVerificationLogGroup) {
 
-        $faceverificationlog->get(
+        $faceVerificationLogGroup->get(
             "/get/face-verification-logs[/{verification_log_id}[/{organiser_id}[/{event_id}[/{user_id}[/{page}[/{limit}]]]]]]",
             FaceVerificationLogController::class . ":getFaceVerificationLogs"
         );
@@ -24,9 +24,9 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $faceverificationlog) {
+    function (RouteCollectorProxy $faceVerificationLogGroup) {
 
-        $faceverificationlog->get(
+        $faceVerificationLogGroup->get(
             "/get/face-verification-logs[/{verification_log_id}[/{event_id}[/{user_id}[/{page}[/{limit}]]]]]",
             FaceVerificationLogController::class . ":getOrganiserFaceVerificationLogs"
         );

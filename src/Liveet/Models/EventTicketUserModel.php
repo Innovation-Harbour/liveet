@@ -94,7 +94,7 @@ class EventTicketUserModel extends HelperModel
         if (isset($conditions["event_id"])) {
             $event_id = $conditions["event_id"];
             unset($conditions["event_id"]);
-            $event_ticket_ids = (new HelperController())->getEventTicketIds([$event_id]);
+            $event_ticket_ids = (new HelperController())->getEventTicketIdsOfEvent([$event_id]);
             $queryOptions["whereIn"][] = ["event_ticket_id" => $event_ticket_ids];
         }
 

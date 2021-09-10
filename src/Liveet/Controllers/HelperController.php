@@ -8,7 +8,9 @@ use Liveet\Models\EventInvitationModel;
 use Liveet\Models\EventModel;
 use Liveet\Models\EventTicketModel;
 use Liveet\Models\EventTicketUserModel;
+use Liveet\Models\EventTimelineModel;
 use Liveet\Models\OrganiserStaffModel;
+use Liveet\Models\TimelineMediaModel;
 use Rashtell\Domain\JSON;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -283,6 +285,7 @@ class HelperController extends BaseController
         }
     }
 
+
     /** */
 
     public function getOrganiserStaffIds($organiser_id)
@@ -313,10 +316,10 @@ class HelperController extends BaseController
     {
         $event_ids = $this->getEventIdsOfOrganiser($organiser_id);
 
-        return $this->getEventTicketIds($event_ids);
+        return $this->getEventTicketIdsOfEvent($event_ids);
     }
 
-    public function getEventTicketIds($event_ids)
+    public function getEventTicketIdsOfEvent($event_ids)
     {
         $event_ticket_id_s = (new EventTicketModel())->select("event_ticket_id")->whereIn("event_id", $event_ids)->get();
 
@@ -342,11 +345,19 @@ class HelperController extends BaseController
         }
     }
 
-    public function eventBelongsToOrganiser($request, $response, $event_id)
+    public function eventBelongsToOrganiser($request, $response, $event_id = null)
     {
         $json = new JSON();
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_id = $authDetails["organiser_id"];
+
+        if (!$event_id) {
+            $body = $this->checkOrGetPostBody($request, ["event_id"]);
+
+            if ($body) {
+                $event_id = $body["event_id"];
+            }
+        }
 
         $event = EventModel::find($event_id);
         if (!$event || $event["organiser_id"] != $organiser_id) {
@@ -418,17 +429,82 @@ class HelperController extends BaseController
         }
     }
 
-    public function getEventCode($request)
+    public function eventTimelineBelongsToOrganiser($request, $response, $timeline_id = null)
     {
-        $eventID = $this->checkOrGetPostBody($request, ["event_id"]);
-        if (!$eventID) {
-            return null;
+        $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
+        $organiser_id = $authDetails["organiser_id"];
+
+        if (!$timeline_id) {
+            $body = $this->checkOrGetPostBody($request, ["timeline_id"]);
+
+            if ($body) {
+                $timeline_id = $body["timeline_id"];
+            }
         }
 
-        $eventID = $eventID["event_id"];
+        $eventTimeline = EventTimelineModel::find($timeline_id);
+        if (!$eventTimeline) {
+            $error = ["errorMessage" => "Event timeline not found", "statusCode" => 400];
 
-        $eventID = (int)$eventID;
-        $event = EventModel::find($eventID);
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $event = $eventTimeline->event;
+        if ($event["organiser_id"] != $organiser_id) {
+            $error = ["errorMessage" => "Event timeline not found", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+    }
+
+    public function eventTimelineMediaBelongsToOrganiser($request, $response, $timeline_media_id = null)
+    {
+        $json = new JSON();
+        $authDetails = static::getTokenInputsFromRequest($request);
+        $organiser_id = $authDetails["organiser_id"];
+
+        if (!$timeline_media_id) {
+            $body = $this->checkOrGetPostBody($request, ["timeline_media_id"]);
+
+            if ($body) {
+                $timeline_media_id = $body["timeline_media_id"];
+            }
+        }
+
+        if (!$timeline_media_id) {
+            $routeParams = $this->getRouteParams($request);
+
+            if (isset($routeParams["timeline_media_id"])) {
+                $timeline_media_id = $routeParams["timeline_media_id"];
+            }
+        }
+
+        $timelineMedia = TimelineMediaModel::find($timeline_media_id);
+        if (!$timelineMedia) {
+            $error = ["errorMessage" => "Timeline media not found", "statusCode" => 400];
+
+            return $json->withJsonResponse($response, $error);
+        }
+
+        $timeline_id = $timelineMedia["timeline_id"];
+
+        return $this->eventTimelineBelongsToOrganiser($request, $response, $timeline_id);
+    }
+
+    public function getEventCode($request, $event_id = null)
+    {
+        if (!$event_id) {
+            $body = $this->checkOrGetPostBody($request, ["event_id"]);
+            if (!$body) {
+                return null;
+            }
+
+            $event_id = $body["event_id"];
+        }
+
+        $event_id = (int)$event_id;
+        $event = EventModel::find($event_id);
 
         $event_code = "";
         if ($event) {
@@ -438,5 +514,29 @@ class HelperController extends BaseController
         }
 
         return $event_code;
+    }
+
+    public function getEventCodeByTimeline($request, $timeline_id = null)
+    {
+
+        if (!$timeline_id) {
+            $body = $this->checkOrGetPostBody($request, ["timeline_id"]);
+            if (!$body) {
+                return null;
+            }
+
+            $timeline_id = $body["timeline_id"];
+        }
+
+        $timeline_id = (int)$timeline_id;
+        $eventTimeline = EventTimelineModel::find($timeline_id);
+
+        if (!$eventTimeline) {
+            return null;
+        }
+
+        $event_id = $eventTimeline["event_id"];
+
+        return $this->getEventCode($request, $event_id);
     }
 }

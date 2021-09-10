@@ -10,14 +10,14 @@ use Liveet\Controllers\ReportController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $report) {
+    function (RouteCollectorProxy $reportGroup) {
 
-        $report->get(
+        $reportGroup->get(
             "/get/organiser/summary/{organiser_id}",
             ReportController::class . ":getOrganiserTimelySummary"
         );
 
-        $report->get(
+        $reportGroup->get(
             "/get/organiser/timely-summary/{organiser_id}/{from}/{to}/{interval}",
             ReportController::class . ":getOrganiserSummaryByInterval"
         );
@@ -29,9 +29,9 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $report) {
+    function (RouteCollectorProxy $reportGroup) {
 
-        $report->get(
+        $reportGroup->get(
             "/get/organiser/timely-summary/{from}/{to}/{interval}",
             ReportController::class . ":getOrganiserSelfTimelySummary"
         );

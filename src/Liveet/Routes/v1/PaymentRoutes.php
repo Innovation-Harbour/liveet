@@ -10,9 +10,9 @@ use Liveet\Controllers\PaymentController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $payment) {
+    function (RouteCollectorProxy $paymentGroup) {
 
-        $payment->get(
+        $paymentGroup->get(
             "/get/payments[/{payment_id}[/{event_ticket_id}[/{user_id}[/{organiser_id}[/{from}[/{to}]]]]]]",
             PaymentController::class . ":getPayments"
         );
@@ -24,9 +24,9 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $payment) {
+    function (RouteCollectorProxy $paymentGroup) {
 
-        $payment->get(
+        $paymentGroup->get(
             "/get/payments[/{payment_id}[/{event_ticket_id}[/{user_id}[/{from}[/{to}]]]]]",
             PaymentController::class . ":getOrganiserPayments"
         );

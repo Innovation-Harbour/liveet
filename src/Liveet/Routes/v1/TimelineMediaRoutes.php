@@ -10,29 +10,29 @@ use Liveet\Controllers\TimelineMediaController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $timelineMediaGroup) {
 
-        $eventGroup->post(
+        $timelineMediaGroup->post(
             "/create/timeline-media",
             TimelineMediaController::class . ":createTimelineMedia"
         );
 
-        $eventGroup->get(
-            "/get/timeline-medias[/{timeline_id}[/{page}[/{limit}]]]",
+        $timelineMediaGroup->get(
+            "/get/timeline-medias[/{timeline_media_id}[/{timeline_id}[/{event_id}[/{page}[/{limit}]]]]]",
             TimelineMediaController::class . ":getTimelineMedias"
         );
 
-        $eventGroup->get(
+        $timelineMediaGroup->get(
             "/get/timeline-media/{timeline_media_id}",
             TimelineMediaController::class . ":getTimelineMediaByPK"
         );
 
-        $eventGroup->put(
+        $timelineMediaGroup->put(
             "/update/timeline-media/{timeline_media_id}",
             TimelineMediaController::class . ":updateTimelineMediaByPK"
         );
 
-        $eventGroup->delete(
+        $timelineMediaGroup->delete(
             "/delete/timeline-media/{timeline_media_id}",
             TimelineMediaController::class . ":deleteTimelineMediaByPK"
         );
@@ -44,6 +44,27 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $timelineMediaGroup) {
+
+        $timelineMediaGroup->post(
+            "/create/timeline-media",
+            TimelineMediaController::class . ":organiserCreateTimelineMedia"
+        );
+
+        $timelineMediaGroup->get(
+            "/get/timeline-medias[/{timeline_media_id}[/{timeline_id}[/{event_id}[/{page}[/{limit}]]]]]",
+            TimelineMediaController::class . ":getOrganiserTimelineMedias"
+        );
+
+
+        $timelineMediaGroup->put(
+            "/update/timeline-media/{timeline_media_id}",
+            TimelineMediaController::class . ":organiserUpdateTimelineMediaByPK"
+        );
+
+        $timelineMediaGroup->delete(
+            "/delete/timeline-media/{timeline_media_id}",
+            TimelineMediaController::class . ":organiserDeleteTimelineMediaByPK"
+        );
     }
 );

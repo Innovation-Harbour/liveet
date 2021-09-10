@@ -10,9 +10,9 @@ use Liveet\Controllers\UserController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $user) {
+    function (RouteCollectorProxy $userGroup) {
 
-        $user->get(
+        $userGroup->get(
             "/get/users[/{user_id}[/{user_phone}[/{fcm_token}[/{page}[/{limit}]]]]]",
             UserController::class . ":getUsers"
         );
@@ -24,6 +24,6 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $user) {
+    function (RouteCollectorProxy $userGroup) {
     }
 );

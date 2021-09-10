@@ -10,29 +10,29 @@ use Liveet\Controllers\EventTimelineController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $timelineGroup) {
 
-        $eventGroup->post(
+        $timelineGroup->post(
             "/create/timeline",
             EventTimelineController::class . ":createEventTimeline"
         );
 
-        $eventGroup->get(
+        $timelineGroup->get(
             "/get/timelines[/{event_id}[/{page}[/{limit}]]]",
             EventTimelineController::class . ":getEventTimelines"
         );
 
-        $eventGroup->get(
+        $timelineGroup->get(
             "/get/timeline/{timeline_id}",
             EventTimelineController::class . ":getEventTimelineByPK"
         );
 
-        $eventGroup->put(
+        $timelineGroup->put(
             "/update/timeline/{timeline_id}",
             EventTimelineController::class . ":updateEventTimelineByPK"
         );
 
-        $eventGroup->delete(
+        $timelineGroup->delete(
             "/delete/timeline/{timeline_id}",
             EventTimelineController::class . ":deleteEventTimelineByPK"
         );
@@ -44,11 +44,26 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $timelineGroup) {
 
-        $eventGroup->get(
+        $timelineGroup->post(
+            "/create/timeline",
+            EventTimelineController::class . ":organiserCreateEventTimeline"
+        );
+
+        $timelineGroup->get(
             "/get/timelines[/{event_id}[/{page}[/{limit}]]]",
             EventTimelineController::class . ":getOrganiserEventTimelines"
+        );
+
+        $timelineGroup->put(
+            "/update/timeline/{timeline_id}",
+            EventTimelineController::class . ":organiserUpdateEventTimelineByPK"
+        );
+
+        $timelineGroup->delete(
+            "/delete/timeline/{timeline_id}",
+            EventTimelineController::class . ":organiserDeleteEventTimelineByPK"
         );
     }
 );

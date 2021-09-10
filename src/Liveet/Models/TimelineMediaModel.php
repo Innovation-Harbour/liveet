@@ -32,9 +32,13 @@ class TimelineMediaModel extends BaseModel
         $timeline_media = $details["timeline_media"];
 
         foreach ($timeline_media as $media) {
+            if ((!isset($media["path"]) && !isset($media["url"])) || !isset($media["type"])) {
+                continue;
+            }
+
             $mediaType = $media["type"] == Constants::MEDIA_TYPE_APPLICATION ? Constants::MEDIA_TYPE_PDF : $media["type"];
 
-            $this->create(["timeline_id" => $timeline_id, "timeline_media" => $media["path"] ?? $media["url"], "media_type" => $mediaType]);
+            $this->create(["timeline_id" => $timeline_id, "timeline_media" => $media["path"] ?? $media["url"] ?? "", "media_type" => $mediaType]);
         }
 
         return (new EventTimelineModel())->getByPK($timeline_id, null, ["timelineMedia"]);

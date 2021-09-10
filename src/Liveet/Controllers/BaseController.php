@@ -1248,7 +1248,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1301,7 +1301,13 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = [
+            "successMessage" => $accountOptions["responseMessage"] ?? "Update success",
+            "statusCode" => 201,
+            "data" => $data["data"],
+            "errorMessage" => $data["error"] ?? "",
+            "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0
+        ];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1411,7 +1417,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1626,7 +1632,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password update success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
 
         return $json->withJsonResponse($response,  $payload);
     }
@@ -1651,7 +1657,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password reset to default: " . Constants::DEFAULT_RESET_PASSWORD, "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password reset to default: " . Constants::DEFAULT_RESET_PASSWORD, "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
 
         return $json->withJsonResponse($response,  $payload);
     }
@@ -1676,7 +1682,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Email verification success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Email verification success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
 
         //TODO redirect to login
         return $json->withJsonResponse($response, $payload);
@@ -1717,7 +1723,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password reset link sent to your email", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password reset link sent to your email", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
 
         return $json->withJsonResponse($response, $payload);
     }
@@ -1790,7 +1796,7 @@ abstract class BaseController
             return $json->withJsonResponse($response,  $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password change success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "Password change success", "statusCode" => 201, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
 
         return $json->withJsonResponse($response,  $payload);
     }
@@ -1822,7 +1828,7 @@ abstract class BaseController
             return $json->withJsonResponse($response, $error);
         }
 
-        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "User verification success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? -1 : 0];
+        $payload = ["successMessage" => $accountOptions["responseMessage"] ?? "User verification success", "statusCode" => 200, "data" => $data["data"], "errorMessage" => $data["error"] ?? "", "errorStatus" => isset($data["error"]) && $data["error"] ? 1 : 0];
 
         return $json->withJsonResponse($response, $payload);
     }

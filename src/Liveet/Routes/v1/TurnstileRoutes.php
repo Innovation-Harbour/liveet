@@ -10,9 +10,9 @@ use Liveet\Controllers\TurnstileController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $turnstile) {
+    function (RouteCollectorProxy $turnstileGroup) {
 
-        $turnstile->get(
+        $turnstileGroup->get(
             "/get/turnstiles[/{turnstile_id}[/{organiser_id}[/{event_id}[/{page}[/{limit}]]]]]",
             TurnstileController::class . ":getTurnstiles"
         );
@@ -24,6 +24,6 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $turnstile) {
+    function (RouteCollectorProxy $turnstileGroup) {
     }
 );

@@ -10,29 +10,29 @@ use Liveet\Controllers\EventTicketUserController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $eventTicketUserGroup) {
 
-        $eventGroup->post(
+        $eventTicketUserGroup->post(
             "/create/ticket-user",
             EventTicketUserController::class . ":createEventTicketUser"
         );
 
-        $eventGroup->get(
+        $eventTicketUserGroup->get(
             "/get/ticket-users[/{event_id}[/{event_ticket_id}[/{from}[/{to}[/{page}[/{limit}]]]]]]",
             EventTicketUserController::class . ":getEventTicketUsers"
         );
 
-        $eventGroup->get(
+        $eventTicketUserGroup->get(
             "/get/ticket-user/{event_ticket_user_id}",
             EventTicketUserController::class . ":getEventTicketUserByPK"
         );
 
-        $eventGroup->put(
+        $eventTicketUserGroup->put(
             "/transfer/ticket-user/{event_ticket_user_id}",
             EventTicketUserController::class . ":transferEventTicketUserByPK"
         );
 
-        $eventGroup->delete(
+        $eventTicketUserGroup->delete(
             "/recall/ticket-user/{event_ticket_user_id}",
             EventTicketUserController::class . ":recallEventTicketUser"
         );
@@ -44,29 +44,29 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $eventTicketUserGroup) {
 
-        $eventGroup->post(
+        $eventTicketUserGroup->post(
             "/create/ticket-user",
             EventTicketUserController::class . ":createOrganiserEventTicketUser"
         );
 
-        $eventGroup->get(
+        $eventTicketUserGroup->get(
             "/get/ticket-users[/{event_id}[/{event_ticket_id}[/{from}[/{to}[/{page}[/{limit}]]]]]]",
             EventTicketUserController::class . ":getOrganiserEventTicketUsers"
         );
 
-        $eventGroup->get(
+        $eventTicketUserGroup->get(
             "/get/ticket-user/{event_ticket_user_id}",
             EventTicketUserController::class . ":getOrganiserEventTicketUserByPK"
         );
 
-        $eventGroup->put(
+        $eventTicketUserGroup->put(
             "/transfer/ticket-user/{event_ticket_user_id}",
             EventTicketUserController::class . ":transferOrganiserEventTicketUserByPK"
         );
 
-        $eventGroup->delete(
+        $eventTicketUserGroup->delete(
             "/recall/ticket-user/{event_ticket_user_id}",
             EventTicketUserController::class . ":recallOrganiserEventTicketUser"
         );

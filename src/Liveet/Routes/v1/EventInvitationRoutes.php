@@ -10,29 +10,29 @@ use Liveet\Controllers\EventInvitationController;
  */
 isset($adminGroup) && $adminGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $invitationGroup) {
 
-        $eventGroup->post(
+        $invitationGroup->post(
             "/create/invitation",
             EventInvitationController::class . ":createEventInvitation"
         );
 
-        $eventGroup->get(
+        $invitationGroup->get(
             "/get/invitations[/{event_id}[/{page}[/{limit}]]]",
             EventInvitationController::class . ":getEventInvitations"
         );
 
-        $eventGroup->get(
+        $invitationGroup->get(
             "/get/invitation/{event_invitation_id}",
             EventInvitationController::class . ":getEventInvitationByPK"
         );
 
-        $eventGroup->put(
+        $invitationGroup->put(
             "/update/invitation/{event_invitation_id}",
             EventInvitationController::class . ":updateEventInvitationByPK"
         );
 
-        $eventGroup->delete(
+        $invitationGroup->delete(
             "/delete/invitation/{event_invitation_id}",
             EventInvitationController::class . ":deleteEventInvitationByPK"
         );
@@ -44,29 +44,29 @@ isset($adminGroup) && $adminGroup->group(
  */
 isset($organiserStaffGroup) && $organiserStaffGroup->group(
     "",
-    function (RouteCollectorProxy $eventGroup) {
+    function (RouteCollectorProxy $invitationGroup) {
 
-        $eventGroup->post(
+        $invitationGroup->post(
             "/create/invitation",
             EventInvitationController::class . ":createOrganiserEventInvitation"
         );
 
-        $eventGroup->get(
+        $invitationGroup->get(
             "/get/invitations[/{event_id}[/{page}[/{limit}]]]",
             EventInvitationController::class . ":getOrganiserEventInvitations"
         );
 
-        $eventGroup->get(
+        $invitationGroup->get(
             "/get/invitation/{event_invitation_id}",
             EventInvitationController::class . ":getOrganiserEventInvitationByPK"
         );
 
-        $eventGroup->put(
+        $invitationGroup->put(
             "/update/invitation/{event_invitation_id}",
             EventInvitationController::class . ":updateOrganiserEventInvitationByPK"
         );
 
-        $eventGroup->delete(
+        $invitationGroup->delete(
             "/delete/invitation/{event_invitation_id}",
             EventInvitationController::class . ":deleteOrganiserEventInvitationByPK"
         );

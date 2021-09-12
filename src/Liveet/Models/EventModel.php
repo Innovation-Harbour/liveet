@@ -109,8 +109,8 @@ class EventModel extends BaseModel
 
         $cordinates = $this->getCoordinates($event_venue);
         $address_found = $cordinates[0];
-        $longitude = $cordinates[1];
-        $latitude = $cordinates[2];
+        $latitude = $cordinates[1];
+        $longitude = $cordinates[2];
         // [$address_found, $latitude, $longitude] = $this->getCoordinates($event_venue);
         //["address_found" => $address_found, "longitude" => $longitude, "latitude" => $latitude] = $cordinates;
 

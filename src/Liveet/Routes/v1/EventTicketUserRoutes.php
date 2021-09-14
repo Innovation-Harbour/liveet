@@ -18,7 +18,7 @@ isset($adminGroup) && $adminGroup->group(
         );
 
         $eventTicketUserGroup->get(
-            "/get/ticket-users[/{event_id}[/{event_ticket_id}[/{from}[/{to}[/{page}[/{limit}[/{event_ticket_user_id}[/{organiser_id}[/{user_id}]]]]]]]]]",
+            "/get/ticket-users[/{event_id}[/{event_ticket_id}[/{from}[/{to}[/{page}[/{limit}[/{event_ticket_user_id}[/{organiser_id}[/{user_phone}]]]]]]]]]",
             EventTicketUserController::class . ":getEventTicketUsers"
         );
 
@@ -52,7 +52,7 @@ isset($organiserStaffGroup) && $organiserStaffGroup->group(
         );
 
         $eventTicketUserGroup->get(
-            "/get/ticket-users[/{event_id}[/{event_ticket_id}[/{from}[/{to}[/{page}[/{limit}[/{event_ticket_user_id}[/{user_id}]]]]]]]]",
+            "/get/ticket-users[/{event_id}[/{event_ticket_id}[/{from}[/{to}[/{page}[/{limit}[/{event_ticket_user_id}[/{user_phone}]]]]]]]]",
             EventTicketUserController::class . ":getOrganiserEventTicketUsers"
         );
 

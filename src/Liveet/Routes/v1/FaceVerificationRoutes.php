@@ -13,7 +13,7 @@ isset($adminGroup) && $adminGroup->group(
     function (RouteCollectorProxy $faceVerificationLogGroup) {
 
         $faceVerificationLogGroup->get(
-            "/get/face-verification-logs[/{verification_log_id}[/{organiser_id}[/{event_id}[/{user_id}[/{page}[/{limit}]]]]]]",
+            "/get/face-verification-logs[/{verification_log_id}[/{organiser_id}[/{event_id}[/{user_phone}[/{page}[/{limit}]]]]]]",
             FaceVerificationLogController::class . ":getFaceVerificationLogs"
         );
     }
@@ -27,7 +27,7 @@ isset($organiserStaffGroup) && $organiserStaffGroup->group(
     function (RouteCollectorProxy $faceVerificationLogGroup) {
 
         $faceVerificationLogGroup->get(
-            "/get/face-verification-logs[/{verification_log_id}[/{event_id}[/{user_id}[/{page}[/{limit}]]]]]",
+            "/get/face-verification-logs[/{verification_log_id}[/{event_id}[/{user_phone}[/{page}[/{limit}]]]]]",
             FaceVerificationLogController::class . ":getOrganiserFaceVerificationLogs"
         );
     }

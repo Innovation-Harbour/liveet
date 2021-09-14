@@ -55,7 +55,7 @@ class EventTicketUserController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["event_id", "event_ticket_id", "from", "to", "event_ticket_user_id", "organiser_id", "user_id"];
+        $expectedRouteParams = ["event_id", "event_ticket_id", "from", "to", "event_ticket_user_id", "organiser_id", "user_phone"];
         $routeParams = $this->getRouteParams($request);
 
         $conditions = [];
@@ -88,16 +88,15 @@ class EventTicketUserController extends HelperController
             unset($conditions["organiser_id"]);
         }
 
-        if (isset($conditions["user_id"])) {
-            $user_id = $conditions["user_id"];
+        if (isset($conditions["user_phone"])) {
+            $user_phone = $conditions["user_phone"];
 
-            $whereHas["user"] = function ($query) use ($user_id) {
-                return $query->where("user_id", $user_id);
+            $whereHas["user"] = function ($query) use ($user_phone) {
+                return $query->where("user_phone", "LIKE", "%$user_phone%");
             };
 
-            unset($conditions["user_id"]);
+            unset($conditions["user_phone"]);
         }
-
 
         return $this->getByPage($request, $response, new EventTicketUserModel(), null, $conditions, ["user", "eventTicket"], ["whereHas" => $whereHas]);
     }
@@ -214,7 +213,7 @@ class EventTicketUserController extends HelperController
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_id = $authDetails["organiser_id"];
 
-        $expectedRouteParams = ["event_id", "event_ticket_id", "from", "to", "event_ticket_user_id", "organiser_id", "user_id"];
+        $expectedRouteParams = ["event_id", "event_ticket_id", "from", "to", "event_ticket_user_id", "organiser_id", "user_phone"];
         $routeParams = $this->getRouteParams($request);
 
         $conditions = [];
@@ -240,14 +239,14 @@ class EventTicketUserController extends HelperController
             unset($conditions["event_id"]);
         }
 
-        if (isset($conditions["user_id"])) {
-            $user_id = $conditions["user_id"];
+        if (isset($conditions["user_phone"])) {
+            $user_phone = $conditions["user_phone"];
 
-            $whereHas["user"] = function ($query) use ($user_id) {
-                return $query->where("user_id", $user_id);
+            $whereHas["user"] = function ($query) use ($user_phone) {
+                return $query->where("user_phone", "LIKE", "%$user_phone%");
             };
 
-            unset($conditions["user_id"]);
+            unset($conditions["user_phone"]);
         }
 
         return $this->getByPage($request, $response, new EventTicketUserModel(), null, $conditions, ["user", "eventTicket"], ["whereHas" => $whereHas]);

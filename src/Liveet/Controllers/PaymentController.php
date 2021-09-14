@@ -19,7 +19,7 @@ class PaymentController extends HelperController
             return $permissonResponse;
         }
 
-        $expectedRouteParams = ["payment_id", "event_ticket_id", "user_id", "organiser_id", "event_id"];
+        $expectedRouteParams = ["payment_id", "event_ticket_id", "user_phone", "organiser_id", "event_id"];
         $routeParams = $this->getRouteParams($request);
 
         $conditions = [];
@@ -53,6 +53,16 @@ class PaymentController extends HelperController
             unset($conditions["event_id"]);
         }
 
+        if (isset($conditions["user_phone"])) {
+            $user_phone = $conditions["user_phone"];
+
+            $whereHas["user"] = function ($query) use ($user_phone) {
+                return $query->where("user_phone", "LIKE", "%$user_phone%");
+            };
+
+            unset($conditions["user_phone"]);
+        }
+
         return $this->getByDate($request, $response, new PaymentModel(), null, $conditions, ["user", "eventTicket"], ["dateCreatedColumn" => "created_at", "whereHas" => $whereHas]);
     }
 
@@ -69,7 +79,7 @@ class PaymentController extends HelperController
         $authDetails = static::getTokenInputsFromRequest($request);
         $organiser_id = $authDetails["organiser_id"];
 
-        $expectedRouteParams = ["payment_id", "event_ticket_id", "user_id", "event_id"];
+        $expectedRouteParams = ["payment_id", "event_ticket_id", "user_phone", "event_id"];
         $routeParams = $this->getRouteParams($request);
         $conditions = [];
 
@@ -93,6 +103,16 @@ class PaymentController extends HelperController
             };
 
             unset($conditions["event_id"]);
+        }
+
+        if (isset($conditions["user_phone"])) {
+            $user_phone = $conditions["user_phone"];
+
+            $whereHas["user"] = function ($query) use ($user_phone) {
+                return $query->where("user_phone", "LIKE", "%$user_phone%");
+            };
+
+            unset($conditions["user_phone"]);
         }
 
         return $this->getByDate($request, $response, new PaymentModel(), null, $conditions, ["user", "eventTicket"], [

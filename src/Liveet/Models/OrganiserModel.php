@@ -341,7 +341,7 @@ class OrganiserModel extends BaseModel
         $totalGeneratedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalGeneratedInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where($newConditions)->first()["totalGeneratedInvitations"];
         $totalAcceptedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalAcceptedInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where($newConditions)->where("event_invitation_status", Constants::INVITATION_ACCEPT)->first()["totalAcceptedInvitations"];
         $totalPendingInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalPendingInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where($newConditions)->where("event_invitation_status", Constants::INVITATION_PENDING)->first()["totalPendingInvitations"];
-        $totalRejectedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalRejectedInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where($newConditions)->where("event_invitation_status", Constants::INVITATION_PENDING)->first()["totalRejectedInvitations"];
+        $totalRejectedInvitations = EventInvitationModel::selectRaw('SUM(invitee_can_invite_count)  as totalRejectedInvitations')->join("event", "event.event_id", "=", "event_invitation.event_id")->where($newConditions)->where("event_invitation_status", Constants::INVITATION_DECLINED)->first()["totalRejectedInvitations"];
 
         $newConditions =  $this->changeArrayKey($conditions, "created_at", "event_timeline.created_at");
 

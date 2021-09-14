@@ -2,7 +2,7 @@
 
 require "vendor/autoload.php";
 
-// use Liveet\Domain\Constants;
+use Liveet\Domain\Constants;
 // use Dotenv\Dotenv;
 
 // $dotenv = Dotenv::createImmutable(__DIR__."/..");
@@ -14,3 +14,7 @@ $db_user = $_ENV["DB_USER"];
 $db_pass = $_ENV["DB_PWD"];
 
 $basePath = $_ENV["BASE_PATH"];
+
+var_dump($basePath,$db_host);
+die;
+

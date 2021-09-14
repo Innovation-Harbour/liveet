@@ -2,11 +2,11 @@
 
 require "vendor/autoload.php";
 
-use Liveet\Domain\Constants;
-use Dotenv\Dotenv;
+// use Liveet\Domain\Constants;
+// use Dotenv\Dotenv;
 
-$dotenv = Dotenv::createImmutable(__DIR__."/..");
-$dotenv->load();
+// $dotenv = Dotenv::createImmutable(__DIR__."/..");
+// $dotenv->load();
 
 $db_host = $_ENV["DB_HOST"];
 $db_name = $_ENV["DB_NAME"];

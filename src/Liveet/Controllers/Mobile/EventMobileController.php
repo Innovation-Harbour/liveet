@@ -417,6 +417,10 @@ class EventMobileController extends HelperController
     $eventCode = $event_details->event_code;
     $eventStopSaleTime = $event_details->event_sale_stop_time;
 
+    $code = rand(00000000, 99999999);
+
+    $transaction_reference = $eventCode."-".$code;
+
     //check if the stop time is not elapsed
     if (!is_null($eventStopSaleTime) && time() > intval($eventStopSaleTime)) {
       $error = ["errorMessage" => "Event Registration Time Has Elapsed", "statusCode" => 400];
@@ -464,6 +468,7 @@ class EventMobileController extends HelperController
       "ticket_cost" => $eventCost,
       "public_key" => $flutterwave_public,
       "encryption_key" => $flutterwave_encryption,
+      'txt_ref' => $transaction_reference
     ];
 
     $payload = ["statusCode" => 200, "data" => $payment_data];

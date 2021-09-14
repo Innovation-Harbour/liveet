@@ -8,13 +8,16 @@ provider:
     httpApi:
         id: ppl2yu2v4c
 
+plugins:
+    - ./vendor/bref/bref
+
 functions:
     api:
         handler: index.php
         description: ''
         timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)
         layers:
-            - 'arn:aws:lambda:us-east-1:209497400698:layer:php-73-fpm:25'
+            - ${bref:layer.php-74-fpm}
         events:
             -   httpApi: '*'
 

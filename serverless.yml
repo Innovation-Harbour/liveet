@@ -3,13 +3,10 @@ service: liveet-api
 provider:
     name: aws
     region: us-west-2
-    runtime: provided
+    runtime: provided.al2
     stage: ${opt:stage, 'staging'}
     httpApi:
         id: ppl2yu2v4c
-
-plugins:
-    - ./vendor/bref/bref
 
 functions:
     api:
@@ -17,7 +14,7 @@ functions:
         description: ''
         timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)
         layers:
-            - ${bref:layer.php-74-fpm}
+            - 'arn:aws:lambda:us-west-2:209497400698:layer:php-74-fpm:29'
         events:
             -   httpApi: '*'
 

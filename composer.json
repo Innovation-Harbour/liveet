@@ -13,7 +13,8 @@
     "aws/aws-sdk-php": "^3.176",
     "guzzlehttp/guzzle": "^7.0",
     "edwinhoksberg/php-fcm": "^1.2",
-    "bluerhinos/phpmqtt": "@dev"
+    "bluerhinos/phpmqtt": "@dev",
+    "bref/bref": "^1.2"
   },
   "authors": [
     {

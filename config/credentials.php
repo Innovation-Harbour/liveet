@@ -15,6 +15,3 @@ $db_pass = $_ENV["DB_PWD"];
 
 $basePath = $_ENV["BASE_PATH"];
 
-var_dump($basePath,$db_host);
-die;
-

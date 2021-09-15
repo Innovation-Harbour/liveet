@@ -510,21 +510,17 @@ class AuthController extends HelperController
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
   {
-    $json = new JSON();
-    $temp_db = new TempsModel();
+    $data = $request->getParsedBody();
 
-    $temp_details = $temp_db->first();
-    $base64 = $temp_details->base_64;
+    $image = $data["image"];
 
-    $byte_image = base64_decode($base64);
+    $byte_image = base64_decode($image);
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
 
-    $code = rand(00000000, 99999999);
-
     try {
-      $s3 = new S3Client([
+      $recognition = new RekognitionClient([
         'region'  => 'us-west-2',
         'version' => 'latest',
         'credentials' => [
@@ -533,29 +529,25 @@ class AuthController extends HelperController
         ]
       ]);
     } catch (\Exception $e) {
-      $error = ["errorMessage" => "Error connecting to AWS s3. Please try Registering again", "statusCode" => 400];
+      $error = ["errorMessage" => "Error connecting to image server. Please try Registering again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-    //push image to s3
-    $key = 'user-' . $code . '-image.png';
 
     try {
-      $s3_result = $s3->putObject([
-        'Bucket' => 'liveet-test-user-bucket',
-        'Key'    => $key,
-        'Body'   => $byte_image,
-        'ACL'    => 'public-read',
-        'ContentType'    => 'image/png'
+      $result = $recognition->detectFaces([ // REQUIRED
+        'Attributes' => ['ALL'],
+        'Image' => [ // REQUIRED
+          'Bytes' => $byte_image
+        ]
       ]);
     } catch (\Exception $e) {
-      $error = ["errorMessage" => "Error posting image to S3. Please try Registering again", "statusCode" => 400];
+      $error = ["errorMessage" => "Error getting face recognition. Please try Registering again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-
-    $payload = ["statusCode" => 200, "successMessage" => "IMAGE UPLOAD  Successfully"];
-    return $json->withJsonResponse($response, $payload);
+    var_dump($result);
+    die;
   }
 
   public function changeUsername(Request $request, ResponseInterface $response): ResponseInterface

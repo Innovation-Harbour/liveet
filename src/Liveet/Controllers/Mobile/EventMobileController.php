@@ -1109,7 +1109,7 @@ class EventMobileController extends HelperController
       ->leftJoin('event_control', 'event_ticket.event_id', '=', 'event_control.event_id')
       ->select('event_ticket_users.event_ticket_user_id', 'event.event_id', 'event.event_multimedia', 'event.event_venue', 'event.location_lat', 'event.location_long', 'event.event_name', 'event.event_date_time', 'event_control.event_can_recall', 'event_control.event_can_invite', 'event_control.event_can_transfer_ticket')
       ->where("event_ticket_users.user_id", $user_id)->where("event_ticket_users.ownership_status", Constants::EVENT_TICKET_ACTIVE)
-      ->offset($offset)->limit($limit)->get();
+      ->offset($offset)->limit($limit)->orderBy("event.event_date_time", "DESC")->get();
 
     foreach ($results as $result) {
       $datetime = $result->event_date_time;

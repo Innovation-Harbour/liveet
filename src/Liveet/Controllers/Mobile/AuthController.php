@@ -559,6 +559,7 @@ class AuthController extends HelperController
         "user_fullname" => $fullname,
         "user_phone" => $phone_clean,
         "user_email" => $email,
+        "user_password" => $password,
         "reg_status" => Constants::USER_REG_NOTCOMPLETED,
       ]);
     } catch (\Exception $e) {

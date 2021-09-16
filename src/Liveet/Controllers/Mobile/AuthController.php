@@ -438,14 +438,6 @@ class AuthController extends HelperController
 
 
     if ($confidence > 85) {
-      //get temp data and delete temp data from db
-      $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
-      $temp_data_clean = $temp_data[0];
-
-      $fullname = $temp_data_clean->temp_name;
-      $email = $temp_data_clean->temp_email;
-      $password = $temp_data_clean->temp_password;
-
       //push image to s3
       $key = 'user-' . $code . '-image.png';
 
@@ -476,6 +468,14 @@ class AuthController extends HelperController
         $payload = ["statusCode" => 200, "successMessage" => "User Registration Successful"];
         return $json->withJsonResponse($response, $payload);
       } else {
+
+        //get temp data and delete temp data from db
+        $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
+        $temp_data_clean = $temp_data[0];
+
+        $fullname = $temp_data_clean->temp_name;
+        $email = $temp_data_clean->temp_email;
+        $password = $temp_data_clean->temp_password;
 
         //create user auth token
 

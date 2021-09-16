@@ -372,6 +372,8 @@ class AuthController extends HelperController
     $phone = $data["phone"];
     $image = $data["image"];
 
+    $from_registered_users = isset($data["from_reg_users"]) ? true : false;
+
     $byte_image = base64_decode($image);
     $code = rand(00000000, 99999999);
 
@@ -462,50 +464,123 @@ class AuthController extends HelperController
 
       $picture_url = "https://liveet-prod-users.s3-us-west-2.amazonaws.com/" . $key;
 
+      if ($from_registered_users) {
+        $user_db->where("user_phone", $phone_clean)->update(
+          [
+            "user_picture" => $picture_url,
+            "image_key" => $key,
+            "reg_status" => Constants::USER_REG_COMPLETED,
+          ]
+        );
 
+        $payload = ["statusCode" => 200, "successMessage" => "User Registration Successful"];
+        return $json->withJsonResponse($response, $payload);
+      } else {
 
-      //create user auth token
+        //create user auth token
 
-      $user_data_token = [
-        "email" => $email
-      ];
+        $user_data_token = [
+          "email" => $email
+        ];
 
-      $token = $keymanager->createClaims($user_data_token);
+        $token = $keymanager->createClaims($user_data_token);
 
-      //add data to user table
-      try {
+        //add data to user table
+        try {
         $user_db->create([
-          "user_fullname" => $fullname,
-          "user_phone" => $phone_clean,
-          "user_email" => $email,
-          "user_password" => $password,
-          "user_picture" => $picture_url,
-          "image_key" => $key,
-        ]);
-      } catch (\Exception $e) {
-        $error = ["errorMessage" => $e->getMessage(), "statusCode" => 400];
-        return $json->withJsonResponse($response, $error);
+            "user_fullname" => $fullname,
+            "user_phone" => $phone_clean,
+            "user_email" => $email,
+            "user_password" => $password,
+            "user_picture" => $picture_url,
+            "image_key" => $key,
+            "reg_status" => Constants::USER_REG_COMPLETED,
+          ]);
+        } catch (\Exception $e) {
+          $error = ["errorMessage" => $e->getMessage(), "statusCode" => 400];
+          return $json->withJsonResponse($response, $error);
+        }
+
+        //remove record from temp db
+        $temp_db->where('temp_phone', $phone_clean)->forceDelete();
+
+        $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
+        $user_data_clean = $user_data[0];
+
+        $user_id = $user_data_clean->user_id;
+        $user_picture = $user_data_clean->user_picture;
+
+        $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname, "user_id" => $user_id, "user_pics" => $user_picture];
+
+        $payload = ["statusCode" => 200, "data" => $data_to_view];
+        return $json->withJsonResponse($response, $payload);
       }
-
-      $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
-      $user_data_clean = $user_data[0];
-
-      $user_id = $user_data_clean->user_id;
-      $user_picture = $user_data_clean->user_picture;
-
-
-      //remove record from temp db
-      $temp_db->where('temp_phone', $phone_clean)->forceDelete();
-
-      $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname, "user_id" => $user_id, "user_pics" => $user_picture];
-
-      $payload = ["statusCode" => 200, "data" => $data_to_view];
-
-      return $json->withJsonResponse($response, $payload);
+      
     } else {
       $error = ["errorMessage" => "Image Not Accepted. Please take a selfie of your face alone", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
+  }
+
+  public function skipSelfieRegistration(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $json = new JSON();
+    $keymanager = new KeyManager();
+    $user_db = new UserModel();
+    $temp_db = new TempsModel();
+
+    $data = $request->getParsedBody();
+
+    $phone = $data["phone"];
+    $phone_clean = substr($phone, 1);
+
+    //get temp data and delete temp data from db
+    $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
+    $temp_data_clean = $temp_data[0];
+
+    $fullname = $temp_data_clean->temp_name;
+    $email = $temp_data_clean->temp_email;
+    $password = $temp_data_clean->temp_password;
+
+   
+
+    //create user auth token
+
+    $user_data_token = [
+      "email" => $email
+    ];
+
+    $token = $keymanager->createClaims($user_data_token);
+
+    //add data to user table
+    try {
+    $user_db->create([
+        "user_fullname" => $fullname,
+        "user_phone" => $phone_clean,
+        "user_email" => $email,
+        "reg_status" => Constants::USER_REG_NOTCOMPLETED,
+      ]);
+    } catch (\Exception $e) {
+      $error = ["errorMessage" => $e->getMessage(), "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    //remove record from temp db
+    $temp_db->where('temp_phone', $phone_clean)->forceDelete();
+
+    $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
+    $user_data_clean = $user_data[0];
+
+    $user_id = $user_data_clean->user_id;
+    $user_picture = "";
+
+    $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname, "user_id" => $user_id, "user_pics" => $user_picture];
+
+    $payload = ["statusCode" => 200, "data" => $data_to_view];
+
+    return $json->withJsonResponse($response, $payload);
+    
   }
 
   public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface

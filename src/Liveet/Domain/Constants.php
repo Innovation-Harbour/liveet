@@ -132,4 +132,8 @@ class Constants
   //face verification type
   const VERIFICATION_VERIFIED = "VERIFIED";
   const VERIFICATION_FAILED = "FAILED";
+
+  //User Reg Status
+  const USER_REG_NOTCOMPLETED = "NOT_COMPLETED";
+  const USER_REG_COMPLETED = "COMPLETED";
 }

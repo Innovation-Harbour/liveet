@@ -78,7 +78,7 @@ class EventMobileController extends HelperController
       $can_invite = ($event_can_invite === "CAN_INVITE" || ($event_can_invite === "CAN_INVITE_RESTRICTED" && $can_invite_count > 0)) ? true : false;
       $is_free = ($result->event_payment_type === "FREE") ? true : false;
       $isFavourite = ($favourite_count > 0) ? true : false;
-      $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
+      $useMap = ($result->location_lat !== null && $result->location_long !== null) ? true : false;
 
       $tmp = [
         "event_id" => intval($result->event_id),
@@ -340,7 +340,7 @@ class EventMobileController extends HelperController
       }
     }
 
-    if ($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists()) {
+    if ($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->where("deleted_at", NULL)->exists()) {
       $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->update(["event_invitation_status" => Constants::INVITATION_ACCEPT]);
     }
 
@@ -644,6 +644,7 @@ class EventMobileController extends HelperController
     ->where("event_invitation.event_invitee_user_phone", $user_phone)
     ->where("event_invitation.event_invitation_status", Constants::INVITATION_PENDING)
     ->where("event.event_date_time",">", time())
+    ->where("event_invitation.deleted_at", NULL)
     ->count();
 
     $response_data = [
@@ -677,7 +678,7 @@ class EventMobileController extends HelperController
       $user_details = $user_db->where("user_id", $user_id)->first();
       $user_phone = $user_details->user_phone;
 
-      $invitation_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->first();
+      $invitation_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->where("deleted_at", NULL)->first();
       $inviteCount = $invitation_details->invitee_can_invite_count;
 
       $isRestricted = true;
@@ -735,7 +736,7 @@ class EventMobileController extends HelperController
     $invited_details = $user_db->where("user_phone", $invited_phone)->first();
     $invited_user_id = $invited_details->user_id;
 
-    $inviter_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->first();
+    $inviter_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->where("deleted_at", NULL)->first();
     $invite_count = $inviter_details->invitee_can_invite_count;
 
     $control_details = $control_db->where("event_id", $event_id)->first();
@@ -772,7 +773,7 @@ class EventMobileController extends HelperController
 
     if ($can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED) {
       $invite_count = $invite_count + 1;
-      $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->update(["invitee_can_invite_count" => $invite_count]);
+      $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->where("deleted_at", NULL)->update(["invitee_can_invite_count" => $invite_count]);
     }
 
     $log->create([
@@ -829,7 +830,7 @@ class EventMobileController extends HelperController
       $first_strip = preg_replace('/[^a-zA-Z0-9-_\.]/', '', trim($phone));
       $stripped_phone = preg_replace('/-/', '', trim($first_strip));
 
-      $invitation_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->first();
+      $invitation_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->where("deleted_at", NULL)->first();
       $invitation_count = $invitation_details->invitee_can_invite_count;
 
       if ($can_invite === Constants::EVENT_CAN_INVITE) {
@@ -846,7 +847,7 @@ class EventMobileController extends HelperController
 
         $clean_phone = $stripped_phone;
 
-        if (!$invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $clean_phone)->exists()) {
+        if (!$invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $clean_phone)->where("deleted_at", NULL)->exists()) {
           //add invitation to DB
           $invitation_db->create([
             "event_id" => $event_id,
@@ -858,7 +859,7 @@ class EventMobileController extends HelperController
             //Decrease Inviters number of invite
             $invitation_count--;
 
-            $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->update(["invitee_can_invite_count" => $invitation_count]);
+            $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->where("deleted_at", NULL)->update(["invitee_can_invite_count" => $invitation_count]);
           }
 
           //check if user exists with that Number
@@ -917,7 +918,7 @@ class EventMobileController extends HelperController
     $invited_by_pics = "https://liveet-prod-media.s3.us-west-2.amazonaws.com/liveet-static/user.png";
 
     // get invitations invited for
-    $invited_for_results = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_invitee_user_phone", $user_phone_number)->where("event_invitation_status", Constants::INVITATION_PENDING)->get();
+    $invited_for_results = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_invitee_user_phone", $user_phone_number)->where("event_invitation.deleted_at", NULL)->where("event_invitation_status", Constants::INVITATION_PENDING)->get();
 
     foreach ($invited_for_results as $result) {
       $datetime = $result->event_date_time;
@@ -980,7 +981,7 @@ class EventMobileController extends HelperController
     }
 
     // get invitations you invited others for
-    $invited_others_result = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_inviter_user_id", $user_id)->groupBy("event_invitation.event_id")->get();
+    $invited_others_result = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_invitation.deleted_at", NULL)->where("event_inviter_user_id", $user_id)->groupBy("event_invitation.event_id")->get();
 
     foreach ($invited_others_result as $result) {
       $datetime = $result->event_date_time;
@@ -1048,7 +1049,7 @@ class EventMobileController extends HelperController
     $offset = $data["offset"];
     $limit = $data["limit"];
 
-    $results = $invitation_db->where("event_id", $event_id)->where("event_inviter_user_id", $user_id)->offset($offset)->limit($limit)->get();
+    $results = $invitation_db->where("event_id", $event_id)->where("event_inviter_user_id", $user_id)->where("deleted_at", NULL)->offset($offset)->limit($limit)->get();
 
     foreach ($results as $result) {
       $user_phone = $result->event_invitee_user_phone;
@@ -1118,7 +1119,7 @@ class EventMobileController extends HelperController
       $year = date('Y', $datetime);
 
       if ($result->event_can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED) {
-        $invitation_details = $invitation_db->where("event_id", $result->event_id)->where("event_invitee_user_phone", $user_phone)->first();
+        $invitation_details = $invitation_db->where("event_id", $result->event_id)->where("event_invitee_user_phone", $user_phone)->where("deleted_at", NULL)->first();
         $can_invite_count = $invitation_details->invitee_can_invite_count;
       }
 

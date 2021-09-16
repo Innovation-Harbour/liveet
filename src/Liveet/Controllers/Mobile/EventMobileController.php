@@ -165,6 +165,7 @@ class EventMobileController extends HelperController
     $db = new EventTicketModel();
     $access_db = new EventAccessModel();
     $log = new UserActivityModel();
+    $user_db = new UserModel();
 
     $response_data = [];
 
@@ -172,6 +173,10 @@ class EventMobileController extends HelperController
 
     $user_id = $data["user_id"];
     $event_id = $data["event_id"];
+
+    $user_details = $user_db->where("user_id", $user_id)->first();
+    $user_phone = $user_details->user_phone;
+    $has_registered = ($user_details->reg_status === Constants::USER_REG_COMPLETED) ? true : false;
 
     $results = $db->where("event_id", $event_id)->get();
 
@@ -192,7 +197,9 @@ class EventMobileController extends HelperController
         "ticket_desc" => $result->ticket_desc,
         "ticket_cost" => $new_ticket_price,
         "ticket_discount" => $readable_ticket_discount,
-        "is_selected" => false
+        "is_selected" => false,
+        "has_registered" => $has_registered,
+        "phone" => "+".$user_phone
       ];
 
       array_push($response_data, $tmp);

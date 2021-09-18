@@ -70,19 +70,19 @@ class TimelineMediaModel extends BaseModel
         return ["data" => $model["data"], "error" => $model["error"]];
     }
 
-    public function getMobileTimeline($user_id, $offset, $limit)
-    {
-        $sql = "
-              SELECT
-              DISTINCT timeline_media,event_multimedia,event_name,media_type, timeline_desc
-              FROM  timeline_media
-              LEFT JOIN event_timeline ON timeline_media.timeline_id = event_timeline.timeline_id
-              LEFT JOIN event on event_timeline.event_id = event.event_id
-              LEFT JOIN (SELECT event_id,user_id FROM event_ticket INNER JOIN event_ticket_users ON event_ticket.event_ticket_id = event_ticket_users.event_ticket_id) X ON event.event_id = X.event_id
-              WHERE timeline_media.deleted_at IS NULL AND (event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND X.user_id = " . $user_id . "))
-              ORDER BY media_datetime DESC LIMIT " . $offset . ", " . $limit . "
-              ";
-        $result = $this->getConnection()->select($sql);
-        return $result;
-    }
+    // public function getMobileTimeline($user_id, $offset, $limit)
+    // {
+    //     $sql = "
+    //           SELECT
+    //           DISTINCT timeline_media,event_multimedia,event_name,media_type, timeline_desc
+    //           FROM  timeline_media
+    //           LEFT JOIN event_timeline ON timeline_media.timeline_id = event_timeline.timeline_id
+    //           LEFT JOIN event on event_timeline.event_id = event.event_id
+    //           LEFT JOIN (SELECT event_id,user_id FROM event_ticket INNER JOIN event_ticket_users ON event_ticket.event_ticket_id = event_ticket_users.event_ticket_id) X ON event.event_id = X.event_id
+    //           WHERE timeline_media.deleted_at IS NULL AND (event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND X.user_id = " . $user_id . "))
+    //           ORDER BY media_datetime DESC LIMIT " . $offset . ", " . $limit . "
+    //           ";
+    //     $result = $this->getConnection()->select($sql);
+    //     return $result;
+    // }
 }

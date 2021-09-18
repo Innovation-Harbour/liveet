@@ -15,6 +15,7 @@ use Liveet\Models\EventModel;
 use Liveet\Models\EventControlModel;
 use Liveet\Models\PaymentModel;
 use Liveet\Models\TimelineMediaModel;
+use Liveet\Models\EventTimelineModel;
 use Liveet\Models\EventTicketUserModel;
 use Illuminate\Support\Facades\DB;
 use Liveet\Models\Mobile\FavouriteModel;
@@ -1478,6 +1479,86 @@ class EventMobileController extends HelperController
         "is_pdf" => ($result->media_type === Constants::MEDIA_TYPE_PDF) ? true : false,
         "timeline_desc" => $result->timeline_desc
       ];
+
+      array_push($response_data, $tmp);
+    }
+
+    $log->create([
+      "user_id" => $user_id,
+      "activity_type" => Constants::LOG_GET_TIMELINE
+    ]);
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function getNewTimelines(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $timeline_media_db = new TimelineMediaModel();
+    $timeline_db = new EventTimelineModel();
+    $log = new UserActivityModel();
+
+    $response_data = [];
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $offset = $data["offset"];
+    $limit = $data["limit"];
+
+    $results = $timeline_db->getMobileTimeline($user_id, $offset, $limit);
+
+    foreach ($results as $result) {
+      $timeline_id = $result->timeline_id;
+      $event_multimedia = $result->event_multimedia;
+      $event_name = $result->event_name;
+      $timeline_desc = $result->timeline_desc;
+
+      //get timeline multimedias
+
+      $timeline_query = $timeline_media_db->where("timeline_id",$timeline_id);
+
+      if($timeline_query->count() > 0)
+      {
+        $num_of_timelines = $timeline_query->count();
+
+        $timeline_media_array = [];
+
+        foreach ($timeline_query->get() as $timeline) {
+          $link_url = '';
+          $media_type = $timeline->media_type;
+
+          if ($media_type === Constants::MEDIA_TYPE_LINK) {
+            $full_media = explode("^", $timeline->timeline_media);
+            $content_url = isset($full_media[0]) ? $full_media[0] : '';
+            $link_url = isset($full_media[1]) ? $full_media[1] : '';
+          } else {
+            $content_url = $timeline->timeline_media;
+          }
+
+          $multimedia_tmp = [
+            "content_url" => $content_url,
+            "is_video" => ($result->media_type === Constants::MEDIA_TYPE_VIDEO) ? true : false,
+            "is_image" => ($result->media_type === Constants::MEDIA_TYPE_IMAGE) ? true : false,
+            "is_pdf" => ($result->media_type === Constants::MEDIA_TYPE_PDF) ? true : false,
+            "is_link" => ($result->media_type === Constants::MEDIA_TYPE_LINK) ? true : false,
+            "link_url" => $result->$link_url
+          ];
+
+          array_push($timeline_media_array, $multimedia_tmp);
+        }
+
+        //create data for mobile app
+        $tmp = [
+          "num_timeline_content" => $num_of_timelines,
+          "event_image" => $event_multimedia,
+          "event_title" => $event_name,
+          "timeline_desc" => $result->timeline_desc,
+          "multimedias" => $timeline_media_array
+        ];
+      }
 
       array_push($response_data, $tmp);
     }

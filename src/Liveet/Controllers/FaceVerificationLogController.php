@@ -51,7 +51,7 @@ class FaceVerificationLogController extends HelperController
             unset($conditions["user_phone"]);
         }
 
-        return $this->getByPage($request, $response, new FaceVerificationLogModel(), null, $conditions, ["user", "event"]);
+        return $this->getByPage($request, $response, new FaceVerificationLogModel(), null, $conditions, ["user", "event"], ["whereHas" => $whereHas]);
     }
 
 

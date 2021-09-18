@@ -74,8 +74,6 @@ class EventMobileController extends HelperController
 
       $can_invite_count = intval($result->invitee_can_invite_count);
 
-      $add_to_timeline = ($result->event_invitation_status == null || $result->event_invitation_status === Constants::INVITATION_PENDING) ? true : false;
-
       $can_invite = ($event_can_invite === "CAN_INVITE" || ($event_can_invite === "CAN_INVITE_RESTRICTED" && $can_invite_count > 0)) ? true : false;
       $is_free = ($result->event_payment_type === "FREE") ? true : false;
       $isFavourite = ($favourite_count > 0) ? true : false;
@@ -98,17 +96,7 @@ class EventMobileController extends HelperController
         "use_map" => $useMap,
       ];
 
-      //check if the user already attending this event
-      $eventQuery = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
-        ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
-        ->where("event_ticket.event_id", $result->event_id)
-        ->where("event_ticket_users.user_id", $user_id)
-        ->where("event_ticket_users.ownership_status", Constants::EVENT_TICKET_ACTIVE)
-        ->count();
-
-      if ($eventQuery < 1 && (intval($datetime) > time()) && $add_to_timeline) {
-        array_push($response_data, $tmp);
-      }
+      array_push($response_data, $tmp);
     }
 
     $payload = ["statusCode" => 200, "data" => $response_data];

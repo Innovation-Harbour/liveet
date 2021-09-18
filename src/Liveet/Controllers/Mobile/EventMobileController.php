@@ -1518,7 +1518,7 @@ class EventMobileController extends HelperController
 
       //get timeline multimedias
 
-      $timeline_query = $timeline_media_db->where("timeline_id",$timeline_id);
+      $timeline_query = $timeline_media_db->where("timeline_id",$timeline_id)->where("deleted_at",NULL);
 
       if($timeline_query->count() > 0)
       {

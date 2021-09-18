@@ -1540,11 +1540,11 @@ class EventMobileController extends HelperController
 
           $multimedia_tmp = [
             "content_url" => $content_url,
-            "is_video" => ($result->media_type === Constants::MEDIA_TYPE_VIDEO) ? true : false,
-            "is_image" => ($result->media_type === Constants::MEDIA_TYPE_IMAGE) ? true : false,
-            "is_pdf" => ($result->media_type === Constants::MEDIA_TYPE_PDF) ? true : false,
-            "is_link" => ($result->media_type === Constants::MEDIA_TYPE_LINK) ? true : false,
-            "link_url" => $result->$link_url
+            "is_video" => ($timeline->media_type === Constants::MEDIA_TYPE_VIDEO) ? true : false,
+            "is_image" => ($timeline->media_type === Constants::MEDIA_TYPE_IMAGE) ? true : false,
+            "is_pdf" => ($timeline->media_type === Constants::MEDIA_TYPE_PDF) ? true : false,
+            "is_link" => ($timeline->media_type === Constants::MEDIA_TYPE_LINK) ? true : false,
+            "link_url" => $link_url
           ];
 
           array_push($timeline_media_array, $multimedia_tmp);
@@ -1558,9 +1558,10 @@ class EventMobileController extends HelperController
           "timeline_desc" => $result->timeline_desc,
           "multimedias" => $timeline_media_array
         ];
-      }
 
-      array_push($response_data, $tmp);
+        array_push($response_data, $tmp);
+      }
+      
     }
 
     $log->create([

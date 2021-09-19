@@ -41,6 +41,11 @@ isset($mobileGroup) && $mobileGroup->group(
         );
 
         $authGroup->post(
+            "/skipselfieregistration",
+            AuthController::class . ":skipSelfieRegistration"
+        );
+
+        $authGroup->post(
             "/login",
             AuthController::class . ":Login"
         );

@@ -15,6 +15,7 @@ use Liveet\Models\EventModel;
 use Liveet\Models\EventControlModel;
 use Liveet\Models\PaymentModel;
 use Liveet\Models\TimelineMediaModel;
+use Liveet\Models\EventTimelineModel;
 use Liveet\Models\EventTicketUserModel;
 use Illuminate\Support\Facades\DB;
 use Liveet\Models\Mobile\FavouriteModel;
@@ -73,12 +74,10 @@ class EventMobileController extends HelperController
 
       $can_invite_count = intval($result->invitee_can_invite_count);
 
-      $add_to_timeline = ($result->event_invitation_status == null || $result->event_invitation_status === Constants::INVITATION_PENDING) ? true : false;
-
       $can_invite = ($event_can_invite === "CAN_INVITE" || ($event_can_invite === "CAN_INVITE_RESTRICTED" && $can_invite_count > 0)) ? true : false;
       $is_free = ($result->event_payment_type === "FREE") ? true : false;
       $isFavourite = ($favourite_count > 0) ? true : false;
-      $useMap = ($result->location_lat !== null || $result->location_long !== null) ? true : false;
+      $useMap = ($result->location_lat !== null && $result->location_long !== null) ? true : false;
 
       $tmp = [
         "event_id" => intval($result->event_id),
@@ -97,17 +96,7 @@ class EventMobileController extends HelperController
         "use_map" => $useMap,
       ];
 
-      //check if the user already attending this event
-      $eventQuery = $ticket_db->join('event', 'event_ticket.event_id', '=', 'event.event_id')
-        ->join('event_ticket_users', 'event_ticket.event_ticket_id', '=', 'event_ticket_users.event_ticket_id')
-        ->where("event_ticket.event_id", $result->event_id)
-        ->where("event_ticket_users.user_id", $user_id)
-        ->where("event_ticket_users.ownership_status", Constants::EVENT_TICKET_ACTIVE)
-        ->count();
-
-      if ($eventQuery < 1 && (intval($datetime) > time()) && $add_to_timeline) {
-        array_push($response_data, $tmp);
-      }
+      array_push($response_data, $tmp);
     }
 
     $payload = ["statusCode" => 200, "data" => $response_data];
@@ -165,6 +154,7 @@ class EventMobileController extends HelperController
     $db = new EventTicketModel();
     $access_db = new EventAccessModel();
     $log = new UserActivityModel();
+    $user_db = new UserModel();
 
     $response_data = [];
 
@@ -172,6 +162,10 @@ class EventMobileController extends HelperController
 
     $user_id = $data["user_id"];
     $event_id = $data["event_id"];
+
+    $user_details = $user_db->where("user_id", $user_id)->first();
+    $user_phone = $user_details->user_phone;
+    $has_registered = ($user_details->reg_status === Constants::USER_REG_COMPLETED) ? true : false;
 
     $results = $db->where("event_id", $event_id)->get();
 
@@ -192,7 +186,9 @@ class EventMobileController extends HelperController
         "ticket_desc" => $result->ticket_desc,
         "ticket_cost" => $new_ticket_price,
         "ticket_discount" => $readable_ticket_discount,
-        "is_selected" => false
+        "is_selected" => false,
+        "has_registered" => $has_registered,
+        "phone" => "+".$user_phone
       ];
 
       array_push($response_data, $tmp);
@@ -340,7 +336,7 @@ class EventMobileController extends HelperController
       }
     }
 
-    if ($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->exists()) {
+    if ($invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->where("deleted_at", NULL)->exists()) {
       $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->update(["event_invitation_status" => Constants::INVITATION_ACCEPT]);
     }
 
@@ -417,6 +413,10 @@ class EventMobileController extends HelperController
     $eventCode = $event_details->event_code;
     $eventStopSaleTime = $event_details->event_sale_stop_time;
 
+    $code = rand(00000000, 99999999);
+
+    $transaction_reference = $eventCode."-".$code;
+
     //check if the stop time is not elapsed
     if (!is_null($eventStopSaleTime) && time() > intval($eventStopSaleTime)) {
       $error = ["errorMessage" => "Event Registration Time Has Elapsed", "statusCode" => 400];
@@ -464,6 +464,7 @@ class EventMobileController extends HelperController
       "ticket_cost" => $eventCost,
       "public_key" => $flutterwave_public,
       "encryption_key" => $flutterwave_encryption,
+      'txt_ref' => $transaction_reference
     ];
 
     $payload = ["statusCode" => 200, "data" => $payment_data];
@@ -639,6 +640,7 @@ class EventMobileController extends HelperController
     ->where("event_invitation.event_invitee_user_phone", $user_phone)
     ->where("event_invitation.event_invitation_status", Constants::INVITATION_PENDING)
     ->where("event.event_date_time",">", time())
+    ->where("event_invitation.deleted_at", NULL)
     ->count();
 
     $response_data = [
@@ -672,7 +674,7 @@ class EventMobileController extends HelperController
       $user_details = $user_db->where("user_id", $user_id)->first();
       $user_phone = $user_details->user_phone;
 
-      $invitation_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->first();
+      $invitation_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $user_phone)->where("deleted_at", NULL)->first();
       $inviteCount = $invitation_details->invitee_can_invite_count;
 
       $isRestricted = true;
@@ -730,7 +732,7 @@ class EventMobileController extends HelperController
     $invited_details = $user_db->where("user_phone", $invited_phone)->first();
     $invited_user_id = $invited_details->user_id;
 
-    $inviter_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->first();
+    $inviter_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->where("deleted_at", NULL)->first();
     $invite_count = $inviter_details->invitee_can_invite_count;
 
     $control_details = $control_db->where("event_id", $event_id)->first();
@@ -767,7 +769,7 @@ class EventMobileController extends HelperController
 
     if ($can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED) {
       $invite_count = $invite_count + 1;
-      $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->update(["invitee_can_invite_count" => $invite_count]);
+      $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->where("deleted_at", NULL)->update(["invitee_can_invite_count" => $invite_count]);
     }
 
     $log->create([
@@ -824,7 +826,7 @@ class EventMobileController extends HelperController
       $first_strip = preg_replace('/[^a-zA-Z0-9-_\.]/', '', trim($phone));
       $stripped_phone = preg_replace('/-/', '', trim($first_strip));
 
-      $invitation_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->first();
+      $invitation_details = $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->where("deleted_at", NULL)->first();
       $invitation_count = $invitation_details->invitee_can_invite_count;
 
       if ($can_invite === Constants::EVENT_CAN_INVITE) {
@@ -841,7 +843,7 @@ class EventMobileController extends HelperController
 
         $clean_phone = $stripped_phone;
 
-        if (!$invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $clean_phone)->exists()) {
+        if (!$invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $clean_phone)->where("deleted_at", NULL)->exists()) {
           //add invitation to DB
           $invitation_db->create([
             "event_id" => $event_id,
@@ -853,7 +855,7 @@ class EventMobileController extends HelperController
             //Decrease Inviters number of invite
             $invitation_count--;
 
-            $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->update(["invitee_can_invite_count" => $invitation_count]);
+            $invitation_db->where("event_id", $event_id)->where("event_invitee_user_phone", $inviter_phone)->where("deleted_at", NULL)->update(["invitee_can_invite_count" => $invitation_count]);
           }
 
           //check if user exists with that Number
@@ -912,7 +914,7 @@ class EventMobileController extends HelperController
     $invited_by_pics = "https://liveet-prod-media.s3.us-west-2.amazonaws.com/liveet-static/user.png";
 
     // get invitations invited for
-    $invited_for_results = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_invitee_user_phone", $user_phone_number)->where("event_invitation_status", Constants::INVITATION_PENDING)->get();
+    $invited_for_results = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_invitee_user_phone", $user_phone_number)->where("event_invitation.deleted_at", NULL)->where("event_invitation_status", Constants::INVITATION_PENDING)->get();
 
     foreach ($invited_for_results as $result) {
       $datetime = $result->event_date_time;
@@ -975,7 +977,7 @@ class EventMobileController extends HelperController
     }
 
     // get invitations you invited others for
-    $invited_others_result = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_inviter_user_id", $user_id)->groupBy("event_invitation.event_id")->get();
+    $invited_others_result = $invitation_db->join('event', 'event_invitation.event_id', '=', 'event.event_id')->where("event_invitation.deleted_at", NULL)->where("event_inviter_user_id", $user_id)->groupBy("event_invitation.event_id")->get();
 
     foreach ($invited_others_result as $result) {
       $datetime = $result->event_date_time;
@@ -1043,7 +1045,7 @@ class EventMobileController extends HelperController
     $offset = $data["offset"];
     $limit = $data["limit"];
 
-    $results = $invitation_db->where("event_id", $event_id)->where("event_inviter_user_id", $user_id)->offset($offset)->limit($limit)->get();
+    $results = $invitation_db->where("event_id", $event_id)->where("event_inviter_user_id", $user_id)->where("deleted_at", NULL)->offset($offset)->limit($limit)->get();
 
     foreach ($results as $result) {
       $user_phone = $result->event_invitee_user_phone;
@@ -1104,7 +1106,7 @@ class EventMobileController extends HelperController
       ->leftJoin('event_control', 'event_ticket.event_id', '=', 'event_control.event_id')
       ->select('event_ticket_users.event_ticket_user_id', 'event.event_id', 'event.event_multimedia', 'event.event_venue', 'event.location_lat', 'event.location_long', 'event.event_name', 'event.event_date_time', 'event_control.event_can_recall', 'event_control.event_can_invite', 'event_control.event_can_transfer_ticket')
       ->where("event_ticket_users.user_id", $user_id)->where("event_ticket_users.ownership_status", Constants::EVENT_TICKET_ACTIVE)
-      ->offset($offset)->limit($limit)->get();
+      ->offset($offset)->limit($limit)->orderBy("event.event_date_time", "DESC")->get();
 
     foreach ($results as $result) {
       $datetime = $result->event_date_time;
@@ -1113,7 +1115,7 @@ class EventMobileController extends HelperController
       $year = date('Y', $datetime);
 
       if ($result->event_can_invite === Constants::EVENT_CAN_INVITE_RESTRICTED) {
-        $invitation_details = $invitation_db->where("event_id", $result->event_id)->where("event_invitee_user_phone", $user_phone)->first();
+        $invitation_details = $invitation_db->where("event_id", $result->event_id)->where("event_invitee_user_phone", $user_phone)->where("deleted_at", NULL)->first();
         $can_invite_count = $invitation_details->invitee_can_invite_count;
       }
 
@@ -1467,6 +1469,87 @@ class EventMobileController extends HelperController
       ];
 
       array_push($response_data, $tmp);
+    }
+
+    $log->create([
+      "user_id" => $user_id,
+      "activity_type" => Constants::LOG_GET_TIMELINE
+    ]);
+
+    $payload = ["statusCode" => 200, "data" => $response_data];
+
+    return $this->json->withJsonResponse($response, $payload);
+  }
+
+  public function getNewTimelines(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    //declare needed class objects
+    $timeline_media_db = new TimelineMediaModel();
+    $timeline_db = new EventTimelineModel();
+    $log = new UserActivityModel();
+
+    $response_data = [];
+
+    $data = $request->getParsedBody();
+
+    $user_id = $data["user_id"];
+    $offset = $data["offset"];
+    $limit = $data["limit"];
+
+    $results = $timeline_db->getMobileTimeline($user_id, $offset, $limit);
+
+    foreach ($results as $result) {
+      $timeline_id = $result->timeline_id;
+      $event_multimedia = $result->event_multimedia;
+      $event_name = $result->event_name;
+      $timeline_desc = $result->timeline_desc;
+
+      //get timeline multimedias
+
+      $timeline_query = $timeline_media_db->where("timeline_id",$timeline_id)->where("deleted_at",NULL);
+
+      if($timeline_query->count() > 0)
+      {
+        $num_of_timelines = $timeline_query->count();
+
+        $timeline_media_array = [];
+
+        foreach ($timeline_query->get() as $timeline) {
+          $link_url = '';
+          $media_type = $timeline->media_type;
+
+          if ($media_type === Constants::MEDIA_TYPE_LINK) {
+            $full_media = explode("^", $timeline->timeline_media);
+            $content_url = isset($full_media[0]) ? $full_media[0] : '';
+            $link_url = isset($full_media[1]) ? $full_media[1] : '';
+          } else {
+            $content_url = $timeline->timeline_media;
+          }
+
+          $multimedia_tmp = [
+            "content_url" => $content_url,
+            "is_video" => ($timeline->media_type === Constants::MEDIA_TYPE_VIDEO) ? true : false,
+            "is_image" => ($timeline->media_type === Constants::MEDIA_TYPE_IMAGE) ? true : false,
+            "is_pdf" => ($timeline->media_type === Constants::MEDIA_TYPE_PDF) ? true : false,
+            "is_link" => ($timeline->media_type === Constants::MEDIA_TYPE_LINK) ? true : false,
+            "link_url" => $link_url
+          ];
+
+          array_push($timeline_media_array, $multimedia_tmp);
+        }
+
+        //create data for mobile app
+        $tmp = [
+          "num_timeline_content" => $num_of_timelines,
+          "event_image" => $event_multimedia,
+          "event_title" => $event_name,
+          "timeline_desc" => $result->timeline_desc,
+          "multimedias" => $timeline_media_array
+        ];
+
+        array_push($response_data, $tmp);
+      }
+      
     }
 
     $log->create([

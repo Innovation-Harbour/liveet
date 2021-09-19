@@ -234,13 +234,32 @@ class EventModel extends BaseModel
         return ["data" => $eventReturn, "error" => null];
     }
 
+    public function getOldMobileEvents($user_id, $offset, $limit)
+    {
+        $sql = "
+                SELECT * FROM event
+                LEFT JOIN
+                  (SELECT event_id AS invitation_event_id,invitee_can_invite_count,event_invitation_status,user_id FROM event_invitation INNER JOIN user ON event_invitation.event_invitee_user_phone = user.user_phone WHERE event_invitation.deleted_at IS NULL AND user.user_id = " . $user_id . " ) X ON event.event_id = X.invitation_event_id
+                WHERE event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND user_id = " . $user_id . ")
+                ORDER BY event.event_date_time DESC, event.event_id DESC
+                LIMIT " . $offset . ", " . $limit . "
+              ";
+        $result = $this->getConnection()->select($sql);
+        return $result;
+    }
+
     public function getMobileEvents($user_id, $offset, $limit)
     {
         $sql = "
                 SELECT * FROM event
                 LEFT JOIN
-                  (SELECT event_id AS invitation_event_id,invitee_can_invite_count,event_invitation_status,user_id FROM event_invitation INNER JOIN user ON event_invitation.event_invitee_user_phone = user.user_phone WHERE user.user_id = " . $user_id . ") X ON event.event_id = X.invitation_event_id
-                WHERE event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND user_id = " . $user_id . ")
+                  (SELECT event_id AS invitation_event_id,invitee_can_invite_count,event_invitation_status,user_id FROM event_invitation INNER JOIN user ON event_invitation.event_invitee_user_phone = user.user_phone WHERE event_invitation.deleted_at IS NULL AND user.user_id = " . $user_id . " ) X ON event.event_id = X.invitation_event_id
+                LEFT JOIN 
+                  (SELECT event_ticket.event_id as attending_event_id,event_ticket_users.ownership_status FROM event_ticket INNER JOIN event_ticket_users ON event_ticket.event_ticket_id = event_ticket_users.event_ticket_id WHERE event_ticket_users.user_id= " . $user_id . ") Y ON event.event_id = Y.attending_event_id
+                WHERE event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND user_id = " . $user_id . ") AND
+                (X.event_invitation_status IS NULL OR X.event_invitation_status = 'PENDING') AND
+                (Y.ownership_status IS NULL OR Y.ownership_status = 'TRANSFERRED' OR Y.ownership_status = 'RECALLED') AND 
+                event.event_date_time > UNIX_TIMESTAMP()
                 ORDER BY event.event_date_time DESC, event.event_id DESC
                 LIMIT " . $offset . ", " . $limit . "
               ";

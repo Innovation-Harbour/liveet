@@ -1911,7 +1911,7 @@ abstract class BaseController
                     "overrideKeys" => [$statusInputKey => $statusColumnKey]
                 ]
             ],
-            ["parent" => true]
+            ["useParentModel" => true]
         );
     }
 

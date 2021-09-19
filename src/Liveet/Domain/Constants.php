@@ -58,6 +58,7 @@ class Constants
   const MEDIA_TYPE_VIDEO = "VIDEO";
   const MEDIA_TYPE_APPLICATION = "APPLICATION";
   const MEDIA_TYPE_PDF = "PDF";
+  const MEDIA_TYPE_LINK = "LINK";
 
   /**
    * value "local" | "s3Bucket" | "azure"
@@ -132,4 +133,8 @@ class Constants
   //face verification type
   const VERIFICATION_VERIFIED = "VERIFIED";
   const VERIFICATION_FAILED = "FAILED";
+
+  //User Reg Status
+  const USER_REG_NOTCOMPLETED = "NOT_COMPLETED";
+  const USER_REG_COMPLETED = "COMPLETED";
 }

@@ -372,6 +372,8 @@ class AuthController extends HelperController
     $phone = $data["phone"];
     $image = $data["image"];
 
+    $from_registered_users = isset($data["from_reg_users"]) ? true : false;
+
     $byte_image = base64_decode($image);
     $code = rand(00000000, 99999999);
 
@@ -436,14 +438,6 @@ class AuthController extends HelperController
 
 
     if ($confidence > 85) {
-      //get temp data and delete temp data from db
-      $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
-      $temp_data_clean = $temp_data[0];
-
-      $fullname = $temp_data_clean->temp_name;
-      $email = $temp_data_clean->temp_email;
-      $password = $temp_data_clean->temp_password;
-
       //push image to s3
       $key = 'user-' . $code . '-image.png';
 
@@ -462,69 +456,147 @@ class AuthController extends HelperController
 
       $picture_url = "https://liveet-prod-users.s3-us-west-2.amazonaws.com/" . $key;
 
+      if ($from_registered_users) {
+        $user_db->where("user_phone", $phone_clean)->update(
+          [
+            "user_picture" => $picture_url,
+            "image_key" => $key,
+            "reg_status" => Constants::USER_REG_COMPLETED,
+          ]
+        );
 
+        $payload = ["statusCode" => 200, "successMessage" => "User Registration Successful"];
+        return $json->withJsonResponse($response, $payload);
+      } else {
 
-      //create user auth token
+        //get temp data and delete temp data from db
+        $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
+        $temp_data_clean = $temp_data[0];
 
-      $user_data_token = [
-        "email" => $email
-      ];
+        $fullname = $temp_data_clean->temp_name;
+        $email = $temp_data_clean->temp_email;
+        $password = $temp_data_clean->temp_password;
 
-      $token = $keymanager->createClaims($user_data_token);
+        //create user auth token
 
-      //add data to user table
-      try {
+        $user_data_token = [
+          "email" => $email
+        ];
+
+        $token = $keymanager->createClaims($user_data_token);
+
+        //add data to user table
+        try {
         $user_db->create([
-          "user_fullname" => $fullname,
-          "user_phone" => $phone_clean,
-          "user_email" => $email,
-          "user_password" => $password,
-          "user_picture" => $picture_url,
-          "image_key" => $key,
-        ]);
-      } catch (\Exception $e) {
-        $error = ["errorMessage" => $e->getMessage(), "statusCode" => 400];
-        return $json->withJsonResponse($response, $error);
+            "user_fullname" => $fullname,
+            "user_phone" => $phone_clean,
+            "user_email" => $email,
+            "user_password" => $password,
+            "user_picture" => $picture_url,
+            "image_key" => $key,
+            "reg_status" => Constants::USER_REG_COMPLETED,
+          ]);
+        } catch (\Exception $e) {
+          $error = ["errorMessage" => $e->getMessage(), "statusCode" => 400];
+          return $json->withJsonResponse($response, $error);
+        }
+
+        //remove record from temp db
+        $temp_db->where('temp_phone', $phone_clean)->forceDelete();
+
+        $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
+        $user_data_clean = $user_data[0];
+
+        $user_id = $user_data_clean->user_id;
+        $user_picture = $user_data_clean->user_picture;
+
+        $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname, "user_id" => $user_id, "user_pics" => $user_picture];
+
+        $payload = ["statusCode" => 200, "data" => $data_to_view];
+        return $json->withJsonResponse($response, $payload);
       }
-
-      $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
-      $user_data_clean = $user_data[0];
-
-      $user_id = $user_data_clean->user_id;
-      $user_picture = $user_data_clean->user_picture;
-
-
-      //remove record from temp db
-      $temp_db->where('temp_phone', $phone_clean)->forceDelete();
-
-      $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname, "user_id" => $user_id, "user_pics" => $user_picture];
-
-      $payload = ["statusCode" => 200, "data" => $data_to_view];
-
-      return $json->withJsonResponse($response, $payload);
+      
     } else {
       $error = ["errorMessage" => "Image Not Accepted. Please take a selfie of your face alone", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
   }
 
-  public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
+  public function skipSelfieRegistration(Request $request, ResponseInterface $response): ResponseInterface
   {
+    //declare needed class objects
     $json = new JSON();
+    $keymanager = new KeyManager();
+    $user_db = new UserModel();
     $temp_db = new TempsModel();
 
-    $temp_details = $temp_db->first();
-    $base64 = $temp_details->base_64;
+    $data = $request->getParsedBody();
 
-    $byte_image = base64_decode($base64);
+    $phone = $data["phone"];
+    $phone_clean = substr($phone, 1);
+
+    //get temp data and delete temp data from db
+    $temp_data = $temp_db->where('temp_phone', $phone_clean)->take(1)->get();
+    $temp_data_clean = $temp_data[0];
+
+    $fullname = $temp_data_clean->temp_name;
+    $email = $temp_data_clean->temp_email;
+    $password = $temp_data_clean->temp_password;
+
+   
+
+    //create user auth token
+
+    $user_data_token = [
+      "email" => $email
+    ];
+
+    $token = $keymanager->createClaims($user_data_token);
+
+    //add data to user table
+    try {
+    $user_db->create([
+        "user_fullname" => $fullname,
+        "user_phone" => $phone_clean,
+        "user_email" => $email,
+        "user_password" => $password,
+        "reg_status" => Constants::USER_REG_NOTCOMPLETED,
+      ]);
+    } catch (\Exception $e) {
+      $error = ["errorMessage" => $e->getMessage(), "statusCode" => 400];
+      return $json->withJsonResponse($response, $error);
+    }
+
+    //remove record from temp db
+    $temp_db->where('temp_phone', $phone_clean)->forceDelete();
+
+    $user_data = $user_db->where('user_phone', $phone_clean)->take(1)->get();
+    $user_data_clean = $user_data[0];
+
+    $user_id = $user_data_clean->user_id;
+    $user_picture = "";
+
+    $data_to_view = ["email" => $email, "token" => $token, "name" => $fullname, "user_id" => $user_id, "user_pics" => $user_picture];
+
+    $payload = ["statusCode" => 200, "data" => $data_to_view];
+
+    return $json->withJsonResponse($response, $payload);
+    
+  }
+
+  public function AWSAddEvent(Request $request, ResponseInterface $response): ResponseInterface
+  {
+    $data = $request->getParsedBody();
+
+    $image = $data["image"];
+
+    $byte_image = base64_decode($image);
 
     $aws_key = $_ENV["AWS_KEY"];
     $aws_secret = $_ENV["AWS_SECRET"];
 
-    $code = rand(00000000, 99999999);
-
     try {
-      $s3 = new S3Client([
+      $recognition = new RekognitionClient([
         'region'  => 'us-west-2',
         'version' => 'latest',
         'credentials' => [
@@ -533,29 +605,25 @@ class AuthController extends HelperController
         ]
       ]);
     } catch (\Exception $e) {
-      $error = ["errorMessage" => "Error connecting to AWS s3. Please try Registering again", "statusCode" => 400];
+      $error = ["errorMessage" => "Error connecting to image server. Please try Registering again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-    //push image to s3
-    $key = 'user-' . $code . '-image.png';
 
     try {
-      $s3_result = $s3->putObject([
-        'Bucket' => 'liveet-test-user-bucket',
-        'Key'    => $key,
-        'Body'   => $byte_image,
-        'ACL'    => 'public-read',
-        'ContentType'    => 'image/png'
+      $result = $recognition->detectFaces([ // REQUIRED
+        'Attributes' => ['ALL'],
+        'Image' => [ // REQUIRED
+          'Bytes' => $byte_image
+        ]
       ]);
     } catch (\Exception $e) {
-      $error = ["errorMessage" => "Error posting image to S3. Please try Registering again", "statusCode" => 400];
+      $error = ["errorMessage" => "Error getting face recognition. Please try Registering again", "statusCode" => 400];
       return $json->withJsonResponse($response, $error);
     }
 
-
-    $payload = ["statusCode" => 200, "successMessage" => "IMAGE UPLOAD  Successfully"];
-    return $json->withJsonResponse($response, $payload);
+    var_dump($result);
+    die;
   }
 
   public function changeUsername(Request $request, ResponseInterface $response): ResponseInterface

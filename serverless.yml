@@ -7,7 +7,7 @@ provider:
     stage: ${opt:stage, 'staging'}
     httpApi:
         id: ppl2yu2v4c
-        cors: true
+
 
 plugins:
     - ./vendor/bref/bref

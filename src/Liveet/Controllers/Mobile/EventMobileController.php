@@ -1492,11 +1492,23 @@ class EventMobileController extends HelperController
 
     $data = $request->getParsedBody();
 
+    $hasEventId = false;
+    $eventId = '';
+
     $user_id = $data["user_id"];
     $offset = $data["offset"];
     $limit = $data["limit"];
 
-    $results = $timeline_db->getMobileTimeline($user_id, $offset, $limit);
+    if(isset($data["event_id"])) {
+      $hasEventId = true;
+      $eventId = $data["event_id"];
+    }
+
+    if($hasEventId) {
+      $results = $timeline_db->getEventMobileTimeline($user_id, $offset, $limit,$eventId);
+    } else {
+      $results = $timeline_db->getMobileTimeline($user_id, $offset, $limit);
+    }
 
     foreach ($results as $result) {
       $timeline_id = $result->timeline_id;
@@ -1542,6 +1554,7 @@ class EventMobileController extends HelperController
         $tmp = [
           "num_timeline_content" => $num_of_timelines,
           "event_image" => $event_multimedia,
+          "event_id" => intval($result->event_id),
           "event_title" => $event_name,
           "timeline_desc" => $result->timeline_desc,
           "multimedias" => $timeline_media_array

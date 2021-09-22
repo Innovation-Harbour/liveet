@@ -80,11 +80,26 @@ class EventTimelineModel extends BaseModel
     {
         $sql = "
               SELECT
-              timeline_id,event_multimedia,event_name,timeline_desc
+              timeline_id,event_multimedia,event_name,timeline_desc,event.event_id
               FROM  event_timeline
               LEFT JOIN event on event_timeline.event_id = event.event_id
               LEFT JOIN (SELECT event_id,user_id FROM event_ticket INNER JOIN event_ticket_users ON event_ticket.event_ticket_id = event_ticket_users.event_ticket_id WHERE event_ticket_users.ownership_status = 'ACTIVE') X ON event.event_id = X.event_id
               WHERE event_timeline.deleted_at IS NULL AND (event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND X.user_id = " . $user_id . "))
+              ORDER BY timeline_datetime DESC LIMIT " . $offset . ", " . $limit . "
+              ";
+        $result = $this->getConnection()->select($sql);
+        return $result;
+    }
+
+    public function getEventMobileTimeline($user_id, $offset, $limit,$eventId)
+    {
+        $sql = "
+              SELECT
+              timeline_id,event_multimedia,event_name,timeline_desc,event.event_id
+              FROM  event_timeline
+              LEFT JOIN event on event_timeline.event_id = event.event_id
+              LEFT JOIN (SELECT event_id,user_id FROM event_ticket INNER JOIN event_ticket_users ON event_ticket.event_ticket_id = event_ticket_users.event_ticket_id WHERE event_ticket_users.ownership_status = 'ACTIVE') X ON event.event_id = X.event_id
+              WHERE event.event_id = " . $eventId . " AND event_timeline.deleted_at IS NULL AND (event.event_type = 'PUBLIC' OR (event.event_type = 'PRIVATE' AND X.user_id = " . $user_id . "))
               ORDER BY timeline_datetime DESC LIMIT " . $offset . ", " . $limit . "
               ";
         $result = $this->getConnection()->select($sql);
